@@ -54,7 +54,7 @@ const Footer = () => {
           {/* Product, Company, Legal - Full width row on md */}
           <div className="md:col-span-1 lg:col-span-3 w-full bg-transparent flex flex-col md:flex-row justify-center items-start md:items-start gap-y-6 md:gap-y-0 md:gap-x-12 lg:gap-x-2">
             {/* Product */}
-            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
+            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center lg:items-start items-start md:items-center p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
               <div className="text-xl md:text-lg lg:text-xl font-bold text-white mb-2 md:mb-1 lg:mb-2">
                 Product
               </div>
@@ -69,7 +69,7 @@ const Footer = () => {
               </div>
             </div>
             {/* Company */}
-            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
+            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center lg:items-start p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
               <div className="text-xl md:text-lg lg:text-xl font-bold text-white mb-2 md:mb-1 lg:mb-2">
                 Company
               </div>
@@ -84,7 +84,7 @@ const Footer = () => {
               </div>
             </div>
             {/* Legal */}
-            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
+            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center lg:items-start p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
               <div className="text-xl md:text-lg lg:text-xl font-bold text-white mb-2 md:mb-1 lg:mb-2">
                 Legal
               </div>
