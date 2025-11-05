@@ -259,7 +259,7 @@ export default function Home() {
             price={"RS 249"}
             subprice={"per month"}
             points={[
-              "Everything in Student, plus:",
+              "Everything in Student",
               "Advanced predictive analytics (75-85% accuracy)",
               "Seasonal trend analysis",
               "Recurring transaction detection",
