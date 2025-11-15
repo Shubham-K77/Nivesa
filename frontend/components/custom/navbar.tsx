@@ -1,3 +1,4 @@
+"use client";
 //Shadcn Components:
 import { Button } from "../ui/button";
 import {
@@ -6,11 +7,14 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
+//Routing:
+import { useRouter } from "next/navigation";
 //Icons:
 import { GiHamburgerMenu } from "react-icons/gi";
 
 const Navbar = () => {
+  //Constant:
+  const router = useRouter();
   return (
     <div className="w-[95%] h-[11.5vh] md:w-[95%] md:h-[10.5vh] lg:w-[75%] lg:h-[11.5vh] rounded-2xl bg-black/40 lg:backdrop-blur-lg fixed top-4 left-1/2 -translate-x-1/2 flex justify-around items-center border-2 border-gray-800/80 z-50">
       {/* Logo and title */}
@@ -42,10 +46,16 @@ const Navbar = () => {
           Pricing
         </div>
         {/* CTA Buttons */}
-        <Button className="bg-transparent border border-yellow-300/80 text-center text-yellow-400/80 w-[18%] h-[6.5vh] text-md hover:cursor-pointer hover:bg-yellow-400/40 hover:text-white">
+        <Button
+          className="bg-transparent border border-yellow-300/80 text-center text-yellow-400/80 w-[18%] h-[6.5vh] text-md hover:cursor-pointer hover:bg-yellow-400/40 hover:text-white"
+          onClick={() => router.push("/login")}
+        >
           Sign In
         </Button>
-        <Button className="bg-yellow-500/80 text-center text-white w-[20%] h-[6.5vh] text-md hover:cursor-pointer hover:bg-yellow-600/80">
+        <Button
+          className="bg-yellow-500/80 text-center text-white w-[20%] h-[6.5vh] text-md hover:cursor-pointer hover:bg-yellow-600/80"
+          onClick={() => router.push("/signup")}
+        >
           Get Started
         </Button>
       </div>
@@ -69,10 +79,16 @@ const Navbar = () => {
               <div className="w-full h-[7vh] text-base font-medium md:font-semibold md:text-xl text-gray-200 hover:cursor-pointer bg-transparent hover:bg-linear-to-r hover:from-yellow-500/90 hover:to-amber-500/90 hover:text-black flex justify-center items-center transition-all ease-in-out duration-200 rounded-lg">
                 Pricing
               </div>
-              <div className="w-full h-[7vh] text-base font-bold md:text-xl text-gray-900 hover:cursor-pointer bg-linear-to-r from-yellow-400 to-amber-400 flex justify-center items-center transition-all ease-in-out duration-200 rounded-lg hover:from-yellow-500 hover:to-amber-500 hover:scale-[1.02] mt-2">
+              <div
+                className="w-full h-[7vh] text-base font-bold md:text-xl text-gray-900 hover:cursor-pointer bg-linear-to-r from-yellow-400 to-amber-400 flex justify-center items-center transition-all ease-in-out duration-200 rounded-lg hover:from-yellow-500 hover:to-amber-500 hover:scale-[1.02] mt-2"
+                onClick={() => router.push("/login")}
+              >
                 Sign In
               </div>
-              <div className="w-full h-[7vh] text-base font-bold md:text-xl text-yellow-400 hover:cursor-pointer bg-transparent border-2 border-yellow-400/70 flex justify-center items-center transition-all ease-in-out duration-200 rounded-lg hover:bg-yellow-400/20 hover:border-yellow-300 hover:scale-[1.02]">
+              <div
+                className="w-full h-[7vh] text-base font-bold md:text-xl text-yellow-400 hover:cursor-pointer bg-transparent border-2 border-yellow-400/70 flex justify-center items-center transition-all ease-in-out duration-200 rounded-lg hover:bg-yellow-400/20 hover:border-yellow-300 hover:scale-[1.02]"
+                onClick={() => router.push("/signup")}
+              >
                 Get Started
               </div>
             </div>
