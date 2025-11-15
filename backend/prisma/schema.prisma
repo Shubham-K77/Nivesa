@@ -18,6 +18,7 @@ datasource db {
 model User{
   id String @id @default(uuid()) //Randomly generate userId as string
   email String @unique
+  phoneNumber String? @unique //Optional but if provided must be unique
   name String 
   password String //Hashed Password
   imageUrl String?

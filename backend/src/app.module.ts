@@ -1,62 +1,56 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { RedisService } from './redis/redis.service';
-//Arject
-import {
-  ArcjetGuard,
-  ArcjetModule,
-  detectBot,
-  fixedWindow,
-  shield,
-} from '@arcjet/nest';
+import { Module, DynamicModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { PrismaService } from './prisma/prisma.service';
+import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './redis/redis.module';
+import { BcryptModule } from './bcrypt/bcrypt.module';
 
 @Module({
   imports: [
-    //Env Config
-    ConfigModule.forRoot({
-      isGlobal: true, //Makes the env file accessible globally
+    ConfigModule.forRoot({ isGlobal: true }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('access_token_secret'),
+        signOptions: { expiresIn: '15m' },
+      }),
     }),
-    //Arcjet Config
-    ArcjetModule.forRoot({
-      isGlobal: true,
-      key: process.env.ARJECT_KEY!,
-      rules: [
-        // Shield protects your app from common attacks e.g. SQL injection
-        shield({ mode: 'LIVE' }),
-        // Create a bot detection rule
-        detectBot({
-          mode: 'LIVE', // Blocks requests. Use "DRY_RUN" to log only
-          // Block all bots except the following
-          allow: [
-            'CATEGORY:SEARCH_ENGINE', // Google, Bing, etc
-            // Uncomment to allow these other common bot categories
-            // See the full list at https://arcjet.com/bot-list
-            //"CATEGORY:MONITOR", // Uptime monitoring services
-            //"CATEGORY:PREVIEW", // Link previews e.g. Slack, Discord
-          ],
-        }),
-        // Create a fixed window rate limit. Other algorithms are supported.
-        fixedWindow({
-          mode: 'LIVE',
-          window: '60s', // 10 second fixed window
-          max: 2, // Allow a maximum of 2 requests
-        }),
-      ],
-    }),
-  ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    RedisService,
-    {
-      provide: APP_GUARD,
-      useClass: ArcjetGuard,
-    },
-    PrismaService,
+    UserModule,
+    PrismaModule,
+    RedisModule,
+    BcryptModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  static async registerAsync(): Promise<DynamicModule> {
+    const arcjetNest = await import('@arcjet/nest');
+    const { ArcjetModule, ArcjetGuard, shield, fixedWindow } = arcjetNest;
+
+    return {
+      module: AppModule,
+      imports: [
+        ArcjetModule.forRoot({
+          isGlobal: true,
+          key: process.env.ARJECT_KEY!,
+          rules: [
+            shield({ mode: 'DRY_RUN' }),
+            fixedWindow({
+              mode: 'DRY_RUN',
+              window: '60s',
+              max: 1000,
+            }),
+          ],
+        }),
+      ],
+      providers: [
+        {
+          provide: APP_GUARD,
+          useClass: ArcjetGuard,
+        },
+      ],
+    };
+  }
+}
