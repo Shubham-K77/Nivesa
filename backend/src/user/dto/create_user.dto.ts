@@ -33,4 +33,5 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   imageUrl?: string;
+  otp: string;
 }

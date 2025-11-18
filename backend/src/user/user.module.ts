@@ -5,9 +5,10 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { BcryptModule } from 'src/bcrypt/bcrypt.module';
 import { JwtModule } from '@nestjs/jwt';
+import { MailerModule } from 'src/mailer/mailer.module';
 
 @Module({
-  imports: [PrismaModule, RedisModule, BcryptModule, JwtModule],
+  imports: [PrismaModule, RedisModule, BcryptModule, JwtModule, MailerModule],
   providers: [UserService],
   controllers: [UserController],
 })
