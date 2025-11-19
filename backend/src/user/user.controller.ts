@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Body,
   Controller,
@@ -6,10 +7,16 @@ import {
   Post,
   Param,
   Res,
+  Req,
+  UseGuards,
+  HttpException,
+  ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create_user.dto';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
+import { UserLoginGuard } from './guard/user.login.guard';
 
 @Controller('users')
 export class UserController {
@@ -18,12 +25,38 @@ export class UserController {
   //1. Get Requests:
   //Get All The Users Info
   @Get()
+  @UseGuards(UserLoginGuard)
   async getAllUsers() {
     const result = await this.userService.getAllUsers();
     return result;
   }
+  //Get The Current Logged In User
+  @Get('/active')
+  @UseGuards(UserLoginGuard)
+  getCurrentUser(@Req() req: Request, @Res() res: Response) {
+    try {
+      const currentUser = req['current_user'];
+      if (!currentUser) {
+        throw new UnauthorizedException(
+          'Must login to retrieve the information',
+        );
+      }
+      return res.status(200).send({
+        message: 'Successfully Retrieved',
+        statusCode: 200,
+        currentUser,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException(
+        'Internal Server Error, Unable to retrieve the current user info!',
+      );
+    }
+  }
   //2. Post Requests:
-  //i. Create The New User In Redis Db
+  //Create The New User In Redis Db
   @Post()
   async createNewUser(
     @Body(new ValidationPipe()) createUserDto: CreateUserDto,
@@ -31,7 +64,7 @@ export class UserController {
     const result = await this.userService.createUser(createUserDto);
     return result;
   }
-  //ii. Verify The User
+  //Verify The User
   @Post('/verify/:token')
   async verifyUser(
     @Param('token') token: string,
@@ -40,19 +73,19 @@ export class UserController {
     const result = await this.userService.verifyUser(token, verifyInfo);
     return result;
   }
-  //iii. Resend The Otp Again
+  //Resend The Otp Again
   @Post('/resend/:token')
   async resendOtp(@Param('token') token: string) {
     const result = await this.userService.resendOtp(token);
     return result;
   }
-  //iv.1. Reset The Password: Ask For Email
+  //Reset The Password: Ask For Email
   @Post('/reset')
   async resetPasswordEmail(@Body('email') email: string) {
     const result = await this.userService.resetPasswordEmail(email);
     return result;
   }
-  //iv.2. Reset The Password: Check Otp
+  //Reset The Password: Check Otp
   @Post('/reset/verify/:token')
   async resetPasswordCheckOtp(
     @Param('token') token: string,
@@ -64,7 +97,7 @@ export class UserController {
     );
     return result;
   }
-  //iv.3. Reset The Password
+  //Reset The Password
   @Post('/reset/password/:token')
   async resetPassword(
     @Param('token') token: string,
@@ -73,7 +106,7 @@ export class UserController {
     const result = await this.userService.resetPassword(token, newPassword);
     return result;
   }
-  //v. Login The User
+  //Login The User
   @Post('/login')
   async login(
     @Body() credentials: { email: string; password: string },
@@ -102,5 +135,43 @@ export class UserController {
       message: result.message,
       statusCode: result.statusCode,
     };
+  }
+  //Logout The User
+  @Post('/logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    try {
+      //Remove Both Of The Cookies
+      res.cookie(
+        'access_token',
+        {},
+        {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          maxAge: 0,
+        },
+      );
+      res.cookie(
+        'refresh_token',
+        {},
+        {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          maxAge: 0,
+        },
+      );
+      res.status(200).send({
+        message: 'Successfully Logged Out Of The System!',
+        statusCode: 200,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException(
+        'Unable to execute the logout procedure',
+      );
+    }
   }
 }
