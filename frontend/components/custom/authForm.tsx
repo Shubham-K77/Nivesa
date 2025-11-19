@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 //ShadCn User Input Form
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,10 +21,21 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+//Toaster
+import { toast } from "sonner";
 //Routing
 import { useRouter } from "next/navigation";
 //React
 import { useState } from "react";
+//My Server Component For Api Calls
+import {
+  login,
+  resendOtp,
+  signup,
+  verify,
+} from "@/app/(auth)/(authentication)/user.api";
+//Icons
+import { ImSpinner8 } from "react-icons/im";
 //Schema For Signup
 const signupSchema = z.object({
   email: z.string().email(),
@@ -35,24 +45,34 @@ const signupSchema = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
       "Password must have 8+ characters..."
     ),
-  fullName: z.string().min(2),
+  name: z.string().min(2),
+  phoneNumber: z
+    .string()
+    .regex(
+      /^\+977\d{10}$/,
+      "Invalid phone number format. Please enter the number in the format: +977 followed by exactly 10 digits. Example: +9779801234567"
+    )
+    .optional()
+    .or(z.literal("")),
 });
 //Schema For Login
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
-  fullName: z.string().optional(),
 });
 //Schema For Otp Validation
 const otpSchema = z.object({
-  email: z.string().email().optional(),
   otp: z.string().length(6, "OTP must be 6 characters"),
 });
-
-const AuthForm = ({ type }: { type: string }) => {
+//Type for the Auth Form Props
+type AuthFormProps = {
+  type: "signup" | "login" | "otp";
+  token?: string; // optional token
+};
+const AuthForm = ({ type, token }: AuthFormProps) => {
   //Constant for routing
   const router = useRouter();
-  const [isResendClicked, setIsResendClicked] = useState(false);
+  const [loading, setLoading] = useState(false);
   //Determine the schema and default values
   let selectedSchema:
     | typeof signupSchema
@@ -67,7 +87,8 @@ const AuthForm = ({ type }: { type: string }) => {
     defaultValues = {
       email: "",
       password: "",
-      fullName: "",
+      name: "",
+      phoneNumber: "",
     };
   } else if (type === "login") {
     selectedSchema = loginSchema;
@@ -78,7 +99,6 @@ const AuthForm = ({ type }: { type: string }) => {
   } else {
     selectedSchema = otpSchema;
     defaultValues = {
-      email: "",
       otp: "",
     };
   }
@@ -87,10 +107,50 @@ const AuthForm = ({ type }: { type: string }) => {
     resolver: zodResolver(selectedSchema),
     defaultValues,
   });
-  function onSubmit(values: any) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  async function onSubmit(values: any) {
+    if (type === "signup") {
+      setLoading(true);
+      try {
+        const { email, name, phoneNumber, password } = values;
+        const payload = {
+          email,
+          name,
+          password,
+          ...(phoneNumber ? { phoneNumber } : {}), // only include if not empty
+        };
+        const response = await signup(payload);
+        toast.success(response.data.message);
+        setLoading(false);
+        return router.push(`/verify/${response.data.token}`);
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error.response?.data?.message);
+      }
+    } else if (type === "login") {
+      try {
+        setLoading(true);
+        const { email, password } = values;
+        const response = await login({ email, password });
+        setLoading(false);
+        return toast.success(response.data.message);
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error.response?.data?.message);
+      }
+      // return router.push("/login");
+    } else {
+      try {
+        setLoading(true);
+        const { otp } = values;
+        const response = await verify({ otp, token: token || "" });
+        setLoading(false);
+        toast.success(response.data.message);
+        return router.push("/login");
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error.response?.data?.message);
+      }
+    }
   }
   return (
     <div className="w-[95%] md:w-full lg:w-full bg-transparent">
@@ -133,7 +193,7 @@ const AuthForm = ({ type }: { type: string }) => {
                   control={form.control}
                   name="otp"
                   render={({ field }) => (
-                    <FormItem className="w-full flex justify-center items-center">
+                    <FormItem className="w-full flex flex-col justify-center items-center">
                       <FormControl>
                         <InputOTP
                           maxLength={6}
@@ -169,7 +229,7 @@ const AuthForm = ({ type }: { type: string }) => {
                           </InputOTPGroup>
                         </InputOTP>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="mt-2 w-full text-center text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                     </FormItem>
                   )}
                 />
@@ -178,59 +238,42 @@ const AuthForm = ({ type }: { type: string }) => {
                   type="submit"
                   className="w-[95%] h-[9.5vh] md:h-[7vh] lg:h-[7.5vh] bg-linear-to-r from-yellow-400/80 to-amber-500/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-xl md:text-2xl lg:text-sm mb-4 mt-4 hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-105"
                 >
-                  Submit
+                  {loading === true ? (
+                    <ImSpinner8 className="text-2xl font-semibold animate-spin" />
+                  ) : (
+                    "Submit"
+                  )}
                 </Button>
-                {/* Resend Link */}
-                <div
-                  className="w-[95%] text-center text-sm md:text-xl lg:text-sm text-white font-semibold hover:underline hover:text-blue-500 hover:cursor-pointer"
-                  onClick={() => setIsResendClicked(!isResendClicked)}
-                >
-                  Didn't receive the code?
-                </div>
-                {/* Resend Component */}
-                {isResendClicked === true ? (
-                  <>
-                    <div className="w-[98%] flex justify-center items-center gap-x-2 mt-4">
-                      {/* Form Field */}
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem className="w-[70%] flex flex-col space-y-2 justify-start items-start">
-                            <FormLabel className="font-normal text-sm md:text-xl lg:text-sm text-white">
-                              Email Address
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="example@email.com"
-                                {...field}
-                                type="email"
-                                className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {/* Resend Button */}
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const email = form.getValues("email");
-                          console.log("Resending OTP to:", email);
-                          // Add your resend logic here
-                        }}
-                        className="w-[25%] h-[7vh] md:h-[5.75vh] lg:h-[7vh] border-2 border-gray-200/80 rounded-lg bg-transparent text-sm md:text-xl lg:text-sm font-semibold text-white hover:bg-amber-400/70 mt-8 hover:cursor-pointer"
-                      >
-                        Resend
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <></>
-                )}
               </form>
             </Form>
+            {/* Resend Link */}
+            <div
+              className="w-[95%] text-center text-sm md:text-xl lg:text-sm text-white font-semibold hover:underline hover:text-blue-500 hover:cursor-pointer"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  // Add your resend logic here
+                  const response = await resendOtp({
+                    token: token || "",
+                  });
+                  setLoading(false);
+                  toast.success(response.data.message);
+                  return router.push(`/verify/${response.data.token}`);
+                } catch (error: any) {
+                  setLoading(false);
+                  toast.error(error.response?.data?.message);
+                  return router.push("/signup");
+                }
+              }}
+            >
+              {loading === true ? (
+                <div className="flex items-center justify-center w-full">
+                  <ImSpinner8 className="text-2xl font-semibold animate-spin" />
+                </div>
+              ) : (
+                "Didn't receive the code?"
+              )}
+            </div>
           </div>
         </>
       ) : (
@@ -252,7 +295,7 @@ const AuthForm = ({ type }: { type: string }) => {
                   {/* FullName Field */}
                   <FormField
                     control={form.control}
-                    name="fullName"
+                    name="name"
                     render={({ field }) => (
                       <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
                         <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
@@ -266,7 +309,7 @@ const AuthForm = ({ type }: { type: string }) => {
                             className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>
                     )}
                   />
@@ -287,7 +330,28 @@ const AuthForm = ({ type }: { type: string }) => {
                             className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Phone Number Field */}
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
+                        <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                          WhatsApp Number (Optional)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="+9779801234567"
+                            {...field}
+                            type="text"
+                            className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                          />
+                        </FormControl>
+                        <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>
                     )}
                   />
@@ -308,7 +372,7 @@ const AuthForm = ({ type }: { type: string }) => {
                             className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>
                     )}
                   />
@@ -332,7 +396,7 @@ const AuthForm = ({ type }: { type: string }) => {
                             className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>
                     )}
                   />
@@ -353,7 +417,7 @@ const AuthForm = ({ type }: { type: string }) => {
                             className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>
                     )}
                   />
@@ -364,7 +428,13 @@ const AuthForm = ({ type }: { type: string }) => {
                 type="submit"
                 className="w-[95%] h-[7.5vh] md:h-[6vh] lg:h-[7.5vh] bg-linear-to-r from-yellow-400/80 to-amber-500/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-md md:text-lg lg:text-sm mb-4 mt-4 hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-105"
               >
-                {type === "signup" ? "Register" : "Sign In"}
+                {loading === true ? (
+                  <ImSpinner8 className="text-2xl font-semibold animate-spin" />
+                ) : type === "signup" ? (
+                  "Register"
+                ) : (
+                  "Sign In"
+                )}
               </Button>
               {/* Jump Link */}
               <div className="w-[95%] flex justify-center items-center gap-x-2">

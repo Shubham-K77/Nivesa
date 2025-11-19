@@ -41,8 +41,8 @@ export default function Home() {
             </div>
           </div>
           {/* CTA */}
-          <div className="w-[85%] h-[10.5vh] md:w-[55%] md:h-[8.5vh] lg:w-[20%] lg:h-[8.5vh] rounded-lg bg-amber-500/80 flex justify-center items-center hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-95 hover:bg-amber-600">
-            <div className="text-xl md:text-2xl lg:text-xl font-bold text-white">
+          <div className="w-[85%] h-[10.5vh] md:w-[55%] md:h-[8.5vh] lg:w-[20%] lg:h-[8.5vh] rounded-lg bg-yellow-400/70 flex justify-center items-center hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-95 hover:bg-amber-500/80">
+            <div className="text-xl md:text-2xl lg:text-[1.10rem] font-bold text-white">
               Take Control Now!
             </div>
           </div>
