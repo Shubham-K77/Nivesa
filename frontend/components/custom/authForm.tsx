@@ -33,7 +33,11 @@ import {
   resendOtp,
   signup,
   verify,
-} from "@/app/(auth)/(authentication)/user.api";
+  resetEmail,
+  resetResendOtp,
+  resetVerifyOtp,
+  resetPassword,
+} from "@/app/(auth)/(api)/user.api";
 //Icons
 import { ImSpinner8 } from "react-icons/im";
 //Schema For Signup
@@ -43,7 +47,7 @@ const signupSchema = z.object({
     .string()
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      "Password must have 8+ characters..."
+      "Password must have 8+ characters, including uppercase, lowercase, number, and special char."
     ),
   name: z.string().min(2),
   phoneNumber: z
@@ -58,30 +62,64 @@ const signupSchema = z.object({
 //Schema For Login
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
+  password: z
+    .string()
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      "Password must have 8+ characters, including uppercase, lowercase, number, and special char."
+    ),
 });
 //Schema For Otp Validation
 const otpSchema = z.object({
   otp: z.string().length(6, "OTP must be 6 characters"),
 });
+//Schema For Reset Password : Email Request
+const resetPasswordEmailSchema = z.object({
+  email: z.string().email(),
+});
+//Schema For Reset Password: Final Password Reset
+const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        "Password must have 8+ characters, including uppercase, lowercase, number, and special char."
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 //Type for the Auth Form Props
 type AuthFormProps = {
-  type: "signup" | "login" | "otp";
+  type:
+    | "signup"
+    | "login"
+    | "otp"
+    | "resetEmail"
+    | "resetOtp"
+    | "resetPassword";
   token?: string; // optional token
 };
 const AuthForm = ({ type, token }: AuthFormProps) => {
-  //Constant for routing
+  //Routing
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   //Determine the schema and default values
   let selectedSchema:
     | typeof signupSchema
     | typeof loginSchema
-    | typeof otpSchema;
+    | typeof otpSchema
+    | typeof resetPasswordEmailSchema
+    | typeof resetPasswordSchema;
   let defaultValues:
     | z.infer<typeof signupSchema>
     | z.infer<typeof loginSchema>
-    | z.infer<typeof otpSchema>;
+    | z.infer<typeof otpSchema>
+    | z.infer<typeof resetPasswordEmailSchema>
+    | z.infer<typeof resetPasswordSchema>;
   if (type === "signup") {
     selectedSchema = signupSchema;
     defaultValues = {
@@ -96,10 +134,21 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
       email: "",
       password: "",
     };
-  } else {
+  } else if (type === "otp" || type === "resetOtp") {
     selectedSchema = otpSchema;
     defaultValues = {
       otp: "",
+    };
+  } else if (type === "resetEmail") {
+    selectedSchema = resetPasswordEmailSchema;
+    defaultValues = {
+      email: "",
+    };
+  } else {
+    selectedSchema = resetPasswordSchema;
+    defaultValues = {
+      newPassword: "",
+      confirmPassword: "",
     };
   }
 
@@ -138,7 +187,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         return toast.error(error.response?.data?.message);
       }
       // return router.push("/login");
-    } else {
+    } else if (type === "otp") {
       try {
         setLoading(true);
         const { otp } = values;
@@ -149,6 +198,45 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
       } catch (error: any) {
         setLoading(false);
         return toast.error(error.response?.data?.message);
+      }
+    } else if (type === "resetEmail") {
+      try {
+        setLoading(true);
+        const { email } = values;
+        const response = await resetEmail({ email });
+        setLoading(false);
+        toast.success(response.data.message);
+        return router.push(`/reset/${response.data.token}`);
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error?.response?.data?.message);
+      }
+    } else if (type === "resetOtp") {
+      try {
+        setLoading(true);
+        const { otp } = values;
+        const response = await resetVerifyOtp({ otp, token: token || "" });
+        setLoading(false);
+        toast.success(response.data.message);
+        return router.push(`/reset/password/${response.data.token}`);
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error?.response?.data?.message);
+      }
+    } else {
+      try {
+        setLoading(true);
+        const { newPassword } = values;
+        const response = await resetPassword({
+          token: token || "",
+          newPassword,
+        });
+        setLoading(false);
+        toast.success(response.data.message);
+        return router.push(`/login`);
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error?.response?.data?.message);
       }
     }
   }
@@ -161,27 +249,37 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
             ? "Create Your Account"
             : type === "login"
             ? "Welcome Back"
-            : "Verify Your Email"}
+            : type === "resetEmail"
+            ? "Verify Your Email"
+            : type === "otp" || type === "resetOtp"
+            ? "Confirm Your Identity"
+            : "Update Your Password"}
         </div>
         <div className="text-md md:text-lg lg:text-md text-gray-400/80 text-center">
           {type === "signup"
             ? "Start your financial management journey today"
             : type === "login"
             ? "Sign in to keep your financial goals on track"
-            : "We've sent a verification code to your email"}
+            : type === "otp" || type === "resetOtp"
+            ? "We've sent a verification code to your email"
+            : type === "resetEmail"
+            ? "Give us your email to reset your password"
+            : "Enter a new password to secure your account."}
         </div>
       </div>
       {/* Form UI   */}
-      {type === "otp" ? (
+      {type === "otp" || type === "resetOtp" ? (
         <>
           <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-2 flex flex-col justify-start items-center">
             {/* Title */}
             <div className="text-3xl md:text-3xl lg:text-2xl text-white font-bold text-center">
-              Email Verification
+              OTP Verification
             </div>
             {/* SubTitle */}
             <div className="text-md md:text-xl lg:text-lg text-gray-400/90 text-center mb-4">
-              Confirm your OTP to access your account
+              {type === "otp"
+                ? "Confirm your OTP to access your account"
+                : "Confirm your OTP to reset your password"}
             </div>
             {/* Otp-Input Form */}
             <Form {...form}>
@@ -253,16 +351,29 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                 try {
                   setLoading(true);
                   // Add your resend logic here
-                  const response = await resendOtp({
-                    token: token || "",
-                  });
+                  let response;
+                  if (type === "otp") {
+                    response = await resendOtp({
+                      token: token || "",
+                    });
+                  } else {
+                    response = await resetResendOtp({ token: token || "" });
+                  }
                   setLoading(false);
                   toast.success(response.data.message);
-                  return router.push(`/verify/${response.data.token}`);
+                  if (type === "otp") {
+                    return router.push(`/verify/${response.data.token}`);
+                  } else {
+                    return router.push(`/reset/${response.data.token}`);
+                  }
                 } catch (error: any) {
                   setLoading(false);
                   toast.error(error.response?.data?.message);
-                  return router.push("/signup");
+                  if (type === "otp") {
+                    return router.push("/signup");
+                  } else {
+                    return router.push("/reset");
+                  }
                 }
               }}
             >
@@ -274,6 +385,137 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                 "Didn't receive the code?"
               )}
             </div>
+          </div>
+        </>
+      ) : type === "resetEmail" ? (
+        <>
+          <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4">
+            {/* Title */}
+            <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-6">
+              Recover Your Account
+            </div>
+            {/* Form Component */}
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="w-[98%] space-y-4 flex flex-col justify-start items-center"
+              >
+                {/* Email Address Field */}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
+                      <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                        Email Address
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="example@email.com"
+                          {...field}
+                          type="email"
+                          className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                        />
+                      </FormControl>
+                      <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
+                    </FormItem>
+                  )}
+                />
+                {/* CTA Button */}
+                <Button
+                  type="submit"
+                  className="w-[95%] h-[7.5vh] md:h-[6vh] lg:h-[7.5vh] bg-linear-to-r from-yellow-400/80 to-amber-500/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-md md:text-lg lg:text-sm mb-4 mt-4 hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-105"
+                >
+                  {loading === true ? (
+                    <ImSpinner8 className="text-2xl font-semibold animate-spin" />
+                  ) : (
+                    "Proceed"
+                  )}
+                </Button>
+                {/* Jump Link */}
+                <div className="w-[95%] flex justify-center items-center gap-x-2">
+                  <div className="text-sm text-gray-400/80">
+                    Already have an account?
+                  </div>
+                  <div
+                    className="text-sm font-semibold text-amber-500/80 hover:cursor-pointer hover:underline"
+                    onClick={() => router.push("/login")}
+                  >
+                    Sign In
+                  </div>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </>
+      ) : type === "resetPassword" ? (
+        <>
+          <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4">
+            {/* Title */}
+            <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-6">
+              Choose a New Password
+            </div>
+            {/* Form Component */}
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="w-[98%] space-y-4 flex flex-col justify-start items-center"
+              >
+                {/* New Password Field */}
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
+                      <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                        New Password
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="............"
+                          {...field}
+                          type="password"
+                          className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                        />
+                      </FormControl>
+                      <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
+                    </FormItem>
+                  )}
+                />
+                {/* Repeat Password Field */}
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
+                      <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                        Retype New Password
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="............"
+                          {...field}
+                          type="password"
+                          className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                        />
+                      </FormControl>
+                      <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
+                    </FormItem>
+                  )}
+                />
+                {/* CTA Button */}
+                <Button
+                  type="submit"
+                  className="w-[95%] h-[7.5vh] md:h-[6vh] lg:h-[7.5vh] bg-linear-to-r from-yellow-400/80 to-amber-500/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-md md:text-lg lg:text-sm mb-4 mt-4 hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-105"
+                >
+                  {loading === true ? (
+                    <ImSpinner8 className="text-2xl font-semibold animate-spin" />
+                  ) : (
+                    "Change Password"
+                  )}
+                </Button>
+              </form>
+            </Form>
           </div>
         </>
       ) : (
@@ -436,6 +678,19 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                   "Sign In"
                 )}
               </Button>
+              {/* Jump to reset password */}
+              {type === "login" ? (
+                <div className="w-[95%] flex justify-center items-center gap-x-2">
+                  <div
+                    className="text-sm font-semibold text-amber-500/80 hover:cursor-pointer hover:underline"
+                    onClick={() => router.push("/reset")}
+                  >
+                    Forgot your password?
+                  </div>
+                </div>
+              ) : (
+                <> </>
+              )}
               {/* Jump Link */}
               <div className="w-[95%] flex justify-center items-center gap-x-2">
                 <div className="text-sm text-gray-400/80">

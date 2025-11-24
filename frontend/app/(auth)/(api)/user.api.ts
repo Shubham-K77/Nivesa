@@ -1,4 +1,5 @@
 import axios from "axios";
+
 //Interface:
 interface signupCredentials {
   email: string;
@@ -15,6 +16,7 @@ interface otpCredential {
   token: string;
 }
 
+//Functions To Call Backend Endpoints:
 const signup = async ({
   email,
   name,
@@ -54,4 +56,41 @@ const resendOtp = async ({ token }: { token: string }) => {
   );
 };
 
-export { signup, login, verify, resendOtp };
+const resetEmail = async ({ email }: { email: string }) => {
+  return axios.post("http://localhost:3001/api/v1/users/reset", { email });
+};
+
+const resetResendOtp = async ({ token }: { token: string }) => {
+  return axios.post(`http://localhost:3001/api/v1/users/reset/resend/${token}`);
+};
+
+const resetVerifyOtp = async ({ otp, token }: otpCredential) => {
+  return await axios.post(
+    `http://localhost:3001/api/v1/users/reset/verify/${token}`,
+    { otp }
+  );
+};
+
+const resetPassword = async ({
+  token,
+  newPassword,
+}: {
+  token: string;
+  newPassword: string;
+}) => {
+  return await axios.post(
+    `http://localhost:3001/api/v1/users/reset/password/${token}`,
+    { newPassword }
+  );
+};
+
+export {
+  signup,
+  login,
+  verify,
+  resendOtp,
+  resetEmail,
+  resetResendOtp,
+  resetVerifyOtp,
+  resetPassword,
+};

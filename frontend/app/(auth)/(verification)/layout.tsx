@@ -13,11 +13,11 @@ export default function VerifyLayout({
         <div className="w-full flex flex-row justify-between items-center mt-4 px-4 sm:px-6 md:px-8 lg:px-12">
           {/* Back To Home Link */}
           <div
-            className="flex justify-center items-center gap-x-2 hover:underline hover:cursor-pointer"
+            className="flex justify-center items-center gap-x-2 hover:cursor-pointer p-3 md:p-4 lg:p-3 bg-yellow-600/80 rounded-lg transition-all ease-in-out duration-150 hover:scale-105"
             onClick={() => router.push("/")}
           >
-            <IoMdArrowBack className="text-gray-400/80 font-bold text-xl md:text-2xl" />
-            <div className="text-sm md:text-lg font-semibold text-gray-400/80">
+            <IoMdArrowBack className="text-white font-bold text-xl md:text-3xl lg:text-xl" />
+            <div className="text-sm md:text-xl lg:text-sm text-white">
               Back to Home
             </div>
           </div>
@@ -25,7 +25,7 @@ export default function VerifyLayout({
           <div className="flex justify-center items-center">
             {/* Logo */}
             <div
-              className="w-[12vh] h-[12vh] sm:w-[15vh] sm:h-[15vh] md:w-[18.5vh] md:h-[18.5vh] lg:w-[22.5vh] lg:h-[20.5vh]"
+              className="w-[15.5vh] h-[15.5vh] sm:w-[15.5vh] sm:h-[15.5vh] md:w-[18.5vh] md:h-[18.5vh] lg:w-[22.5vh] lg:h-[20.5vh]"
               style={{
                 backgroundImage: `url(/images/logo.png)`,
                 backgroundPosition: "center",

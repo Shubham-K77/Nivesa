@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 // Props interface for the gradient animation component
 interface BackgroundGradientAnimationProps {
@@ -22,12 +23,12 @@ import { useEffect, useRef, useState } from "react";
 export const BackgroundGradientAnimation = ({
   gradientBackgroundStart = "rgb(30, 30, 60)",
   gradientBackgroundEnd = "rgb(10, 20, 40)",
-  firstColor = "60, 100, 180", // muted blue
-  secondColor = "180, 80, 160", // muted pink
-  thirdColor = "80, 180, 200", // muted cyan
-  fourthColor = "180, 60, 60", // muted red
-  fifthColor = "180, 180, 100", // muted yellow
-  pointerColor = "120, 80, 180", // muted purple
+  firstColor = "220, 180, 60", // Gold
+  secondColor = "255, 191, 71", // Amber
+  thirdColor = "60, 180, 120", // Emerald
+  fourthColor = "70, 110, 180", // Sapphire
+  fifthColor = "184, 115, 51", // Copper
+  pointerColor = "255, 215, 80", // Gold highlight
   size = "160%",
   blendingValue = "hard-light",
   children,
@@ -77,21 +78,18 @@ export const BackgroundGradientAnimation = ({
       if (!interactiveRef.current) return;
       setCurX((prevCurX) => {
         const newCurX = prevCurX + (tgX - prevCurX) / 20;
-        interactiveRef.current!.style.transform = `translate(${Math.round(
-          newCurX
-        )}px, ${Math.round(curY)}px)`;
+        setCurY((prevCurY) => {
+          const newCurY = prevCurY + (tgY - prevCurY) / 20;
+          interactiveRef.current!.style.transform = `translate(${Math.round(
+            newCurX
+          )}px, ${Math.round(newCurY)}px)`;
+          return newCurY;
+        });
         return newCurX;
-      });
-      setCurY((prevCurY) => {
-        const newCurY = prevCurY + (tgY - prevCurY) / 20;
-        interactiveRef.current!.style.transform = `translate(${Math.round(
-          curX
-        )}px, ${Math.round(newCurY)}px)`;
-        return newCurY;
       });
     }
     move();
-  }, [tgX, tgY, curX, curY]);
+  }, [tgX, tgY]); // curX and curY removed here!
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (interactiveRef.current) {

@@ -12,7 +12,7 @@ export default function Home() {
     <div className="w-full flex flex-col justify-start items-center">
       {/* Hero Section     */}
       <BackgroundBeamsWithCollision className="relative z-0">
-        <div className="w-full h-[112vh] md:h-[85vh] lg:h-screen flex flex-col justify-center items-center bg-transparent gap-y-4 relative z-10">
+        <div className="w-full h-[112vh] md:h-[85vh] lg:h-[105vh] flex flex-col justify-center items-center bg-transparent gap-y-4 relative z-10">
           {/* Tagline */}
           <div className="w-[75%] h-[5.5vh] md:w-[50%] md:h-[4vh] lg:w-[20%] lg:h-[5.5vh] rounded-2xl bg-amber-500/30 border md:border-0 lg:border border-amber-400/80 flex justify-center items-center p-2 mb-6">
             <div className="text-sm md:text-lg lg:text-sm font-semibold text-yellow-300/80">
