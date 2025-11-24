@@ -85,6 +85,12 @@ export class UserController {
     const result = await this.userService.resetPasswordEmail(email);
     return result;
   }
+  //Resend The Otp Again To Reset Password
+  @Post('/reset/resend/:token')
+  async resetResendOtp(@Param('token') token: string) {
+    const result = await this.userService.resetResendOtp(token);
+    return result;
+  }
   //Reset The Password: Check Otp
   @Post('/reset/verify/:token')
   async resetPasswordCheckOtp(

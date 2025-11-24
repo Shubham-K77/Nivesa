@@ -337,7 +337,77 @@ export class UserService {
       );
     }
   }
-  //iv.2) Reset Check Otp
+  //iv.2) Reset The Password [Resend The Otp]
+  async resetResendOtp(token: string) {
+    try {
+      //Check the token:
+      if (!token || !token.trim()) {
+        throw new BadRequestException(
+          'Verification token is required to resend OTP.',
+        );
+      }
+      let isValid;
+      try {
+        isValid = await this.jwtService.verify(token, {
+          secret: this.configService.get<string>('reset_password_email'),
+        });
+      } catch (error: any) {
+        throw new UnauthorizedException(
+          'Either the token is invalid or is expired',
+        );
+      }
+      //Check Against Redis
+      const userInfo = await this.redis.get(`reset-${isValid.email}`);
+      if (!userInfo) {
+        throw new NotFoundException(
+          'Verification session not found. Please reset the whole process again.',
+        );
+      }
+      //Then Regenerate The New OTP And Reset The Rate:
+      userInfo['otp'] = randomInt(
+        parseInt(this.configService.get<string>('min_value') || '100000'),
+        parseInt(this.configService.get<string>('max_value') || '999999') + 1,
+      ).toString();
+      userInfo['rate'] = 5;
+      //Update into redis
+      const updatedUser = await this.redis.set(
+        `reset-${userInfo.email}`,
+        userInfo,
+        { ttl: 300 },
+      );
+      if (!updatedUser) {
+        throw new ServiceUnavailableException(
+          'Unable to resend verification code at this time. Please try again later.',
+        );
+      }
+      //Generate new jwt token:
+      const otpToken = this.jwtService.sign(
+        { email: userInfo.email },
+        {
+          secret: this.configService.get<string>('reset_password_email'),
+          expiresIn: '5m', //Otp Validation For 5 Mins
+        },
+      );
+      //Send the mail to the user for the otp:
+      await this.mailerService.otpMail(userInfo.email, userInfo.otp, 'resend');
+      //If Successfully Created:
+      return {
+        message:
+          'New OTP has been sent to your email. Please enter the otp within 5 minutes.',
+        statusCode: 200,
+        token: otpToken,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      console.error(error);
+      throw new ServiceUnavailableException(
+        'An unexpected error occurred while processing your password reset request. Please try again later.',
+      );
+    }
+  }
+  //iv.3) Reset Check Otp
   async resetPasswordCheckOtp(token: string, verifyInfo: { otp: string }) {
     try {
       //Check The Token Provided First:
@@ -400,6 +470,15 @@ export class UserService {
               expiresIn: '5m',
             },
           );
+          //Create a new redis item
+          const newUserItem = await this.redis.set(
+            `reset-final-${resetUserExists.email}`,
+            {},
+            { ttl: 300 },
+          );
+          if (!newUserItem) {
+            throw new ServiceUnavailableException('Internal Server Error');
+          }
           //Response
           return {
             message:
@@ -418,7 +497,7 @@ export class UserService {
       );
     }
   }
-  //iv.3) Reset With The New Password
+  //iv.4) Reset With The New Password
   async resetPassword(token: string, newPassword: string) {
     try {
       //Check the provided informations:
@@ -437,6 +516,13 @@ export class UserService {
       } catch (error: any) {
         throw new UnauthorizedException(
           'Your password reset link has expired or is invalid. Please request a new password reset.',
+        );
+      }
+      //Check The Redis Item
+      const redisExists = await this.redis.get(`reset-final-${isValid.email}`);
+      if (!redisExists) {
+        throw new UnauthorizedException(
+          'Password already reset or session expired.',
         );
       }
       //Extract The Email And Check Against DB
@@ -460,6 +546,8 @@ export class UserService {
           'Unable to update your password at this time. Please try again later.',
         );
       }
+      //Delete The Redis
+      await this.redis.del(`reset-final-${isValid.email}`);
       //Response
       return {
         message:
