@@ -548,6 +548,8 @@ export class UserService {
       }
       //Delete The Redis
       await this.redis.del(`reset-final-${isValid.email}`);
+      //Send The Mail
+      await this.mailerService.resetPasswordMail(userExists.email);
       //Response
       return {
         message:

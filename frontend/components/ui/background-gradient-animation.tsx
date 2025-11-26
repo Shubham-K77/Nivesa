@@ -28,7 +28,7 @@ export const BackgroundGradientAnimation = ({
   thirdColor = "60, 180, 120", // Emerald
   fourthColor = "70, 110, 180", // Sapphire
   fifthColor = "184, 115, 51", // Copper
-  pointerColor = "255, 215, 80", // Gold highlight
+  pointerColor = "255, 215, 80", // Gold highlight// Muted light gray highlight
   size = "160%",
   blendingValue = "hard-light",
   children,

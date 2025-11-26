@@ -181,7 +181,8 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         const { email, password } = values;
         const response = await login({ email, password });
         setLoading(false);
-        return toast.success(response.data.message);
+        toast.success(response.data.message);
+        return router.push("/home");
       } catch (error: any) {
         setLoading(false);
         return toast.error(error.response?.data?.message);

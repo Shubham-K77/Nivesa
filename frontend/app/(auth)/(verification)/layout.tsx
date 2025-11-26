@@ -1,11 +1,24 @@
 "use client";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { IoMdArrowBack } from "react-icons/io";
+import { getCurrentUser } from "../(api)/user.api";
+import { toast } from "sonner";
 export default function VerifyLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
+  useEffect(() => {
+    const getActiveUser = async () => {
+      const response = await getCurrentUser();
+      if (response.data?.statusCode === 200) {
+        toast.info("User is already logged in.");
+        return router.push("/home");
+      }
+    };
+    getActiveUser();
+  }, [router]);
   return (
     <>
       <BackgroundGradientAnimation className="w-full flex flex-col justify-start items-center text-white gap-y-4">

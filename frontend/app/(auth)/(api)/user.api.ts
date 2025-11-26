@@ -84,6 +84,21 @@ const resetPassword = async ({
   );
 };
 
+const logout = async () => {
+  return axios.post(
+    "http://localhost:3001/api/v1/users/logout",
+    {},
+    { withCredentials: true }
+  );
+};
+
+//Get Request To Acess The Current Logged In User:
+const getCurrentUser = async () => {
+  return axios.get("http://localhost:3001/api/v1/users/active", {
+    withCredentials: true,
+  });
+};
+
 export {
   signup,
   login,
@@ -93,4 +108,6 @@ export {
   resetResendOtp,
   resetVerifyOtp,
   resetPassword,
+  getCurrentUser,
+  logout,
 };

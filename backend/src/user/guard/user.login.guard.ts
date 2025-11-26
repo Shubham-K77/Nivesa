@@ -28,42 +28,51 @@ export class UserLoginGuard implements CanActivate {
     const response = context.switchToHttp().getResponse();
     //Get The Http Only Cookies:
     try {
-      //Get The Refresh Token First:
+      //Get the Access Token First:
+      const access_token = request.cookies['access_token'];
+      if (access_token) {
+        try {
+          const payload = this.jwtService.verify(access_token, {
+            secret: this.configService.get<string>('access_token_secret'),
+          });
+          request['current_user'] = payload;
+          return true;
+        } catch (error: any) {
+          console.error(error.message);
+        }
+      }
+      //Then Get The Refresh Token:
       const refresh_token = request.cookies['refresh_token'];
       if (!refresh_token) {
         throw new UnauthorizedException(
           'You must login to continue the request.',
         );
       }
-      let isValid;
+      let refresh_payload;
       try {
-        isValid = this.jwtService.verify(refresh_token, {
+        refresh_payload = this.jwtService.verify(refresh_token, {
           secret: this.configService.get<string>('refresh_token_secret'),
         });
       } catch (error: any) {
         console.error(error.message);
-        throw new ServiceUnavailableException(
+        throw new UnauthorizedException(
           'The token is already expired, please login again.',
         );
       }
       //Get The Appropriate Value
-      const { exp, ...payload } = isValid;
-      //Get The Access Token
-      const access_token = request.cookies['access_token'];
-      if (!access_token) {
-        // Access token missing/expired - generate new one from refresh token payload
-        const newAccessToken = this.jwtService.sign(payload, {
-          secret: this.configService.get<string>('access_token_secret'),
-          expiresIn: '15m',
-        });
-        // Set new access token cookie
-        await response.cookie('access_token', newAccessToken, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          maxAge: 15 * 60 * 1000, //15 mins
-        });
-      }
+      const { exp, ...payload } = refresh_payload;
+      // Access token missing/expired - generate new one from refresh token payload
+      const newAccessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('access_token_secret'),
+        expiresIn: '15m',
+      });
+      // Set new access token cookie
+      await response.cookie('access_token', newAccessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000, //15 mins
+      });
       // Use refresh token payload since we just generated access token from it
       request['current_user'] = payload;
       return Promise.resolve(true);
