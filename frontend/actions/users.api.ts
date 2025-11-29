@@ -1,5 +1,4 @@
 import axios from "axios";
-
 //Interface:
 interface signupCredentials {
   email: string;

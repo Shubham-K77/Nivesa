@@ -3,7 +3,7 @@ import { BackgroundGradientAnimation } from "@/components/ui/background-gradient
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { IoMdArrowBack } from "react-icons/io";
-import { getCurrentUser } from "../(api)/user.api";
+import { getCurrentUser } from "../../../actions/users.api";
 import { toast } from "sonner";
 export default function VerifyLayout({
   children,

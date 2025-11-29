@@ -4,7 +4,7 @@ import Footer from "@/components/custom/footer";
 import Navbar from "@/components/custom/navbar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { getCurrentUser } from "../(auth)/(api)/user.api";
+import { getCurrentUser } from "../../actions/users.api";
 import { toast } from "sonner";
 
 export default function HomeLayout({

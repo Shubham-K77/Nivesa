@@ -3,7 +3,7 @@ import { BackgroundGradientAnimation } from "@/components/ui/background-gradient
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { getCurrentUser } from "../(api)/user.api";
+import { getCurrentUser } from "../../../actions/users.api";
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

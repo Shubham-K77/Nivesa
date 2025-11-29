@@ -37,7 +37,7 @@ import {
   resetResendOtp,
   resetVerifyOtp,
   resetPassword,
-} from "@/app/(auth)/(api)/user.api";
+} from "@/actions/users.api";
 //Icons
 import { ImSpinner8 } from "react-icons/im";
 //Schema For Signup
