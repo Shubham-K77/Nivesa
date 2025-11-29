@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { BcryptModule } from './bcrypt/bcrypt.module';
 import { MailerModule } from './mailer/mailer.module';
+import { AccountModule } from './account/account.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MailerModule } from './mailer/mailer.module';
     RedisModule,
     BcryptModule,
     MailerModule,
+    AccountModule,
   ],
 })
 export class AppModule {
