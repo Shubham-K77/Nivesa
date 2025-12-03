@@ -7,7 +7,14 @@ import { toast } from "sonner";
 import { ImSpinner8 } from "react-icons/im";
 import Sidebar from "@/components/custom/sidebar";
 
-export const UserContext = createContext({});
+export const UserContext = createContext<{
+  id: string;
+  email: string;
+  phoneNumber: string;
+  name: string;
+  imageUrl?: string;
+  iat?: number;
+} | null>(null);
 
 export default function DashboardLayout({
   children,
@@ -15,17 +22,28 @@ export default function DashboardLayout({
   //Constants:
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState({});
+  const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+    phoneNumber: string;
+    name: string;
+    imageUrl?: string;
+    iat?: number;
+  } | null>(null);
 
   useEffect(() => {
     const getActiveUser = async () => {
+      setAuthChecked(false);
       setLoading(true);
       try {
         const response = await getCurrentUser();
         setCurrentUser(response?.data?.currentUser);
+        setAuthChecked(true);
         setLoading(false);
         toast.success("Welcome Back!", { id: "welcome-back" });
       } catch (error: any) {
+        setAuthChecked(false);
         setLoading(false);
         console.error(error);
         toast.error(error.response?.data?.message);
@@ -34,24 +52,32 @@ export default function DashboardLayout({
     };
     getActiveUser();
   }, [router]);
+
   return (
     <>
-      {loading === true ? (
-        <div className="w-full min-h-screen flex flex-col justify-center items-center gap-y-4">
-          <ImSpinner8 className="text-white font-bold animate-spin" size={70} />
-          <div className="text-white font-semibold text-xl">
-            Signing you in, just a moment…
-          </div>
-        </div>
-      ) : (
-        <>
-          <UserContext.Provider value={currentUser}>
-            <div className="w-full min-h-screen flex flex-col justify-start items-center gap-y-8">
-              <Sidebar />
-              {children}
+      {authChecked === true ? (
+        loading === true ? (
+          <div className="w-full min-h-screen flex flex-col justify-center items-center gap-y-4">
+            <ImSpinner8
+              className="text-white font-bold animate-spin"
+              size={70}
+            />
+            <div className="text-white font-semibold text-xl">
+              Signing you in, just a moment…
             </div>
-          </UserContext.Provider>
-        </>
+          </div>
+        ) : (
+          <>
+            <UserContext.Provider value={currentUser}>
+              <div className="w-full min-h-screen flex flex-col justify-start items-center gap-y-8">
+                <Sidebar />
+                {children}
+              </div>
+            </UserContext.Provider>
+          </>
+        )
+      ) : (
+        <> </>
       )}
     </>
   );

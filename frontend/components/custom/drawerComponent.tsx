@@ -41,10 +41,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { ImSpinner8 } from "react-icons/im";
 //React
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { createNewAccount } from "@/actions/accounts.api";
+import { UserContext } from "@/app/(dashboard)/layout";
+import { useRouter } from "next/navigation";
+
 const DrawerComponent = ({ children }: any) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const currentUser = useContext(UserContext);
   const form = useForm({
     resolver: zodResolver(accountSchema),
     defaultValues: {
@@ -52,9 +61,31 @@ const DrawerComponent = ({ children }: any) => {
       type: "CURRENT",
       balance: 0,
       isDefault: false,
+      userId: currentUser?.id || "",
     },
   });
-  async function onSubmit(values: any) {}
+  async function onSubmit(values: any) {
+    try {
+      setLoading(true);
+      const { name, type, balance, isDefault, userId } = values;
+      const response = await createNewAccount({
+        name,
+        type,
+        balance,
+        isDefault,
+        userId,
+      });
+      setLoading(false);
+      setOpen(false);
+      form.reset();
+      router.refresh();
+      return toast.success(response.data.message);
+    } catch (error: any) {
+      setLoading(false);
+      console.error(error);
+      return toast.error(error?.response?.data?.message);
+    }
+  }
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
@@ -131,6 +162,7 @@ const DrawerComponent = ({ children }: any) => {
                         {...field}
                         type="number"
                         step={"0.01"}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
                       />
                     </FormControl>
@@ -178,7 +210,11 @@ const DrawerComponent = ({ children }: any) => {
                   type="submit"
                   className="w-[45%] lg:w-[12%] h-[7.5vh] md:h-[6vh] lg:h-[7.5vh] bg-linear-to-br from-yellow-400/80 to-amber-800/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-md md:text-lg lg:text-sm hover:cursor-pointer"
                 >
-                  Create Account
+                  {loading === true ? (
+                    <ImSpinner8 className="text-white animate-spin" size={25} />
+                  ) : (
+                    "Create"
+                  )}
                 </Button>
               </div>
             </form>

@@ -19,4 +19,10 @@ const createNewAccount = async (data: createAccountData) => {
   return result;
 };
 
-export { createNewAccount };
+const getAccountsInfo = async (userId: string) => {
+  return axios.get(`http://localhost:3001/api/v1/accounts/${userId}`, {
+    withCredentials: true,
+  });
+};
+
+export { createNewAccount, getAccountsInfo };
