@@ -2,8 +2,10 @@ import {
   Body,
   Controller,
   Post,
+  Get,
   UseGuards,
   ValidationPipe,
+  Param,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create_account.dto';
@@ -13,6 +15,13 @@ import { UserLoginGuard } from 'src/user/guard/user.login.guard';
 export class AccountController {
   //Dependency Injection
   constructor(private readonly accountService: AccountService) {}
+  //Get Request
+  @Get('/:id')
+  @UseGuards(UserLoginGuard)
+  async getAccountInfo(@Param('id') id: string) {
+    const response = await this.accountService.getUserAccounts(id);
+    return response;
+  }
   //Post Request
   @Post()
   @UseGuards(UserLoginGuard)

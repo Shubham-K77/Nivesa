@@ -184,6 +184,8 @@ export class UserService {
               'Unable to create your account at this time. Please try again later.',
             );
           }
+          //Delete The Redis:
+          await this.redis.del(isValid.email);
           //Send The Mail:
           await this.mailerService.verifiedMail(userInfo.email);
           //Response:

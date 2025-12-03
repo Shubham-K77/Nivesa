@@ -3,6 +3,7 @@ import {
   BadRequestException,
   HttpException,
   Injectable,
+  NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,6 +12,49 @@ import { CreateAccountDto } from './dto/create_account.dto';
 @Injectable()
 export class AccountService {
   constructor(private readonly prisma: PrismaService) {}
+  //Get Request
+  async getUserAccounts(userId: string) {
+    try {
+      if (!userId || !userId.trim()) {
+        throw new UnauthorizedException('Missing user info!');
+      }
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException(
+          'The provided user was not found in the system.',
+        );
+      }
+      //Getting the three latest account info:
+      const accountInfo = await this.prisma.account.findMany({
+        where: { userId: userId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: {
+              transactions: true,
+            },
+          },
+        },
+        take: 3,
+      });
+      if (!accountInfo || accountInfo.length < 0) {
+        throw new NotFoundException('There was no account info!');
+      }
+      //Return The Data:
+      return {
+        message: 'Successfully Retrieved Account Info!',
+        statusCode: 200,
+        accountInfo,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error');
+    }
+  }
   //Post Request
   async createAccount(newAccountInfo: CreateAccountDto) {
     try {
