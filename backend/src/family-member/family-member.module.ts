@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+import { FamilyMemberController } from './family-member.controller';
+import { FamilyMemberService } from './family-member.service';
+import { JwtModule } from '@nestjs/jwt';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { BcryptService } from 'src/bcrypt/bcrypt.service';
+import { MailerModule } from 'src/mailer/mailer.module';
+
+@Module({
+  imports: [JwtModule, PrismaModule, BcryptService, MailerModule],
+  controllers: [FamilyMemberController],
+  providers: [FamilyMemberService],
+})
+export class FamilyMemberModule {}

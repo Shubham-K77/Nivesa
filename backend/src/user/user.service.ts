@@ -603,6 +603,7 @@ export class UserService {
           phoneNumber: userExists?.phoneNumber || '',
           name: userExists.name,
           imageUrl: userExists?.imageUrl || '',
+          role: 'user',
         },
         {
           secret: this.configService.get<string>('access_token_secret'),
@@ -616,6 +617,7 @@ export class UserService {
           phoneNumber: userExists?.phoneNumber || '',
           name: userExists.name,
           imageUrl: userExists?.imageUrl || '',
+          role: 'user',
         },
         {
           secret: this.configService.get<string>('refresh_token_secret'),

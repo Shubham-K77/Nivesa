@@ -8,6 +8,7 @@ import { RedisModule } from './redis/redis.module';
 import { BcryptModule } from './bcrypt/bcrypt.module';
 import { MailerModule } from './mailer/mailer.module';
 import { AccountModule } from './account/account.module';
+import { FamilyMemberModule } from './family-member/family-member.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AccountModule } from './account/account.module';
     BcryptModule,
     MailerModule,
     AccountModule,
+    FamilyMemberModule,
   ],
 })
 export class AppModule {

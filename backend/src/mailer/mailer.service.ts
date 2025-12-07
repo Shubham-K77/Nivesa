@@ -215,6 +215,104 @@ export class MailerService {
       throw new Error(`Internal Server Error: ${error.message}`);
     }
   }
+  //For Activating The Family Account:
+  async familyMemberInvitationMail(
+    email: string,
+    token: string,
+    adminName: string,
+  ) {
+    try {
+      const mailer = await this.configMailer();
+      const activationLink = `https://nivesa.vercel.app/family/activate/${token}`;
+      const info = await mailer.sendMail({
+        from: '"Nivēśa" <nivesa.project@gmail.com>',
+        to: `${email}`,
+        subject: '👨‍👩‍👦 Family Member Access Activation',
+        html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Family Member Invitation</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f8f9fa;
+                    margin: 0;
+                    padding: 0;
+                    color: #333;
+                }
+                .container {
+                    max-width: 540px;
+                    margin: 40px auto;
+                    background: #ffffff;
+                    border-radius: 8px;
+                    padding: 30px;
+                    border: 1px solid #e5e5e5;
+                }
+                h2 {
+                    color: #0d6efd;
+                    margin-bottom: 10px;
+                }
+                a.button {
+                    display: inline-block;
+                    padding: 12px 20px;
+                    background-color: #0d6efd;
+                    color: white !important;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    margin-top: 20px;
+                }
+                .footer {
+                    margin-top: 25px;
+                    font-size: 13px;
+                    color: #777;
+                    text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>You’ve Been Added as a Family Member</h2>
+                <p>Hello,</p>                
+                <p>
+                    <strong>${adminName}</strong> has added you as a family member in the Nivēśa platform.
+                    You now have access to the Nivēśa Family Subsystem.
+                </p>
+                <p>
+                    To activate your account and get started, click the button below:
+                </p>
+                <p>
+                    <a class="button" href="${activationLink}" target="_blank">
+                        Activate Family Access
+                    </a>
+                </p>
+                <p>
+                    Or use this link: <br />
+                    <a href="${activationLink}">${activationLink}</a>
+                </p>
+                <p>
+                    <strong>Important:</strong> This activation link is valid for <strong>3 days</strong>.  
+                    After the expiration period, you will no longer be able to authenticate using this token.
+                </p>
+                <p>Regards,<br /><strong>Nivēśa Team</strong></p>
+                <div class="footer">
+                    This is an automated message; please do not reply.
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+      });
+      console.log('Family Invitation Sent:', info.messageId);
+    } catch (error: any) {
+      console.error(error);
+      throw new Error(`Internal Server Error: ${error.message}`);
+    }
+  }
+
   //For Resetting The Password:
   async resetPasswordMail(email: string) {
     try {
