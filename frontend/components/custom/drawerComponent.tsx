@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 const accountSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  type: z.enum(["CURRENT", "SAVINGS"]),
+  type: z.enum(["CURRENT", "SAVINGS", "FAMILY"]),
   balance: z
     .number("Balance must be specified in number")
     .default(0)
@@ -48,6 +48,7 @@ import { useContext, useState } from "react";
 import { createNewAccount } from "@/actions/accounts.api";
 import { UserContext } from "@/app/(dashboard)/layout";
 import { useRouter } from "next/navigation";
+import FamilyMembersList from "./FamilyMemberFormList";
 
 const DrawerComponent = ({ children }: any) => {
   const router = useRouter();
@@ -89,11 +90,14 @@ const DrawerComponent = ({ children }: any) => {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent className="bg-gray-950/80">
+      <DrawerContent className="bg-gray-950/80 max-h-[90vh] pointer-events-auto">
         <DrawerHeader>
           <DrawerTitle className="text-white">Create New Account</DrawerTitle>
         </DrawerHeader>
-        <div>
+        <div
+          className="overflow-y-auto max-h-[70vh] px-2 pointer-events-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-gray-600"
+          onWheel={(e) => e.stopPropagation()}
+        >
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -140,6 +144,7 @@ const DrawerComponent = ({ children }: any) => {
                         <SelectContent>
                           <SelectItem value="CURRENT">Current</SelectItem>
                           <SelectItem value="SAVINGS">Savings</SelectItem>
+                          <SelectItem value="FAMILY">Family</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -147,6 +152,12 @@ const DrawerComponent = ({ children }: any) => {
                   </FormItem>
                 )}
               />
+              {/* If Type == Family */}
+              {form.watch("type") === "FAMILY" ? (
+                <div className="w-full">
+                  <FamilyMembersList />
+                </div>
+              ) : null}
               {/* Initial Balance Field */}
               <FormField
                 control={form.control}

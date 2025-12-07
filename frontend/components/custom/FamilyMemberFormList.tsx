@@ -1,0 +1,62 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/purity */
+"use client";
+import { useState } from "react";
+import FamilyMemberForm from "./FamilyMemberForm";
+
+const FamilyMembersList = () => {
+  const [members, setMembers] = useState([
+    { id: Date.now(), name: "", email: "", phoneNumber: "" },
+  ]);
+  //Update a member's data
+  const handleMemberChange = (id: number, field: any, value: any) => {
+    setMembers((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+    );
+  };
+  //Add new member's data
+  const addMember = () => {
+    setMembers([
+      ...members,
+      { id: Date.now(), name: "", email: "", phoneNumber: "" },
+    ]);
+  };
+  //Remove existing member's data
+  const removeMember = (id: any) => {
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+  };
+  const handleSubmit = async () => {
+    // Send members array
+    return members;
+  };
+  return (
+    <div className="p-2 border border-gray-700/50 rounded-2xl">
+      {members.map((member) => (
+        <FamilyMemberForm
+          key={member.id}
+          member={member}
+          onChange={handleMemberChange}
+          onRemove={removeMember}
+        />
+      ))}
+      <div className="p-1 w-full grid grid-cols-2 gap-x-4 lg:gap-x-8">
+        <button
+          type="button"
+          onClick={addMember}
+          className="w-full py-3 bg-linear-to-br from-blue-800/20 to-teal-600/50 border border-blue-400/10 transition-all ease-in-out duration-150 hover:scale-95 hover:cursor-pointer text-white rounded-lg"
+        >
+          Add New
+        </button>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="w-full py-3 bg-linear-to-br from-green-800/20 to-emerald-600/50 border border-green-400/10 transition-all ease-in-out duration-150 hover:scale-95 hover:cursor-pointer text-white rounded-lg"
+        >
+          Proceed
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default FamilyMembersList;

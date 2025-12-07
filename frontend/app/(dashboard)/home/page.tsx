@@ -28,7 +28,7 @@ const Page = () => {
       {/* Motif Display */}
       <div className="w-full bg-transparent rounded-xl mt-12 flex justify-around items-center">
         {/* Text, Description And CTA */}
-        <div className="w-full md:w-4/6 lg:w-4/6 flex flex-col p-4 justify-start items-start gap-y-4">
+        <div className="w-full md:w-4/6 lg:w-4/6 flex flex-col p-4 justify-start items-start gap-y-8">
           {/* Hero Text */}
           <div className="text-white font-bold text-5xl md:text-6xl lg:text-5xl text-left">
             Your Personal Finance Companion
