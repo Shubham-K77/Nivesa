@@ -11,20 +11,57 @@ datasource db {
 //Model For The Schema
 model User{
   id String @id @default(uuid()) //Randomly generate userId as string
-  email String @unique
+  name String
   phoneNumber String? @unique //Optional but if provided must be unique
-  name String 
-  password String //Hashed Password
   imageUrl String?
   transactions Transaction[]
   accounts Account[]
   familyMembers FamilyMember[]
+  loginCredentials LoginCredentials[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   //Index
   @@index([id])
   //Mapping The User
   @@map("users")
+}
+model FamilyMember{
+  id String @id @default(uuid()) @unique
+  name String
+  phoneNumber String? @unique
+  invitationToken String? @unique
+  invitationExpiry DateTime?
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactions Transaction[]
+  familyBudget FamilyBudget?
+  loginCredentials LoginCredentials?
+  //Mapping
+  @@unique([accountId, name])
+  @@index([accountId])
+  @@index([id])
+  @@index([userId])
+  @@map("family_members")
+}
+model LoginCredentials{
+  id String @id @default(uuid())
+  email String
+  password String
+  role LoginType //enum
+  userId String? @unique //FK
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyMemberId String? @unique //FK Optional
+  familyMember FamilyMember? @relation(fields: [familyMemberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([email, role])
+  @@index([email])
+  @@map("login_credentials")
 }
 model Account{
   id String @id @default(uuid()) @unique //Randomly generate accountId as string
@@ -43,30 +80,6 @@ model Account{
   @@index([id])
   @@unique([userId, name])   // unique per user
   @@map("accounts")
-}
-model FamilyMember{
-  id String @id @default(uuid()) @unique
-  name String
-  email String? @unique
-  password String?
-  phoneNumber String? @unique
-  invitationToken String? @unique
-  invitationExpiry DateTime?
-  accountId String
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isActive Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  transactions Transaction[]
-  familyBudget FamilyBudget?
-  //Mapping
-  @@unique([accountId, name])
-  @@index([accountId])
-  @@index([id])
-  @@index([userId])
-  @@map("family_members")
 }
 model Budget{
     id String @id @default(uuid()) @unique
@@ -122,6 +135,10 @@ model Transaction{
     @@map("transactions")
 }
 //Enum For The Schema
+enum LoginType{
+  USER
+  FAMILY_MEMBER
+}
 enum AccountType{
   CURRENT
   SAVINGS

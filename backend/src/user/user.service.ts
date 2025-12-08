@@ -72,9 +72,10 @@ export class UserService {
         );
       }
       //Check against the db
-      const emailExists = await this.prisma.user.findUnique({
+      const emailExists = await this.prisma.loginCredentials.findFirst({
         where: {
           email: newUserInfo.email,
+          role: 'USER',
         },
       });
       if (emailExists) {
@@ -175,13 +176,22 @@ export class UserService {
             `Incorrect verification code. You have ${userInfo.rate} attempt${userInfo.rate !== 1 ? 's' : ''} remaining.`,
           );
         } else {
-          //Exlcude the rate and otp:
-          const { rate, otp, ...userData } = userInfo;
-          //Insert Data Into Prisma:
+          //Exlcude the rate, otp, email, password:
+          const { rate, otp, email, password, ...userData } = userInfo;
+          //Insert into user table first
           const newUser = await this.prisma.user.create({ data: userData });
           if (!newUser) {
             throw new ServiceUnavailableException(
               'Unable to create your account at this time. Please try again later.',
+            );
+          }
+          //Insert Data Into Login Credentials Then:
+          const newLoginInfo = await this.prisma.loginCredentials.create({
+            data: { email, password, role: 'USER', userId: newUser.id },
+          });
+          if (!newLoginInfo) {
+            throw new ServiceUnavailableException(
+              'Unable to create the user at this moment. Please try again later.',
             );
           }
           //Delete The Redis:
@@ -286,9 +296,10 @@ export class UserService {
         );
       }
       //Check Against Db
-      const emailExists = await this.prisma.user.findUnique({
+      const emailExists = await this.prisma.loginCredentials.findFirst({
         where: {
           email: email,
+          role: 'USER',
         },
       });
       if (!emailExists) {
@@ -528,8 +539,8 @@ export class UserService {
         );
       }
       //Extract The Email And Check Against DB
-      const userExists = await this.prisma.user.findUnique({
-        where: { email: isValid.email },
+      const userExists = await this.prisma.loginCredentials.findFirst({
+        where: { email: isValid.email, role: 'USER' },
       });
       if (!userExists) {
         throw new NotFoundException(
@@ -538,7 +549,7 @@ export class UserService {
       }
       //Hash The Password And Reset It
       const hashedPassword = await this.bcrypt.encrypt(newPassword);
-      const updatedUserInfo = await this.prisma.user.update({
+      const updatedUserInfo = await this.prisma.loginCredentials.update({
         where: { id: userExists.id },
         data: { password: hashedPassword },
         select: { id: true },
@@ -580,12 +591,23 @@ export class UserService {
           'Must provide a password for this request',
         );
       }
-      //Check If User Exists
-      const userExists = await this.prisma.user.findUnique({
-        where: { email },
+      //Check If User Exists (no role filter - check both USER and FAMILY_MEMBER)
+      let userExists = await this.prisma.loginCredentials.findFirst({
+        where: { email, role: 'USER' },
+        include: { user: true, familyMember: true },
       });
       if (!userExists) {
+        userExists = await this.prisma.loginCredentials.findFirst({
+          where: { email, role: 'FAMILY_MEMBER' },
+          include: { user: true, familyMember: true },
+        });
+      }
+      //Throw Error:
+      if (!userExists) {
         throw new UnauthorizedException('Invalid email or password.');
+      }
+      if (userExists.familyMember && !userExists.familyMember.isActive) {
+        throw new UnauthorizedException("The user isn't permitted to access");
       }
       //Check The User's Password
       const isPasswordValid = await this.bcrypt.decrypt(
@@ -595,38 +617,74 @@ export class UserService {
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid email or password.');
       }
-      //Create The Access And Refresh Token
-      const access_token = this.jwtService.sign(
-        {
-          id: userExists.id,
-          email: userExists.email,
-          phoneNumber: userExists?.phoneNumber || '',
-          name: userExists.name,
-          imageUrl: userExists?.imageUrl || '',
-          role: 'user',
-        },
-        {
-          secret: this.configService.get<string>('access_token_secret'),
-          expiresIn: '15m',
-        },
-      );
-      const refresh_token = this.jwtService.sign(
-        {
-          id: userExists.id,
-          email: userExists.email,
-          phoneNumber: userExists?.phoneNumber || '',
-          name: userExists.name,
-          imageUrl: userExists?.imageUrl || '',
-          role: 'user',
-        },
-        {
-          secret: this.configService.get<string>('refresh_token_secret'),
-          expiresIn: '3d',
-        },
-      );
+      //Check which role has logged in and generate tokens accordingly
+      let access_token;
+      let refresh_token;
+
+      if (userExists.user) {
+        // Main user login
+        access_token = this.jwtService.sign(
+          {
+            id: userExists.user.id,
+            email: userExists.email,
+            phoneNumber: userExists.user?.phoneNumber || '',
+            name: userExists.user.name,
+            imageUrl: userExists.user?.imageUrl || '',
+            role: userExists.role,
+          },
+          {
+            secret: this.configService.get<string>('access_token_secret'),
+            expiresIn: '15m',
+          },
+        );
+        refresh_token = this.jwtService.sign(
+          {
+            id: userExists.user.id,
+            email: userExists.email,
+            phoneNumber: userExists.user?.phoneNumber || '',
+            name: userExists.user.name,
+            imageUrl: userExists.user?.imageUrl || '',
+            role: userExists.role,
+          },
+          {
+            secret: this.configService.get<string>('refresh_token_secret'),
+            expiresIn: '3d',
+          },
+        );
+      } else if (userExists.familyMember) {
+        // Family member login
+        access_token = this.jwtService.sign(
+          {
+            id: userExists.familyMember.id,
+            email: userExists.email,
+            phoneNumber: userExists.familyMember?.phoneNumber || '',
+            name: userExists.familyMember?.name || '',
+            role: userExists.role,
+          },
+          {
+            secret: this.configService.get<string>('access_token_secret'),
+            expiresIn: '15m',
+          },
+        );
+        refresh_token = this.jwtService.sign(
+          {
+            id: userExists.familyMember.id,
+            email: userExists.email,
+            phoneNumber: userExists.familyMember?.phoneNumber || '',
+            name: userExists.familyMember?.name || '',
+            role: userExists.role,
+          },
+          {
+            secret: this.configService.get<string>('refresh_token_secret'),
+            expiresIn: '3d',
+          },
+        );
+      } else {
+        throw new UnauthorizedException('Invalid credentials.');
+      }
       //Response
       return {
-        message: 'Successfully Verified.',
+        message: 'Successfully logged in.',
         statusCode: 200,
         access_token,
         refresh_token,
