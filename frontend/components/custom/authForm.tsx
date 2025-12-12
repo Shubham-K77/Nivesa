@@ -271,7 +271,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
       {/* Form UI   */}
       {type === "otp" || type === "resetOtp" ? (
         <>
-          <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-2 flex flex-col justify-start items-center">
+          <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-2 flex flex-col justify-start items-center shadow-2xl">
             {/* Title */}
             <div className="text-3xl md:text-3xl lg:text-2xl text-white font-bold text-center">
               OTP Verification
@@ -390,7 +390,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         </>
       ) : type === "resetEmail" ? (
         <>
-          <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4">
+          <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
             {/* Title */}
             <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-6">
               Recover Your Account
@@ -451,7 +451,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         </>
       ) : type === "resetPassword" ? (
         <>
-          <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4">
+          <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
             {/* Title */}
             <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-6">
               Choose a New Password
@@ -521,7 +521,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         </>
       ) : (
         // Forms For Signup And Login
-        <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4">
+        <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
           {/* Title */}
           <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-4">
             {type === "signup" ? "" : "Sign In"}

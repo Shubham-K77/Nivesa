@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import DrawerComponent from "@/components/custom/drawerComponent";
+//Icons:
 import { IoMdAdd } from "react-icons/io";
+import { GrTransaction } from "react-icons/gr";
+//React Components:
 import { useContext, useEffect, useState } from "react";
+//Shadcn Components:
 import { toast } from "sonner";
+//API Actions:
 import { getAccountsInfo } from "@/actions/accounts.api";
 import { UserContext } from "../layout";
 const Page = () => {
@@ -40,10 +45,25 @@ const Page = () => {
             financial life.
           </div>
           {/* CTA Button */}
-          <div className="w-[75%] h-[10.5vh] md:w-[60%] md:h-[7.85vh] lg:w-[26%] lg:h-[7.6vh] rounded-md bg-amber-400/80 flex justify-center items-center transition-all ease-in-out duration-150 hover:scale-105 hover:cursor-pointer hover:bg-yellow-400/80">
-            <div className="text-white font-semibold text-xl md:text-2xl lg:text-sm">
-              Create Transaction
+          <div className="w-full md:w-full lg:w-[85%] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-4">
+            {/* To Create Transaction */}
+            <div className="w-full h-[12vh] md:h-[8.5vh] lg:h-[12vh] rounded-md bg-linear-to-br from-yellow-400 via-amber-500 to-orange-500 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80 gap-x-4">
+              <GrTransaction className="text-white" size={22} />
+              <div className="text-white font-semibold text-2xl md:text-xl lg:text-lg">
+                New Transaction
+              </div>
             </div>
+            {/* To Open Account */}
+            <DrawerComponent>
+              <div className="relative w-full h-full overflow-visible isolation-isolate">
+                <div className="w-full bg-linear-to-br from-white/25 to-gray-950 backdrop-blur-md rounded-lg h-[12vh] md:h-[8.5vh] lg:h-[12vh] flex justify-center items-center gap-x-2 transition-all ease-in-out duration-150 hover:cursor-pointer">
+                  <IoMdAdd className="text-white" size={22} />
+                  <div className="text-white font-semibold text-2xl md:text-xl lg:text-lg">
+                    Add Account
+                  </div>
+                </div>
+              </div>
+            </DrawerComponent>
           </div>
         </div>
         {/* Motif */}
@@ -57,19 +77,8 @@ const Page = () => {
           }}
         ></div>
       </div>
-      {/* Drawer For Opening Account */}
-      <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-        <DrawerComponent>
-          <div className="relative w-full h-full overflow-visible isolation-isolate">
-            <div className="w-full bg-linear-to-br from-white/25 to-gray-950 backdrop-blur-md rounded-lg h-[18vh] flex justify-center items-center gap-x-2 transition-all ease-in-out duration-150 hover:cursor-pointer border">
-              <IoMdAdd className="text-white" size={32} />
-              <div className="text-white font-semibold text-2xl md:text-3xl lg:text-lg">
-                Add Account
-              </div>
-            </div>
-          </div>
-        </DrawerComponent>
-      </div>
+      {/* Cards For Showing The Current Accounts In The System */}
+      <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
     </div>
   );
 };

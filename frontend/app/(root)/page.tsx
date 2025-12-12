@@ -14,8 +14,8 @@ export default function Home() {
       <BackgroundBeamsWithCollision className="relative z-0">
         <div className="w-full h-[112vh] md:h-[85vh] lg:h-[105vh] flex flex-col justify-center items-center bg-transparent gap-y-4 relative z-10">
           {/* Tagline */}
-          <div className="w-[75%] md:w-[50%] lg:w-[20%] rounded-2xl bg-amber-500/30 border md:border-0 lg:border border-amber-400/80 flex justify-center items-center p-2 mb-6">
-            <div className="text-sm md:text-lg lg:text-sm font-semibold text-yellow-300/80 text-center">
+          <div className="w-[75%] md:w-[50%] lg:w-[20%] rounded-2xl bg-linear-to-r from-amber-500/40 to-yellow-500/40 backdrop-blur-sm border border-amber-400/60 flex justify-center items-center p-3 mb-6 shadow-lg">
+            <div className="text-sm md:text-lg lg:text-sm font-semibold text-yellow-200 text-center">
               🧠 Powered by AI & Machine Learning
             </div>
           </div>
@@ -41,17 +41,17 @@ export default function Home() {
             </div>
           </div>
           {/* CTA */}
-          <div className="w-[85%] h-[10.5vh] md:w-[55%] md:h-[8.5vh] lg:w-[20%] lg:h-[8.5vh] rounded-lg bg-yellow-400/70 flex justify-center items-center hover:cursor-pointer transition-all ease-in-out duration-150 hover:scale-95 hover:bg-amber-500/80">
-            <div className="text-xl md:text-2xl lg:text-[1.10rem] font-bold text-white">
+          <div className="w-[85%] h-[10.5vh] md:w-[55%] md:h-[8.5vh] lg:w-[20%] lg:h-[8.5vh] rounded-xl bg-linear-to-r from-yellow-400 to-amber-500 flex justify-center items-center hover:cursor-pointer transition-all ease-in-out duration-200 hover:scale-105 shadow-2xl hover:shadow-yellow-500/50 border border-yellow-300/30">
+            <div className="text-xl md:text-2xl lg:text-[1.10rem] font-bold text-white drop-shadow-md">
               Take Control Now!
             </div>
           </div>
         </div>
       </BackgroundBeamsWithCollision>
       {/* Features Section */}
-      <div className="w-full lg:h-[150vh] flex flex-col justify-center items-center text-center relative py-12 bg-black/80">
+      <div className="w-full lg:h-[150vh] flex flex-col justify-center items-center text-center relative py-16 bg-linear-to-b from-black/90 via-black/80 to-black/90">
         {/* Title Section */}
-        <div className="mb-6">
+        <div className="mb-8">
           {/* Title And Description */}
           <div className="relative inline-block">
             {/* Title */}
@@ -77,7 +77,7 @@ export default function Home() {
             </svg>
           </div>
           {/* Description */}
-          <p className="text-gray-300/80 mt-6 text-md p-2">
+          <p className="text-gray-200/90 mt-6 text-md p-2 max-w-3xl mx-auto">
             Our intelligent platform provides comprehensive financial management
             tailored to your income and spending needs.
           </p>
@@ -188,9 +188,9 @@ export default function Home() {
         </div>
       </div>
       {/* Pricing Section */}
-      <div className="w-full lg:h-[150vh] bg-black/80 flex flex-col justify-center items-center text-center relative py-12 gap-y-4">
+      <div className="w-full lg:h-[150vh] bg-linear-to-b from-black/90 via-gray-900/80 to-black/90 flex flex-col justify-center items-center text-center relative py-16 gap-y-4">
         {/* Title Section */}
-        <div className="mb-6">
+        <div className="mb-8">
           {/* Title And Description */}
           <div className="relative inline-block">
             {/* Title */}
@@ -273,8 +273,8 @@ export default function Home() {
         </div>
       </div>
       {/* Banner */}
-      <div className="w-full px-4 sm:px-8 md:px-12 pt-0 pb-20 bg-black/80">
-        <div className="max-w-7xl mx-auto bg-linear-to-br from-yellow-600 via-amber-400 to-amber-800 p-8 sm:p-10 md:p-12 text-center shadow-xl rounded-2xl backdrop-blur-md">
+      <div className="w-full px-4 sm:px-8 md:px-12 pt-0 pb-20 bg-linear-to-b from-black/90 to-black/95">
+        <div className="max-w-7xl mx-auto bg-linear-to-br from-yellow-500 via-amber-500 to-orange-600 p-8 sm:p-10 md:p-12 text-center shadow-2xl rounded-3xl backdrop-blur-sm border border-yellow-400/20">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Take Control of Your Finances?
           </h2>
@@ -284,11 +284,11 @@ export default function Home() {
             future.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button className="bg-white text-yellow-600 font-semibold px-8 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 hover:cursor-pointer hover:scale-105 shadow-lg flex items-center gap-2">
+            <button className="bg-white text-amber-600 font-bold px-8 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 hover:cursor-pointer hover:scale-105 shadow-xl hover:shadow-2xl flex items-center gap-2">
               Start Today
               <FaArrowRight className="text-sm" />
             </button>
-            <button className="border-2 border-white/40 text-white font-semibold px-8 py-3 rounded-lg hover:cursor-pointer hover:bg-white/20 transition-all duration-200 hover:scale-105">
+            <button className="border-2 border-white/50 text-white font-bold px-8 py-3 rounded-xl hover:cursor-pointer hover:bg-white/30 transition-all duration-200 hover:scale-105 shadow-lg">
               View Pricing
             </button>
           </div>

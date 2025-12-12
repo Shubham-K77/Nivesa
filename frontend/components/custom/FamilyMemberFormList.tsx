@@ -3,6 +3,7 @@
 "use client";
 import { useState } from "react";
 import FamilyMemberForm from "./FamilyMemberForm";
+import { IoPersonAddOutline } from "react-icons/io5";
 
 const FamilyMembersList = () => {
   const [members, setMembers] = useState([
@@ -25,10 +26,6 @@ const FamilyMembersList = () => {
   const removeMember = (id: any) => {
     setMembers((prev) => prev.filter((m) => m.id !== id));
   };
-  const handleSubmit = async () => {
-    // Send members array
-    return members;
-  };
   return (
     <div className="p-2 border border-gray-700/50 rounded-2xl">
       {members.map((member) => (
@@ -39,20 +36,14 @@ const FamilyMembersList = () => {
           onRemove={removeMember}
         />
       ))}
-      <div className="p-1 w-full grid grid-cols-2 gap-x-4 lg:gap-x-8">
+      <div className="p-1 w-full grid grid-cols-1">
         <button
           type="button"
           onClick={addMember}
-          className="w-full py-3 bg-linear-to-br from-blue-800/20 to-teal-600/50 border border-blue-400/10 transition-all ease-in-out duration-150 hover:scale-95 hover:cursor-pointer text-white rounded-lg"
+          className="w-full py-3 bg-linear-to-br from-blue-800/20 to-teal-600/50 border border-blue-400/10 transition-all ease-in-out duration-150 hover:scale-95 hover:cursor-pointer rounded-lg flex justify-center items-center gap-x-4"
         >
-          Add New
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="w-full py-3 bg-linear-to-br from-green-800/20 to-emerald-600/50 border border-green-400/10 transition-all ease-in-out duration-150 hover:scale-95 hover:cursor-pointer text-white rounded-lg"
-        >
-          Proceed
+          <IoPersonAddOutline className="text-white" size={22} />
+          <div className="text-white font-semibold">New Family Member</div>
         </button>
       </div>
     </div>

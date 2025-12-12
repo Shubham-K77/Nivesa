@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 //Form Component
@@ -69,18 +70,21 @@ const DrawerComponent = ({ children }: any) => {
     try {
       setLoading(true);
       const { name, type, balance, isDefault, userId } = values;
-      const response = await createNewAccount({
-        name,
-        type,
-        balance,
-        isDefault,
-        userId,
-      });
-      setLoading(false);
-      setOpen(false);
-      form.reset();
-      router.refresh();
-      return toast.success(response.data.message);
+      let response;
+      if (type === "CURRENT" || type === "SAVINGS") {
+        response = await createNewAccount({
+          name,
+          type,
+          balance,
+          isDefault,
+          userId,
+        });
+        setLoading(false);
+        setOpen(false);
+        form.reset();
+        router.refresh();
+      }
+      return toast.success(response?.data.message);
     } catch (error: any) {
       setLoading(false);
       console.error(error);
