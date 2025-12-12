@@ -9,9 +9,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAccountDto } from './dto/create_account.dto';
+import { createFamilyAccountDto } from './dto/create_family_account.dto';
+import { FamilyMemberService } from 'src/family-member/family-member.service';
+import { FamilyMemberDto } from 'src/family-member/dto/familyMember.create.dto';
 @Injectable()
 export class AccountService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly familyMemberService: FamilyMemberService,
+  ) {}
   //Get Request
   async getUserAccounts(userId: string) {
     try {
@@ -31,9 +37,15 @@ export class AccountService {
         where: { userId: userId },
         orderBy: { createdAt: 'desc' },
         include: {
-          _count: {
+          transactions: true,
+          familyMembers: {
             select: {
-              transactions: true,
+              id: true,
+              name: true,
+              phoneNumber: true,
+              accountId: true,
+              userId: true,
+              isActive: true,
             },
           },
         },
@@ -106,6 +118,96 @@ export class AccountService {
       throw new ServiceUnavailableException(
         'Internal Server Error, Failed To Create New Account',
       );
+    }
+  }
+  //Create New Family Memeber
+  async createNewFamilyMember(newFamilyMember: FamilyMemberDto) {
+    try {
+      return await this.familyMemberService.register(newFamilyMember);
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException(
+        'Error, while creating the new member.',
+      );
+    }
+  }
+  //Create New Family Account
+  async createFamilyAccount(newFamilyAccount: createFamilyAccountDto) {
+    try {
+      if (!newFamilyAccount.userId || !newFamilyAccount.userId.trim()) {
+        throw new BadRequestException(
+          'Must provide a user info for this request.',
+        );
+      }
+      //Check The User
+      const userExists = await this.prisma.user.findFirst({
+        where: {
+          id: newFamilyAccount.userId,
+        },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException("The provided user doesn't exist.");
+      }
+      //Validate family member Info
+      if (
+        !newFamilyAccount.familyMemberInfo ||
+        newFamilyAccount.familyMemberInfo.length === 0
+      ) {
+        throw new BadRequestException(
+          "Add at least one family member's details to continue.",
+        );
+      }
+      //If This is only account make this default
+      const existingAccounts = await this.prisma.account.findMany({
+        where: {
+          userId: userExists.id,
+        },
+      });
+      if (existingAccounts.length === 0) {
+        newFamilyAccount.isDefault = true;
+      } else if (newFamilyAccount.isDefault === true) {
+        await this.prisma.account.updateMany({
+          where: { userId: newFamilyAccount.userId },
+          data: { isDefault: false },
+        });
+      }
+      //Create a new Account
+      const { familyMemberInfo, ...newAccountInfo } = newFamilyAccount;
+      const newAccount = await this.prisma.account.create({
+        data: {
+          userId: newAccountInfo.userId,
+          name: newAccountInfo.name,
+          type: newAccountInfo.type,
+          balance: newAccountInfo.balance ?? 0,
+          isDefault: newAccountInfo.isDefault ?? false,
+        },
+      });
+      if (!newAccount) {
+        throw new ServiceUnavailableException(
+          'Account creation failed. Please check the details and retry.',
+        );
+      }
+      //Loop Through The Family Member And Send It To Family Member Create Method
+      for (const familyMember of familyMemberInfo) {
+        await this.createNewFamilyMember({
+          ...familyMember,
+          accountId: newAccount.id,
+          userId: newFamilyAccount.userId,
+        });
+      }
+      //Response
+      return {
+        message: 'Successfully Created New Account!',
+        statusCode: 201,
+        account: newAccount,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error');
     }
   }
 }

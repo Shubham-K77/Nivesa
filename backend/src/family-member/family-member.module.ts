@@ -3,12 +3,13 @@ import { FamilyMemberController } from './family-member.controller';
 import { FamilyMemberService } from './family-member.service';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { BcryptService } from 'src/bcrypt/bcrypt.service';
 import { MailerModule } from 'src/mailer/mailer.module';
+import { BcryptModule } from 'src/bcrypt/bcrypt.module';
 
 @Module({
-  imports: [JwtModule, PrismaModule, BcryptService, MailerModule],
+  imports: [JwtModule, PrismaModule, BcryptModule, MailerModule],
   controllers: [FamilyMemberController],
   providers: [FamilyMemberService],
+  exports: [FamilyMemberService],
 })
 export class FamilyMemberModule {}

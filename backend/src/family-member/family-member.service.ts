@@ -70,12 +70,6 @@ export class FamilyMemberService {
           where: { id: newFamilyMember.id },
           data: { invitationToken, invitationExpiry },
         });
-        //Send The Email To Setup The Account
-        await this.mailer.familyMemberInvitationMail(
-          email,
-          invitationToken,
-          userExists.name,
-        );
         //Create new login credential:
         const newLoginCredential = await this.prisma.loginCredentials.create({
           data: {
@@ -90,6 +84,12 @@ export class FamilyMemberService {
             'Unable to create the new family member!',
           );
         }
+        //Send The Email To Setup The Account
+        await this.mailer.familyMemberInvitationMail(
+          email,
+          invitationToken,
+          userExists.name,
+        );
       } else {
         message = 'Successfully Added The New Family Member!';
       }

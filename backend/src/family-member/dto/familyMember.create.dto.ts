@@ -35,10 +35,10 @@ export class FamilyMemberDto {
   @IsOptional()
   invitationExpiry?: Date;
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   accountId: string;
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   userId: string;
   @IsBoolean()
   @IsOptional()
