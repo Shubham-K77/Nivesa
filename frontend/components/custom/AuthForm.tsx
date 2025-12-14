@@ -40,6 +40,7 @@ import {
 } from "@/actions/users.api";
 //Icons
 import { ImSpinner8 } from "react-icons/im";
+import { setFamilyMemberPassword } from "@/actions/familyMembers.api";
 //Schema For Signup
 const signupSchema = z.object({
   email: z.string().email(),
@@ -100,7 +101,8 @@ type AuthFormProps = {
     | "otp"
     | "resetEmail"
     | "resetOtp"
-    | "resetPassword";
+    | "resetPassword"
+    | "setPasswordFamilyMember";
   token?: string; // optional token
 };
 const AuthForm = ({ type, token }: AuthFormProps) => {
@@ -144,14 +146,15 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
     defaultValues = {
       email: "",
     };
-  } else {
+  } else if (type === "resetPassword" || type === "setPasswordFamilyMember") {
     selectedSchema = resetPasswordSchema;
     defaultValues = {
       newPassword: "",
       confirmPassword: "",
     };
+  } else {
+    throw new Error(`Invalid auth form type: ${type}`);
   }
-
   const form = useForm<any>({
     resolver: zodResolver(selectedSchema),
     defaultValues,
@@ -224,7 +227,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         setLoading(false);
         return toast.error(error?.response?.data?.message);
       }
-    } else {
+    } else if (type === "resetPassword") {
       try {
         setLoading(true);
         const { newPassword } = values;
@@ -235,6 +238,21 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         setLoading(false);
         toast.success(response.data.message);
         return router.push(`/login`);
+      } catch (error: any) {
+        setLoading(false);
+        return toast.error(error?.response?.data?.message);
+      }
+    } else {
+      try {
+        setLoading(true);
+        const { newPassword } = values;
+        const response = await setFamilyMemberPassword({
+          token: token || "",
+          newPassword,
+        });
+        setLoading(false);
+        toast.success(response.data.message);
+        return router.push("/login");
       } catch (error: any) {
         setLoading(false);
         return toast.error(error?.response?.data?.message);
@@ -449,7 +467,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
             </Form>
           </div>
         </>
-      ) : type === "resetPassword" ? (
+      ) : type === "resetPassword" || type === "setPasswordFamilyMember" ? (
         <>
           <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
             {/* Title */}
