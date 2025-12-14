@@ -1,6 +1,6 @@
 //Client Component
 "use client";
-import AuthForm from "@/components/custom/authForm";
+import AuthForm from "@/components/custom/AuthForm";
 import { useParams } from "next/navigation";
 
 const OtpValidationPage = () => {

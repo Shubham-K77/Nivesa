@@ -1,8 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 // ShadCn Components
-import DisplayCard from "@/components/custom/displayCard";
-import HowItWorksCard from "@/components/custom/howItWorksCard";
-import SubscriptionCard from "@/components/custom/subscriptionCard";
+import DisplayCard from "@/components/custom/DisplayCard";
+import HowItWorksCard from "@/components/custom/HowItWorksCard";
+import SubscriptionCard from "@/components/custom/SubscriptionCard";
 import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision";
 //Icons:
 import { FaArrowRight } from "react-icons/fa";

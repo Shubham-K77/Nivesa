@@ -48,11 +48,9 @@ import { ImSpinner8 } from "react-icons/im";
 import { useContext, useState } from "react";
 import { createNewAccount } from "@/actions/accounts.api";
 import { UserContext } from "@/app/(dashboard)/layout";
-import { useRouter } from "next/navigation";
 import FamilyMembersList from "./FamilyMemberFormList";
 
-const DrawerComponent = ({ children }: any) => {
-  const router = useRouter();
+const DrawerComponent = ({ children, onSuccess }: any) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const currentUser = useContext(UserContext);
@@ -79,12 +77,12 @@ const DrawerComponent = ({ children }: any) => {
           isDefault,
           userId,
         });
+        toast.success(response?.data.message);
         setLoading(false);
         setOpen(false);
         form.reset();
-        router.refresh();
+        if (onSuccess) onSuccess();
       }
-      return toast.success(response?.data.message);
     } catch (error: any) {
       setLoading(false);
       console.error(error);

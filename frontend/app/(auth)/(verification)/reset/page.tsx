@@ -1,4 +1,4 @@
-import AuthForm from "@/components/custom/authForm";
+import AuthForm from "@/components/custom/AuthForm";
 import React from "react";
 
 const ResetPage = () => {

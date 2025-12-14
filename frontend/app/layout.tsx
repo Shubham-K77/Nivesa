@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
-import LenisProvider from "../components/custom/lenisProvider";
+import LenisProvider from "../components/custom/LenisProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {

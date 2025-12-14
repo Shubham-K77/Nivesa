@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCurrentUser } from "../../actions/users.api";
 import { toast } from "sonner";
 import { ImSpinner8 } from "react-icons/im";
-import Sidebar from "@/components/custom/sidebar";
+import Sidebar from "@/components/custom/Sidebar";
 
 export const UserContext = createContext<{
   id: string;
@@ -14,6 +14,7 @@ export const UserContext = createContext<{
   name: string;
   imageUrl?: string;
   iat?: number;
+  role: "USER" | "FAMILY_MEMBER";
 } | null>(null);
 
 export default function DashboardLayout({
@@ -30,6 +31,7 @@ export default function DashboardLayout({
     name: string;
     imageUrl?: string;
     iat?: number;
+    role: "USER" | "FAMILY_MEMBER";
   } | null>(null);
 
   useEffect(() => {

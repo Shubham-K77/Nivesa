@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import DrawerComponent from "@/components/custom/drawerComponent";
+import DrawerComponent from "@/components/custom/DrawerComponent";
 //Icons:
 import { IoMdAdd } from "react-icons/io";
 import { GrTransaction } from "react-icons/gr";
@@ -8,14 +8,19 @@ import { GrTransaction } from "react-icons/gr";
 import { useContext, useEffect, useState } from "react";
 //Shadcn Components:
 import { toast } from "sonner";
+//My Components:
+import AccountInfoCard from "@/components/custom/AccountInfoCard";
 //API Actions:
 import { getAccountsInfo } from "@/actions/accounts.api";
 import { UserContext } from "../layout";
+//Type Definition:
+
 const Page = () => {
-  const [accountInfo, setAccountInfo] = useState({});
+  const [accountInfo, setAccountInfo] = useState([]);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
   const currentUser = useContext(UserContext);
   useEffect(() => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id || currentUser?.role !== "USER") return;
     const fetchAccountsInfo = async () => {
       try {
         const response = await getAccountsInfo(currentUser?.id);
@@ -27,7 +32,7 @@ const Page = () => {
       }
     };
     fetchAccountsInfo();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.role, refetchTrigger]);
   return (
     <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
       {/* Motif Display */}
@@ -54,7 +59,9 @@ const Page = () => {
               </div>
             </div>
             {/* To Open Account */}
-            <DrawerComponent>
+            <DrawerComponent
+              onSuccess={() => setRefetchTrigger((prev) => prev + 1)}
+            >
               <div className="relative w-full h-full overflow-visible isolation-isolate">
                 <div className="w-full bg-linear-to-br from-white/25 to-gray-950 backdrop-blur-md rounded-lg h-[12vh] md:h-[8.5vh] lg:h-[12vh] flex justify-center items-center gap-x-2 transition-all ease-in-out duration-150 hover:cursor-pointer">
                   <IoMdAdd className="text-white" size={22} />
@@ -78,7 +85,11 @@ const Page = () => {
         ></div>
       </div>
       {/* Cards For Showing The Current Accounts In The System */}
-      <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
+      <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
+        {accountInfo.map((account) => (
+          <AccountInfoCard key={account.id} accountInfo={account} />
+        ))}
+      </div>
     </div>
   );
 };
