@@ -16,7 +16,8 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create_user.dto';
 import type { Response, Request } from 'express';
-import { UserLoginGuard } from './guard/user.login.guard';
+import { UserLoginGuard } from 'src/guard/user.login.guard';
+import { RestrictFamilyMemberGuard } from 'src/guard/restrict-familyMember.guard';
 
 @Controller('users')
 export class UserController {
@@ -25,7 +26,7 @@ export class UserController {
   //1. Get Requests:
   //Get All The Users Info
   @Get()
-  @UseGuards(UserLoginGuard)
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
   async getAllUsers() {
     const result = await this.userService.getAllUsers();
     return result;

@@ -223,7 +223,7 @@ export class MailerService {
   ) {
     try {
       const mailer = await this.configMailer();
-      const activationLink = `https://nivesa.vercel.app/family/activate/${token}`;
+      const activationLink = `http://localhost:3000/family/activate/${token}`; //Replace it with deployed frontend
       const info = await mailer.sendMail({
         from: '"Nivēśa" <nivesa.project@gmail.com>',
         to: `${email}`,

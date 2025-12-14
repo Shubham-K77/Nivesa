@@ -29,6 +29,7 @@ model FamilyMember{
   id String @id @default(uuid()) @unique
   name String
   phoneNumber String? @unique
+  imageUrl String? 
   invitationToken String? @unique
   invitationExpiry DateTime?
   accountId String

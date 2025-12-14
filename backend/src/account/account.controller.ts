@@ -9,8 +9,9 @@ import {
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create_account.dto';
-import { UserLoginGuard } from 'src/user/guard/user.login.guard';
+import { UserLoginGuard } from 'src/guard/user.login.guard';
 import { createFamilyAccountDto } from './dto/create_family_account.dto';
+import { RestrictFamilyMemberGuard } from 'src/guard/restrict-familyMember.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -18,7 +19,7 @@ export class AccountController {
   constructor(private readonly accountService: AccountService) {}
   //Get Request
   @Get('/:id')
-  @UseGuards(UserLoginGuard)
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
   async getAccountInfo(@Param('id') id: string) {
     const response = await this.accountService.getUserAccounts(id);
     return response;
@@ -26,7 +27,7 @@ export class AccountController {
   //Post Request
   //i. Create New Account: 'CURRENT' || 'SAVINGS'
   @Post()
-  @UseGuards(UserLoginGuard)
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
   async createNewAccount(
     @Body(new ValidationPipe()) accountInfo: CreateAccountDto,
   ) {
@@ -35,7 +36,7 @@ export class AccountController {
   }
   //ii. Create New Account: 'Family'
   @Post('/family')
-  @UseGuards(UserLoginGuard)
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
   async createNewFamilyAccount(
     @Body(new ValidationPipe()) familyAccountInfo: createFamilyAccountDto,
   ) {

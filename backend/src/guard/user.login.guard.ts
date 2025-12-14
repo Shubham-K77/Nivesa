@@ -8,7 +8,6 @@ import {
   CanActivate,
   ExecutionContext,
   HttpException,
-  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
