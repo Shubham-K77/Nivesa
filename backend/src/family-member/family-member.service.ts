@@ -65,7 +65,7 @@ export class FamilyMemberService {
         message =
           'New member added successfully. Please verify the email within 3 days to access the system.';
         const invitationToken = crypto.randomBytes(32).toString('hex');
-        const invitationExpiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        const invitationExpiry = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
         await this.prisma.familyMember.update({
           where: { id: newFamilyMember.id },
           data: { invitationToken, invitationExpiry },

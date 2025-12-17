@@ -294,7 +294,7 @@ export class MailerService {
                     <a href="${activationLink}">${activationLink}</a>
                 </p>
                 <p>
-                    <strong>Important:</strong> This activation link is valid for <strong>3 days</strong>.  
+                    <strong>Important:</strong> This activation link is valid for <strong>1 day</strong>.  
                     After the expiration period, you will no longer be able to authenticate using this token.
                 </p>
                 <p>Regards,<br /><strong>Nivēśa Team</strong></p>
