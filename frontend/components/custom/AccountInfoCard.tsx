@@ -70,7 +70,7 @@ const AccountInfoCard = ({ accountInfo }: { accountInfo: accountDetails }) => {
         </div>
       </div>
       {/* Created At & Members Display */}
-      <div className="w-full flex justify-around items-center mb-4">
+      <div className="w-full flex justify-center items-center mb-4 gap-x-4">
         {/* Created At */}
         <div className="text-md md:text-lg lg:text-sm text-gray-400/80">
           Created At: {new Date(accountInfo.createdAt).toLocaleDateString()}

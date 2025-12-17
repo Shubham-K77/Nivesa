@@ -46,14 +46,20 @@ import { toast } from "sonner";
 import { ImSpinner8 } from "react-icons/im";
 //React
 import { useContext, useState } from "react";
-import { createNewAccount } from "@/actions/accounts.api";
+import {
+  createNewAccount,
+  createNewFamilyAccount,
+} from "@/actions/accounts.api";
 import { UserContext } from "@/app/(dashboard)/layout";
-import FamilyMembersList from "./FamilyMemberFormList";
+import FamilyMembersList, { FamilyMember } from "./FamilyMemberFormList";
 
 const DrawerComponent = ({ children, onSuccess }: any) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const currentUser = useContext(UserContext);
+  const [members, setMembers] = useState<FamilyMember[]>([
+    { id: Date.now(), name: "", email: "", phoneNumber: "" },
+  ]);
   const form = useForm({
     resolver: zodResolver(accountSchema),
     defaultValues: {
@@ -76,6 +82,26 @@ const DrawerComponent = ({ children, onSuccess }: any) => {
           balance,
           isDefault,
           userId,
+        });
+        toast.success(response?.data.message);
+        setLoading(false);
+        setOpen(false);
+        form.reset();
+        if (onSuccess) onSuccess();
+      } else {
+        //Creating the family account
+        const familyMemberInfo = members.map(({ id, ...rest }) => ({
+          name: rest.name,
+          email: rest.email || undefined,
+          phoneNumber: rest.phoneNumber || undefined,
+        }));
+        response = await createNewFamilyAccount({
+          name,
+          type,
+          balance,
+          isDefault,
+          userId,
+          familyMemberInfo,
         });
         toast.success(response?.data.message);
         setLoading(false);
@@ -157,7 +183,10 @@ const DrawerComponent = ({ children, onSuccess }: any) => {
               {/* If Type == Family */}
               {form.watch("type") === "FAMILY" ? (
                 <div className="w-full">
-                  <FamilyMembersList />
+                  <FamilyMembersList
+                    members={members}
+                    setMembers={setMembers}
+                  />
                 </div>
               ) : null}
               {/* Initial Balance Field */}

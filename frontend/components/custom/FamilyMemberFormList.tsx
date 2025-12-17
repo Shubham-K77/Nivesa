@@ -1,14 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/purity */
 "use client";
-import { useState } from "react";
 import FamilyMemberForm from "./FamilyMemberForm";
 import { IoPersonAddOutline } from "react-icons/io5";
 
-const FamilyMembersList = () => {
-  const [members, setMembers] = useState([
-    { id: Date.now(), name: "", email: "", phoneNumber: "" },
-  ]);
+export interface FamilyMember {
+  id: number;
+  name: string;
+  email?: string;
+  phoneNumber?: string;
+}
+
+interface FamilyMembersListProps {
+  members: FamilyMember[];
+  setMembers: React.Dispatch<React.SetStateAction<FamilyMember[]>>;
+}
+
+const FamilyMembersList = ({ members, setMembers }: FamilyMembersListProps) => {
   //Update a member's data
   const handleMemberChange = (id: number, field: any, value: any) => {
     setMembers((prev) =>
