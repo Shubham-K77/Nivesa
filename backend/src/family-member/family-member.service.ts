@@ -49,8 +49,55 @@ export class FamilyMemberService {
           "The provided account doesn't exist on the system.",
         );
       }
-      //Create the familyMember Account And LoginCredential
+      //Check if family member with same name already exists for this user
+      const existingFamilyMember = await this.prisma.familyMember.findFirst({
+        where: {
+          userId: familyMemberInfo.userId,
+          name: familyMemberInfo.name,
+        },
+      });
+      if (existingFamilyMember) {
+        return {
+          message:
+            'This family member already exists in your account. No new member was created.',
+          statusCode: 200,
+          newFamilyMember: existingFamilyMember,
+        };
+      }
+      //Check if login credentials with same email already exist for FAMILY_MEMBER role
       const { email, ...userData } = familyMemberInfo;
+      if (email?.trim()) {
+        const existingLoginCredential =
+          await this.prisma.loginCredentials.findFirst({
+            where: {
+              email: email,
+              role: 'FAMILY_MEMBER',
+            },
+            include: {
+              familyMember: true,
+            },
+          });
+        if (existingLoginCredential && existingLoginCredential.familyMember) {
+          // Email exists - check if it belongs to the same person
+          if (
+            existingLoginCredential.familyMember.name === familyMemberInfo.name
+          ) {
+            // Same person, same email - return success (already exists)
+            return {
+              message:
+                'This family member already exists in the system. No new member was created.',
+              statusCode: 200,
+              newFamilyMember: existingLoginCredential.familyMember,
+            };
+          } else {
+            // Different person trying to use the same email - throw error
+            throw new BadRequestException(
+              'This email is already registered to another family member. Please use a different email address.',
+            );
+          }
+        }
+      }
+      //Create the familyMember Account And LoginCredential
       let message: string;
       const newFamilyMember = await this.prisma.familyMember.create({
         data: userData,

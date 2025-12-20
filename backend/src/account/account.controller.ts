@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Body,
   Controller,
@@ -6,22 +8,26 @@ import {
   UseGuards,
   ValidationPipe,
   Param,
+  Req,
+  Patch,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create_account.dto';
 import { UserLoginGuard } from 'src/guard/user.login.guard';
 import { createFamilyAccountDto } from './dto/create_family_account.dto';
 import { RestrictFamilyMemberGuard } from 'src/guard/restrict-familyMember.guard';
+import type { Request } from 'express';
 
 @Controller('/accounts')
 export class AccountController {
   //Dependency Injection
   constructor(private readonly accountService: AccountService) {}
   //Get Request
-  @Get('/:id')
+  @Get('/')
   @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
-  async getAccountInfo(@Param('id') id: string) {
-    const response = await this.accountService.getUserAccounts(id);
+  async getAccountInfo(@Req() req: Request) {
+    const userId: string = req.current_user!.id;
+    const response = await this.accountService.getUserAccounts(userId);
     return response;
   }
   //Post Request
@@ -43,5 +49,14 @@ export class AccountController {
     const result =
       await this.accountService.createFamilyAccount(familyAccountInfo);
     return result;
+  }
+  //iii. Patch change the isDefault Flag
+  @Patch('/:id')
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
+  async updateIsDefaultFlag(@Req() req: Request, @Param('id') id: string) {
+    // @typescript-eslint/no-unsafe-member-access
+    const userId: string = req.current_user!.id;
+    const response = await this.accountService.makeAccountDefault(userId, id);
+    return response;
   }
 }

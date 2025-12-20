@@ -190,24 +190,81 @@ export class AccountService {
         );
       }
       //Loop Through The Family Member And Send It To Family Member Create Method
+      const memberResults: any[] = [];
       for (const familyMember of familyMemberInfo) {
-        await this.createNewFamilyMember({
+        const result = await this.createNewFamilyMember({
           ...familyMember,
           accountId: newAccount.id,
           userId: newFamilyAccount.userId,
         });
+        memberResults.push(result);
       }
       //Response
       return {
         message: 'Successfully Created New Account!',
         statusCode: 201,
         account: newAccount,
+        memberResults,
       };
     } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;
       }
       throw new ServiceUnavailableException('Internal Server Error');
+    }
+  }
+  //Make the account the default account:
+  async makeAccountDefault(userId: string, accountId: string) {
+    try {
+      //Get the account exists:
+      const accountExists = await this.prisma.account.findFirst({
+        where: {
+          id: accountId,
+          userId: userId,
+        },
+      });
+      if (!accountExists) {
+        throw new NotFoundException(
+          'The provided account not found in the system.',
+        );
+      }
+      //Update other accounts:
+      await this.prisma.account.updateMany({
+        where: {
+          userId: userId,
+          isDefault: true,
+        },
+        data: {
+          isDefault: false,
+        },
+      });
+      //Make the current account default:
+      const account = await this.prisma.account.update({
+        where: {
+          id: accountId,
+          userId: userId,
+        },
+        data: {
+          isDefault: true,
+        },
+      });
+      if (!account) {
+        throw new ServiceUnavailableException(
+          "The account update didn't occurred.",
+        );
+      }
+      //Return
+      return {
+        message: 'This account is now set as your default.',
+        statusCode: 200,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException(
+        'Unable to proceed the operations.',
+      );
     }
   }
 }

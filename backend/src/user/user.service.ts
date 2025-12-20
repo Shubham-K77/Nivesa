@@ -286,7 +286,7 @@ export class UserService {
       );
     }
   }
-  //iv.1) Reset The Password
+  //iv.1) Reset The Password For Both User and Family Member
   async resetPasswordEmail(email: string) {
     try {
       //Check the email, whether it is valid
@@ -296,16 +296,26 @@ export class UserService {
         );
       }
       //Check Against Db
-      const emailExists = await this.prisma.loginCredentials.findFirst({
+      const userExists = await this.prisma.loginCredentials.findFirst({
         where: {
           email: email,
           role: 'USER',
         },
       });
-      if (!emailExists) {
-        throw new BadRequestException(
-          'No account found with this email address. Please check your email or sign up for a new account.',
+      if (!userExists) {
+        const familyMemberExists = await this.prisma.loginCredentials.findFirst(
+          {
+            where: {
+              email: email,
+              role: 'FAMILY_MEMBER',
+            },
+          },
         );
+        if (!familyMemberExists) {
+          throw new UnauthorizedException(
+            'No account found with this email address. Please check your email or sign up for a new account.',
+          );
+        }
       }
       //Redis Payload
       const newOtp = randomInt(
@@ -510,7 +520,7 @@ export class UserService {
       );
     }
   }
-  //iv.4) Reset With The New Password
+  //iv.4) Reset With The New Password For Both User and Family Member
   async resetPassword(token: string, newPassword: string) {
     try {
       //Check the provided informations:
@@ -542,18 +552,33 @@ export class UserService {
       const userExists = await this.prisma.loginCredentials.findFirst({
         where: { email: isValid.email, role: 'USER' },
       });
+      let familyMemberExists;
       if (!userExists) {
-        throw new NotFoundException(
-          'Account not found. Please contact support if you believe this is an error.',
-        );
+        familyMemberExists = await this.prisma.loginCredentials.findFirst({
+          where: { email: isValid.email, role: 'FAMILY_MEMBER' },
+        });
+        if (!familyMemberExists) {
+          throw new NotFoundException(
+            'Account not found. Please contact support if you believe this is an error.',
+          );
+        }
       }
       //Hash The Password And Reset It
       const hashedPassword = await this.bcrypt.encrypt(newPassword);
-      const updatedUserInfo = await this.prisma.loginCredentials.update({
-        where: { id: userExists.id },
-        data: { password: hashedPassword },
-        select: { id: true },
-      });
+      let updatedUserInfo;
+      if (userExists) {
+        updatedUserInfo = await this.prisma.loginCredentials.update({
+          where: { id: userExists.id },
+          data: { password: hashedPassword },
+          select: { id: true },
+        });
+      } else if (familyMemberExists) {
+        updatedUserInfo = await this.prisma.loginCredentials.update({
+          where: { id: familyMemberExists.id },
+          data: { password: hashedPassword },
+          select: { id: true },
+        });
+      }
       if (!updatedUserInfo) {
         throw new ServiceUnavailableException(
           'Unable to update your password at this time. Please try again later.',
@@ -562,7 +587,11 @@ export class UserService {
       //Delete The Redis
       await this.redis.del(`reset-final-${isValid.email}`);
       //Send The Mail
-      await this.mailerService.resetPasswordMail(userExists.email);
+      if (userExists) {
+        await this.mailerService.resetPasswordMail(userExists.email);
+      } else if (familyMemberExists) {
+        await this.mailerService.resetPasswordMail(familyMemberExists.email);
+      }
       //Response
       return {
         message:
