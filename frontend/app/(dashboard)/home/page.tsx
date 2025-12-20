@@ -13,6 +13,7 @@ import AccountInfoCard from "@/components/custom/AccountInfoCard";
 //API Actions:
 import { getAccountsInfo } from "@/actions/accounts.api";
 import { UserContext } from "../layout";
+import { Skeleton } from "@/components/ui/skeleton";
 //Type Definition:
 type accountDataType = {
   id: string;
@@ -29,17 +30,23 @@ type accountDataType = {
 const Page = () => {
   const [accountInfo, setAccountInfo] = useState<accountDataType[]>([]);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const [loading, setLoading] = useState(false);
   const currentUser = useContext(UserContext);
+  const handleAccountUpdate = () => {
+    setRefetchTrigger((prev) => prev + 1);
+  };
   useEffect(() => {
     if (!currentUser?.id) return;
     if (currentUser.role === "USER") {
       const fetchAccountsInfo = async () => {
         try {
-          const response = await getAccountsInfo(currentUser?.id);
+          setLoading(true);
+          const response = await getAccountsInfo();
           setAccountInfo(response.data.accountInfo);
-          return toast.success(response.data.message);
+          return setLoading(false);
         } catch (error: any) {
           console.error(error);
+          setLoading(false);
           return toast.error(error?.response?.data?.message);
         }
       };
@@ -104,9 +111,21 @@ const Page = () => {
       {/* Cards For Showing The Current Accounts In The System */}
       {currentUser?.role === "USER" ? (
         <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
-          {accountInfo.map((account) => (
-            <AccountInfoCard key={account.id} accountInfo={account} />
-          ))}
+          {loading !== true ? (
+            accountInfo.map((account) => (
+              <AccountInfoCard
+                key={account.id}
+                accountInfo={{ ...account, userId: currentUser?.id }}
+                onDefaultChanged={handleAccountUpdate}
+              />
+            ))
+          ) : (
+            <>
+              <Skeleton className="w-full h-[35vh] rounded-lg bg-gray-800/80" />
+              <Skeleton className="w-full h-[35vh] rounded-lg bg-gray-800/80" />
+              <Skeleton className="w-full h-[35vh] rounded-lg bg-gray-800/80" />
+            </>
+          )}
         </div>
       ) : (
         <></>

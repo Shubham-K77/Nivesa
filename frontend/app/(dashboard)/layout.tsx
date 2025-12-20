@@ -43,7 +43,6 @@ export default function DashboardLayout({
         setCurrentUser(response?.data?.currentUser);
         setAuthChecked(true);
         setLoading(false);
-        toast.success("Welcome Back!", { id: "welcome-back" });
       } catch (error: any) {
         setAuthChecked(false);
         setLoading(false);

@@ -1,3 +1,4 @@
+"use client";
 //Type:
 interface accountDetails {
   id: string;
@@ -6,24 +7,52 @@ interface accountDetails {
   balance: number;
   isDefault: boolean;
   createdAt: string;
-  familyMembers: [];
+  userId: string;
+  familyMembers: Array<{ id: string; name: string }>;
 }
+//Hooks:
+import { useRouter } from "next/navigation";
 //Icons:
 import { FaRegUser } from "react-icons/fa";
 import { FiUsers } from "react-icons/fi";
 import { MdOutlineSavings } from "react-icons/md";
 import { Switch } from "@/components/ui/switch";
-
-const AccountInfoCard = ({ accountInfo }: { accountInfo: accountDetails }) => {
+import { toast } from "sonner";
+import { updateDefaultFlag } from "@/actions/accounts.api";
+const AccountInfoCard = ({
+  accountInfo,
+  onDefaultChanged,
+}: {
+  accountInfo: accountDetails;
+  onDefaultChanged?: () => void;
+}) => {
+  const router = useRouter();
+  const handleDefaultChange = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (accountInfo.isDefault) {
+        return toast.warning("This account is already set as your default.");
+      }
+      const response = await updateDefaultFlag({
+        userId: accountInfo.userId,
+        accountId: accountInfo.id,
+      });
+      toast.success(response.data.message);
+      return onDefaultChanged?.();
+    } catch (error: any) {
+      return toast.error(error?.response?.data?.message);
+    }
+  };
   return (
     <div
-      className={`w-full rounded-xl bg-linear-to-br flex flex-col justify-start items-center gap-y-6 ${
+      className={`w-full rounded-xl bg-linear-to-br flex flex-col justify-start items-center gap-y-6 transition-all ease-in-out duration-150 ${
         accountInfo.type === "FAMILY"
-          ? "from-emerald-500/10 to-teal-500/10"
+          ? "from-emerald-500/10 to-teal-500/10 shadow-teal-500/30 border-teal-500/30"
           : accountInfo.type === "CURRENT"
-          ? "from-blue-500/10 to-cyan-500/10"
-          : "from-amber-500/10 to-orange-500/10"
-      }`}
+          ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
+          : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
+      } hover:cursor-pointer hover:shadow-md hover:border hover:scale-95`}
+      onClick={() => router.push(`/account/${accountInfo.id}`)}
     >
       {/* Motif and Title */}
       <div className="w-full pl-8 flex justify-start items-center gap-x-6 mt-4">
@@ -56,8 +85,9 @@ const AccountInfoCard = ({ accountInfo }: { accountInfo: accountDetails }) => {
           Default Payment Account:
         </div>
         <Switch
-          className="data-[state=unchecked]:bg-gray-700 data-[state=checked]:bg-amber-400"
+          className="data-[state=unchecked]:bg-gray-700 data-[state=checked]:bg-amber-400 hover:cursor-pointer"
           checked={accountInfo.isDefault}
+          onClick={(e) => handleDefaultChange(e)}
         />
       </div>
       {/* Available Balance */}
@@ -86,7 +116,7 @@ const AccountInfoCard = ({ accountInfo }: { accountInfo: accountDetails }) => {
                 <div className="text-white text-md md:text-lg lg:text-sm">
                   {member.name
                     .split(" ")
-                    .map((word: string[]) => word[0])
+                    .map((word: string) => word[0])
                     .join("")}
                 </div>
               </div>

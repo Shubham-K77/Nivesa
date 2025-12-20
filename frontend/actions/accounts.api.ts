@@ -23,6 +23,11 @@ type createFamilyAccountData = {
   familyMemberInfo: createNewFamilyMemberData[];
 };
 
+type isDefaultUpdateData = {
+  userId: string;
+  accountId: string;
+};
+
 const createNewAccount = async (data: createAccountData) => {
   const result = await axios.post(
     "http://localhost:3001/api/v1/accounts",
@@ -34,8 +39,8 @@ const createNewAccount = async (data: createAccountData) => {
   return result;
 };
 
-const getAccountsInfo = async (userId: string) => {
-  return axios.get(`http://localhost:3001/api/v1/accounts/${userId}`, {
+const getAccountsInfo = async () => {
+  return axios.get(`http://localhost:3001/api/v1/accounts`, {
     withCredentials: true,
   });
 };
@@ -46,4 +51,17 @@ const createNewFamilyAccount = async (data: createFamilyAccountData) => {
   });
 };
 
-export { createNewAccount, getAccountsInfo, createNewFamilyAccount };
+const updateDefaultFlag = async (data: isDefaultUpdateData) => {
+  return axios.patch(
+    `http://localhost:3001/api/v1/accounts/${data.accountId}`,
+    {},
+    { withCredentials: true }
+  );
+};
+
+export {
+  createNewAccount,
+  getAccountsInfo,
+  createNewFamilyAccount,
+  updateDefaultFlag,
+};
