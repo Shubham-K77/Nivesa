@@ -5,15 +5,14 @@ import DrawerComponent from "@/components/custom/DrawerComponent";
 import { IoMdAdd } from "react-icons/io";
 import { GrTransaction } from "react-icons/gr";
 //React Components:
-import { useContext, useEffect, useState } from "react";
-//Shadcn Components:
-import { toast } from "sonner";
+import { useContext } from "react";
 //My Components:
 import AccountInfoCard from "@/components/custom/AccountInfoCard";
 //API Actions:
 import { getAccountsInfo } from "@/actions/accounts.api";
 import { UserContext } from "../layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import useDataFetch from "@/hooks/useDataFetch";
 //Type Definition:
 type accountDataType = {
   id: string;
@@ -28,31 +27,18 @@ type accountDataType = {
   familyMembers: [];
 };
 const Page = () => {
-  const [accountInfo, setAccountInfo] = useState<accountDataType[]>([]);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
-  const [loading, setLoading] = useState(false);
   const currentUser = useContext(UserContext);
-  const handleAccountUpdate = () => {
-    setRefetchTrigger((prev) => prev + 1);
-  };
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    if (currentUser.role === "USER") {
-      const fetchAccountsInfo = async () => {
-        try {
-          setLoading(true);
-          const response = await getAccountsInfo();
-          setAccountInfo(response.data.accountInfo);
-          return setLoading(false);
-        } catch (error: any) {
-          console.error(error);
-          setLoading(false);
-          return toast.error(error?.response?.data?.message);
-        }
-      };
-      fetchAccountsInfo();
-    }
-  }, [currentUser?.id, currentUser?.role, refetchTrigger]);
+  //Using The Hook (only fetches if user role is USER)
+  const shouldFetch = currentUser?.role === "USER";
+  const {
+    data: accountInfo,
+    loading,
+    refetch,
+  } = useDataFetch<accountDataType[]>(
+    shouldFetch ? getAccountsInfo : () => Promise.resolve({ data: {} }),
+    "accountInfo",
+    [currentUser?.id, currentUser?.role]
+  );
   return (
     <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
       {/* Motif Display */}
@@ -70,7 +56,13 @@ const Page = () => {
             financial life.
           </div>
           {/* CTA Button */}
-          <div className="w-full md:w-full lg:w-[85%] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-4">
+          <div
+            className={`w-full md:w-full lg:w-[85%] grid ${
+              currentUser?.role === "USER"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-4"
+                : "grid-cols-1"
+            }`}
+          >
             {/* To Create Transaction */}
             <div className="w-full h-[12vh] md:h-[8.5vh] lg:h-[12vh] rounded-md bg-linear-to-br from-yellow-400 via-amber-500 to-orange-500 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80 gap-x-4">
               <GrTransaction className="text-white" size={22} />
@@ -80,9 +72,7 @@ const Page = () => {
             </div>
             {/* To Open Account */}
             {currentUser?.role === "USER" ? (
-              <DrawerComponent
-                onSuccess={() => setRefetchTrigger((prev) => prev + 1)}
-              >
+              <DrawerComponent onSuccess={refetch}>
                 <div className="relative w-full h-full overflow-visible isolation-isolate">
                   <div className="w-full bg-linear-to-br from-white/25 to-gray-950 backdrop-blur-md rounded-lg h-[12vh] md:h-[8.5vh] lg:h-[12vh] flex justify-center items-center gap-x-2 transition-all ease-in-out duration-150 hover:cursor-pointer">
                     <IoMdAdd className="text-white" size={22} />
@@ -112,11 +102,11 @@ const Page = () => {
       {currentUser?.role === "USER" ? (
         <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
           {loading !== true ? (
-            accountInfo.map((account) => (
+            accountInfo?.map((account: accountDataType) => (
               <AccountInfoCard
                 key={account.id}
-                accountInfo={{ ...account, userId: currentUser?.id }}
-                onDefaultChanged={handleAccountUpdate}
+                accountInfo={{ ...account, userId: currentUser?.id || "" }}
+                onDefaultChanged={refetch}
               />
             ))
           ) : (

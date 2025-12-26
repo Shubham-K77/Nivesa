@@ -45,6 +45,18 @@ const getAccountsInfo = async () => {
   });
 };
 
+const getEveryAccountInfo = async () => {
+  return axios.get(`http://localhost:3001/api/v1/accounts/all`, {
+    withCredentials: true,
+  });
+};
+
+const getSpecificAccountInfo = async (accountId: string) => {
+  return axios.get(`http://localhost:3001/api/v1/accounts/${accountId}`, {
+    withCredentials: true,
+  });
+};
+
 const createNewFamilyAccount = async (data: createFamilyAccountData) => {
   return axios.post("http://localhost:3001/api/v1/accounts/family", data, {
     withCredentials: true,
@@ -62,6 +74,8 @@ const updateDefaultFlag = async (data: isDefaultUpdateData) => {
 export {
   createNewAccount,
   getAccountsInfo,
+  getEveryAccountInfo,
+  getSpecificAccountInfo,
   createNewFamilyAccount,
   updateDefaultFlag,
 };

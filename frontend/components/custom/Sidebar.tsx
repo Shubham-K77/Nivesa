@@ -95,13 +95,23 @@ const Sidebar = () => {
             </div>
             {/* My Finances */}
             <div
-              className="w-[90%] h-1/10 rounded-lg bg-transparent hover:cursor-pointer hover:bg-gray-400/10 flex justify-start items-center gap-x-4 p-3 hover:ml-4"
-              onClick={() => router.push("/home")}
+              className={`w-[90%] h-1/10 rounded-lg hover:cursor-pointer flex justify-start items-center gap-x-4 p-3 hover:ml-4 ${
+                pathName === "/finances"
+                  ? "bg-yellow-900/20 text-yellow-400/80 font-semibold"
+                  : "bg-transparent hover:bg-gray-400/10 text-white"
+              }`}
+              onClick={() => router.push("/finances")}
             >
+              {/* Indicator of active */}
+              {pathName === "/finances" ? (
+                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-amber-400/80"></div>
+              ) : (
+                ""
+              )}
               {/* Icon */}
-              <MdAccountBalanceWallet className="text-white" size={22} />
+              <MdAccountBalanceWallet size={22} />
               {/* Text */}
-              <div className="text-white text-md">My Finances</div>
+              <div className="text-md">My Finances</div>
             </div>
             {/* My Profile */}
             <div
