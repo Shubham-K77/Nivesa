@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Body,
   Controller,
@@ -28,6 +26,20 @@ export class AccountController {
   async getAccountInfo(@Req() req: Request) {
     const userId: string = req.current_user!.id;
     const response = await this.accountService.getUserAccounts(userId);
+    return response;
+  }
+  @Get('/all')
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
+  async getEveryAccountInfo(@Req() req: Request) {
+    const userId: string = req.current_user!.id;
+    const response = await this.accountService.getUserEveryAccounts(userId);
+    return response;
+  }
+  @Get('/:id')
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
+  async getSpecificAccountInfo(@Req() req: Request, @Param('id') id: string) {
+    const userId: string = req.current_user!.id;
+    const response = await this.accountService.getAccount(userId, id);
     return response;
   }
   //Post Request

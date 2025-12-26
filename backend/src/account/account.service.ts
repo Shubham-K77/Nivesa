@@ -67,6 +67,107 @@ export class AccountService {
       throw new ServiceUnavailableException('Internal Server Error');
     }
   }
+  async getUserEveryAccounts(userId: string) {
+    try {
+      if (!userId || !userId.trim()) {
+        throw new BadRequestException("Must provide the loggedIn user's info.");
+      }
+      //Find the user first
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException(
+          "The provided user wasn't found on the system.",
+        );
+      }
+      //Get The Account Info
+      const accountInfo = await this.prisma.account.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          transactions: true,
+          familyMembers: {
+            select: {
+              id: true,
+              name: true,
+              phoneNumber: true,
+              accountId: true,
+              userId: true,
+              isActive: true,
+            },
+          },
+        },
+      });
+      if (!accountInfo) {
+        throw new ServiceUnavailableException(
+          'Unable to retrieve the information, at this moment. Try Again!',
+        );
+      }
+      //Return
+      return {
+        statusCode: 200,
+        message: 'Successfully retrieved the accounts.',
+        accountInfo,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
+  async getAccount(userId: string, accountId: string) {
+    try {
+      //Check The Parameters:
+      if (!userId || !userId.trim()) {
+        throw new BadRequestException("Must provide the loggedIn user's info.");
+      }
+      if (!accountId || !accountId.trim()) {
+        throw new BadRequestException("Must provide the account's info.");
+      }
+      //Check For User
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException("The provided user doesn't exist.");
+      }
+      //Get The Account
+      const accountInfo = await this.prisma.account.findUnique({
+        where: { userId, id: accountId },
+        include: {
+          transactions: true,
+          familyMembers: {
+            select: {
+              id: true,
+              name: true,
+              phoneNumber: true,
+              accountId: true,
+              userId: true,
+              isActive: true,
+            },
+          },
+        },
+      });
+      if (!accountInfo) {
+        throw new ServiceUnavailableException(
+          'Unable to retrieve at the moment. Please, try again!',
+        );
+      }
+      //Response
+      return {
+        statusCode: 200,
+        message: "Successfully retrieved the account's info.",
+        accountInfo,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
   //Post Request
   async createAccount(newAccountInfo: CreateAccountDto) {
     try {
