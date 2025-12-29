@@ -13,6 +13,7 @@ import { IoIosTrendingDown } from "react-icons/io";
 import { FaArrowLeft } from "react-icons/fa6";
 import { GrTransaction } from "react-icons/gr";
 import { Skeleton } from "@/components/ui/skeleton";
+import TransactionTable from "@/components/custom/TransactionTable";
 //Type
 type accountDataType = {
   id: string;
@@ -40,7 +41,7 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Top Banner */}
       {loading !== true ? (
         <div
-          className={`w-full h-[55vh] bg-linear-to-br grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 ${
+          className={`w-full h-screen lg:h-[55vh] bg-linear-to-br grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 ${
             accountInfo?.type === "FAMILY"
               ? "from-emerald-500/10 to-teal-500/10"
               : accountInfo?.type === "CURRENT"
@@ -49,51 +50,56 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           }`}
         >
           {/* Basic Info */}
-          <div className="w-[95%] flex flex-col justify-center items-center p-4 gap-y-4">
+          <div className="w-[95%] flex flex-col justify-center items-start p-4 gap-y-4 mt-15 lg:mt-4">
             {/* Mottiffs & Name & tags  */}
-            <div className="w-full flex justify-center items-center gap-x-6">
-              {/* Mottiff */}
-              <div className="w-[8.5vh] h-[8.5vh] rounded-lg bg-black flex justify-center items-center">
-                {accountInfo?.type === "FAMILY" ? (
-                  <FiUsers
-                    className="font-semibold text-emerald-400/80"
-                    size={32}
-                  />
-                ) : accountInfo?.type === "CURRENT" ? (
-                  <FaRegUser
-                    className="font-semibold text-sky-400/80"
-                    size={32}
-                  />
-                ) : (
-                  <MdOutlineSavings
-                    className="font-semibold text-orange-400/80"
-                    size={32}
-                  />
-                )}
-              </div>
-              {/* Title */}
-              <div className="text-white font-bold text-4xl">
-                {accountInfo?.name}
+            <div className="w-full flex flex-col justify-start items-start gap-y-4 lg:flex-row lg:justify-center lg:items-center lg:gap-x-6">
+              {/* Motifs And Title */}
+              <div className="w-full flex justify-start items-center gap-x-4">
+                {/* Mottiff */}
+                <div className="w-[10.5vh] lg:w-[9.5vh] h-[8.5vh] rounded-lg bg-black flex justify-center items-center">
+                  {accountInfo?.type === "FAMILY" ? (
+                    <FiUsers
+                      className="font-semibold text-emerald-400/80"
+                      size={32}
+                    />
+                  ) : accountInfo?.type === "CURRENT" ? (
+                    <FaRegUser
+                      className="font-semibold text-sky-400/80"
+                      size={32}
+                    />
+                  ) : (
+                    <MdOutlineSavings
+                      className="font-semibold text-orange-400/80"
+                      size={32}
+                    />
+                  )}
+                </div>
+                {/* Title */}
+                <div className="text-white font-bold text-2xl lg:text-4xl">
+                  {accountInfo?.name}
+                </div>
               </div>
               {/* Tag For Personal Or Family */}
-              <div className="w-[14.5vh] h-[4vh] rounded-md bg-gray-800/80 flex justify-center items-center">
-                <div className="text-white font-semibold text-sm">
-                  {accountInfo?.type === "FAMILY" ? "Family" : "Personal"}
-                </div>
-              </div>
-              {/* Tag For Default */}
-              {accountInfo?.isDefault === true ? (
-                <div className="w-[12.5vh] h-[4vh] rounded-md bg-amber-400/10 flex justify-center items-center">
-                  <div className="text-amber-600/80 font-semibold text-sm">
-                    Default
+              <div className="flex justify-center items-center gap-x-2">
+                <div className="w-[14.5vh] h-[4vh] rounded-md bg-gray-800/80 flex justify-center items-center">
+                  <div className="text-white font-semibold text-sm">
+                    {accountInfo?.type === "FAMILY" ? "Family" : "Personal"}
                   </div>
                 </div>
-              ) : (
-                <></>
-              )}
+                {/* Tag For Default */}
+                {accountInfo?.isDefault === true ? (
+                  <div className="w-[12.5vh] h-[4vh] rounded-md bg-amber-400/10 flex justify-center items-center">
+                    <div className="text-amber-600/80 font-semibold text-sm">
+                      Default
+                    </div>
+                  </div>
+                ) : (
+                  <></>
+                )}
+              </div>
             </div>
             {/* Created Date */}
-            <div className="w-[80%] flex justify-start items-center gap-x-4 p-4">
+            <div className="flex justify-start items-center gap-x-4 p-2">
               <CiCalendar className="text-gray-200/80" size={22} />
               <div className="text-sm text-gray-200/80">
                 Created{"  "}
@@ -106,7 +112,7 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
             </div>
             {/* CTA, Todo: Get The User Role */}
-            <div className="w-full grid grid-cols-2 gap-x-6">
+            <div className="w-full grid grid-cols-1 gap-y-3 lg:grid-cols-2 lg:gap-x-6">
               {/* Back Button */}
               <div
                 className="w-full h-[8.5vh] rounded-lg flex justify-center items-center bg-transparent gap-x-2 border transition-all ease-in-out duration-150 hover:cursor-pointer hover:bg-black hover:scale-105"
@@ -140,7 +146,7 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="w-[95%] flex justify-center items-center">
             {/* Display Card */}
             <div
-              className={`w-[55%] h-[35vh] rounded-lg border shadow backdrop-blur-sm bg-linear-to-br flex flex-col justify-center items-start gap-y-4 p-6 ${
+              className={`w-[85%] h-[30vh] lg:w-[55%] lg:h-[35vh] rounded-lg border shadow backdrop-blur-sm bg-linear-to-br flex flex-col justify-center items-start gap-y-4 p-6 ${
                 accountInfo?.type === "FAMILY"
                   ? "from-emerald-500/10 to-teal-500/10 shadow-teal-500/30 border-teal-500/30"
                   : accountInfo?.type === "CURRENT"
@@ -187,6 +193,11 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <Skeleton className="w-full h-[55vh] bg-gray-800/80 rounded-none" />
         </>
       )}
+      {/* Transaction Table */}
+      <TransactionTable
+        transactions={accountInfo?.transactions}
+        type={accountInfo?.type}
+      />
     </div>
   );
 };

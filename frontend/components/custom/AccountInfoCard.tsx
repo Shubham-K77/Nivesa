@@ -103,7 +103,13 @@ const AccountInfoCard = ({
       <div className="w-full flex justify-center items-center mb-4 gap-x-4">
         {/* Created At */}
         <div className="text-md md:text-lg lg:text-sm text-gray-400/80">
-          Created At: {new Date(accountInfo.createdAt).toLocaleDateString()}
+          Created at:{" "}
+          {accountInfo?.createdAt &&
+            new Intl.DateTimeFormat("en-US", {
+              month: "short",
+              day: "2-digit",
+              year: "numeric",
+            }).format(new Date(accountInfo.createdAt))}
         </div>
         {/* Family Members Info */}
         {accountInfo.type === "FAMILY" ? (
