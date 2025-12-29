@@ -9,6 +9,7 @@ import { BcryptModule } from './bcrypt/bcrypt.module';
 import { MailerModule } from './mailer/mailer.module';
 import { AccountModule } from './account/account.module';
 import { FamilyMemberModule } from './family-member/family-member.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { FamilyMemberModule } from './family-member/family-member.module';
     MailerModule,
     AccountModule,
     FamilyMemberModule,
+    TransactionModule,
   ],
 })
 export class AppModule {
