@@ -6,9 +6,17 @@ import { RedisModule } from 'src/redis/redis.module';
 import { BcryptModule } from 'src/bcrypt/bcrypt.module';
 import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from 'src/mailer/mailer.module';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [PrismaModule, RedisModule, BcryptModule, JwtModule, MailerModule],
+  imports: [
+    PrismaModule,
+    RedisModule,
+    BcryptModule,
+    JwtModule,
+    MailerModule,
+    CloudinaryModule,
+  ],
   providers: [UserService],
   controllers: [UserController],
 })

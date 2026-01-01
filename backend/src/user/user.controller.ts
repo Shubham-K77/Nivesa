@@ -11,12 +11,14 @@ import {
   HttpException,
   ServiceUnavailableException,
   UnauthorizedException,
+  Put,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create_user.dto';
 import type { Response, Request } from 'express';
 import { UserLoginGuard } from 'src/guard/user.login.guard';
 import { RestrictFamilyMemberGuard } from 'src/guard/restrict-familyMember.guard';
+import { UpdateUserDto } from './dto/udpate_user.dto';
 
 @Controller('users')
 export class UserController {
@@ -33,18 +35,23 @@ export class UserController {
   //Get The Current Logged In User
   @Get('/active')
   @UseGuards(UserLoginGuard)
-  getCurrentUser(@Req() req: Request, @Res() res: Response) {
+  async getCurrentUser(@Req() req: Request, @Res() res: Response) {
     try {
-      const currentUser = req['current_user'];
-      if (!currentUser) {
+      const tokenUser = req['current_user'];
+      if (!tokenUser) {
         throw new UnauthorizedException(
           'Must login to retrieve the information',
         );
       }
+      // Fetch fresh user data from database to get updated profile picture
+      const freshUserData = await this.userService.getFreshUserData(
+        tokenUser.id,
+        tokenUser.role,
+      );
       return res.status(200).send({
         message: 'Successfully Retrieved',
         statusCode: 200,
-        currentUser,
+        currentUser: freshUserData,
       });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -179,5 +186,18 @@ export class UserController {
         'Unable to execute the logout procedure',
       );
     }
+  }
+
+  //3. Put Requests:
+  //Update User Profile
+  @Put()
+  @UseGuards(UserLoginGuard)
+  async updateProfile(@Body() userData: UpdateUserDto, @Req() req: Request) {
+    const userId = req['current_user']?.id;
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    const result = await this.userService.updateProfile(userData, userId);
+    return result;
   }
 }

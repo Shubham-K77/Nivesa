@@ -3,11 +3,15 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookie from 'cookie-parser';
 import cors from 'cors';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   //Dynamic App Module For Arject
   const dynamicAppModule = await AppModule.registerAsync();
   const app = await NestFactory.create(dynamicAppModule);
+  //Increase payload size limit for base64 images
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ limit: '10mb', extended: true }));
   //Routing Config
   app.setGlobalPrefix('api/v1');
   app.use(

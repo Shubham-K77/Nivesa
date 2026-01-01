@@ -18,6 +18,8 @@ import { randomInt } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from 'src/mailer/mailer.service';
+import { UpdateUserDto } from './dto/udpate_user.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
@@ -29,6 +31,7 @@ export class UserService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
+    private readonly cloudinary: CloudinaryService,
   ) {}
   //1. Get Requests:
   async getAllUsers() {
@@ -660,6 +663,8 @@ export class UserService {
             name: userExists.user.name,
             imageUrl: userExists.user?.imageUrl || '',
             role: userExists.role,
+            createdAt: userExists.createdAt,
+            updatedAt: userExists.updatedAt,
           },
           {
             secret: this.configService.get<string>('access_token_secret'),
@@ -674,6 +679,8 @@ export class UserService {
             name: userExists.user.name,
             imageUrl: userExists.user?.imageUrl || '',
             role: userExists.role,
+            createdAt: userExists.createdAt,
+            updatedAt: userExists.updatedAt,
           },
           {
             secret: this.configService.get<string>('refresh_token_secret'),
@@ -725,6 +732,114 @@ export class UserService {
       throw new ServiceUnavailableException(
         'An unexpected error occurred while logging in. Please try again later.',
       );
+    }
+  }
+  //3. Update The Information
+  async getFreshUserData(userId: string, role: string) {
+    if (role === 'USER') {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { loginCredentials: { select: { email: true } } },
+      });
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+      return {
+        id: user.id,
+        email: user.loginCredentials[0]?.email || '',
+        phoneNumber: user.phoneNumber || '',
+        name: user.name,
+        imageUrl: user.imageUrl || '',
+        role: role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+    } else if (role === 'FAMILY_MEMBER') {
+      const familyMember = await this.prisma.familyMember.findUnique({
+        where: { id: userId },
+        include: { loginCredentials: { select: { email: true } } },
+      });
+      if (!familyMember) {
+        throw new UnauthorizedException('Family member not found');
+      }
+      return {
+        id: familyMember.id,
+        email: familyMember.loginCredentials?.email || '',
+        phoneNumber: familyMember.phoneNumber || '',
+        name: familyMember.name || '',
+        imageUrl: familyMember.imageUrl || '',
+        role: role,
+      };
+    }
+    throw new UnauthorizedException('Invalid role');
+  }
+  async updateProfile(userData: UpdateUserDto, userId: string) {
+    try {
+      //Check User Exists In The System
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { loginCredentials: true },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException(
+          "Provided user doesn't exist in the system.",
+        );
+      }
+      //Prepare update data
+      const updateData: any = {
+        name: userData.name,
+        phoneNumber: userData.phoneNumber,
+      };
+      if (userData.profilePic) {
+        if (userExists.imageUrl) {
+          //Delete The Old File In Cloudinary
+          const publicId = this.cloudinary.extractPublicId(userExists.imageUrl);
+          await this.cloudinary.delete(publicId, 'image');
+        }
+        updateData.imageUrl = await this.cloudinary.upload(
+          userData.profilePic,
+          'image',
+        );
+      }
+      //Handle password change
+      if (userData.password && userData.newPassword) {
+        const loginCreds = userExists.loginCredentials?.[0];
+        if (!loginCreds) {
+          throw new UnauthorizedException('Login credentials not found.');
+        }
+        const isPasswordValid = await this.bcrypt.decrypt(
+          userData.password,
+          loginCreds.password,
+        );
+        if (!isPasswordValid) {
+          throw new UnauthorizedException('Current password is incorrect.');
+        }
+        const hashedPassword = await this.bcrypt.encrypt(userData.newPassword);
+        await this.prisma.loginCredentials.update({
+          where: { id: loginCreds.id },
+          data: { password: hashedPassword },
+        });
+      }
+      //Update The User Data
+      const updatedUser = await this.prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+      });
+      if (!updatedUser) {
+        throw new ServiceUnavailableException(
+          'Failed to update the profile information',
+        );
+      }
+      //Response
+      return {
+        message: 'Successfully updated!',
+        statusCode: 200,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
 }
