@@ -26,27 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-enum LoginType {
-  USER,
-  FAMILY_MEMBER,
-}
-type userInfo = {
-  id: string;
-  email: string;
-  phoneNumber?: string;
-  name: string;
-  imageUrl: string;
-  role: LoginType;
-  createdAt: string;
-  updatedAt: string;
-};
-type UserData = {
-  name: string;
-  phoneNumber?: string;
-  profilePic?: File | null;
-  password?: string;
-  newPassword?: string;
-};
+import { userInfo, UserData } from "@/types/user.type";
 const ProfilePage = () => {
   //Get Current User
   const {
@@ -57,12 +37,13 @@ const ProfilePage = () => {
   //Use State Variables
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(userInfo?.name || "");
   const [phoneNumber, setPhoneNumber] = useState(userInfo?.phoneNumber || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassowrd, setConfirmNewPassword] = useState("");
   const [loader, setLoader] = useState(false);
+  const [loadingState, setLoadingState] = useState("");
   //Update Name, Picture, Contact At Initial Mount
   useEffect(() => {
     if (userInfo) {
@@ -87,6 +68,7 @@ const ProfilePage = () => {
   };
   //Handle The Changes
   const handleChange = async () => {
+    setLoadingState("save");
     if (currentPassword || newPassword || confirmNewPassowrd) {
       if (!currentPassword || !newPassword || !confirmNewPassowrd) {
         discardChange();
@@ -133,6 +115,7 @@ const ProfilePage = () => {
   };
   //Discard The Changes
   const discardChange = () => {
+    setLoadingState("discard");
     setProfilePic(null);
     setPreviewUrl(null);
     setName(userInfo?.name || "");
@@ -293,7 +276,7 @@ const ProfilePage = () => {
                   <Input
                     className="w-full bg-white/5 border border-white/10 pl-8 text-white"
                     value={phoneNumber}
-                    placeholder="+977 98XXXXXXXX"
+                    placeholder="+9779801234567"
                     onChange={(e) => setPhoneNumber(e.target.value)}
                   />
                   <Phone className="w-4 h-4 absolute top-2.5 left-2 text-muted-foreground" />
@@ -328,7 +311,7 @@ const ProfilePage = () => {
       )}
       {/* Password Change Edit */}
       {loading !== true ? (
-        <div className="w-full rounded-lg bg-[#0A0A0A] border border-white/10 flex flex-col justify-start items-start p-8 gap-y-6">
+        <div className="w-full rounded-lg bg-[#0A0A0A] border border-white/10 flex flex-col justify-start items-start p-8 gap-y-6 mb-4">
           {/* Title And Description */}
           <div className="flex flex-col justify-start items-start gap-y-2">
             {/* Title */}
@@ -434,8 +417,8 @@ const ProfilePage = () => {
       {Boolean(
         profilePic ||
           previewUrl ||
-          name ||
-          phoneNumber ||
+          (name && name !== userInfo?.name) ||
+          (phoneNumber && phoneNumber !== userInfo?.phoneNumber) ||
           currentPassword ||
           newPassword ||
           confirmNewPassowrd
@@ -446,8 +429,11 @@ const ProfilePage = () => {
             className="flex h-[7.5vh] justify-center items-center gap-x-2 bg-green-500/80 text-white hover:cursor-pointer hover:bg-green-400/80 p-2"
             onClick={handleChange}
           >
-            {loader === true ? (
-              <LoaderIcon className="text-white w-4 h-4 animate-spin" />
+            {loadingState === "save" && loader === true ? (
+              <>
+                Saving Changes
+                <LoaderIcon className="text-white w-4 h-4 animate-spin" />
+              </>
             ) : (
               <>
                 <Save className="w-3 h-3 text-white" />
@@ -460,8 +446,11 @@ const ProfilePage = () => {
             className="flex h-[7.5vh] justify-center items-center gap-x-2 bg-red-500/80 text-white hover:cursor-pointer hover:bg-red-400/80 p-2"
             onClick={discardChange}
           >
-            {loader === true ? (
-              <LoaderIcon className="w-4 h-4 text-white animate-spin" />
+            {loadingState === "discard" && loader === true ? (
+              <>
+                Discarding changes
+                <LoaderIcon className="w-4 h-4 text-white animate-spin" />
+              </>
             ) : (
               <>
                 <X className="w-3 h-3 text-white" />

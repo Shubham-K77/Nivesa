@@ -63,24 +63,24 @@ const Navbar = () => {
       <Dialog>
         {/* Hamburger Icon For Triggering Selection */}
         <DialogTrigger>
-          <div className="w-[10.5vh] h-[8.5vh] md:w-[11vh] md:h-[7.5vh] bg-gradient-to-br from-yellow-400 to-amber-500 flex justify-center items-center lg:hidden rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-yellow-300/50">
+          <div className="w-[10.5vh] h-[8.5vh] md:w-[11vh] md:h-[7.5vh] bg-linear-to-br from-yellow-400 to-amber-500 flex justify-center items-center lg:hidden rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-yellow-300/50">
             <GiHamburgerMenu className="text-3xl md:text-4xl text-gray-900 font-bold drop-shadow-sm" />
           </div>
         </DialogTrigger>
-        <DialogContent className="w-[90%] md:w-[85%] bg-gradient-to-br from-gray-900 via-slate-900 to-black backdrop-blur-xl border-2 border-yellow-400/70 shadow-[0_0_60px_rgba(251,191,36,0.5)] text-white rounded-2xl">
+        <DialogContent className="w-[90%] md:w-[85%] bg-linear-to-br from-gray-900 via-slate-900 to-black backdrop-blur-xl border-2 border-yellow-400/70 shadow-[0_0_60px_rgba(251,191,36,0.5)] text-white rounded-2xl">
           <DialogHeader>
             <div className="w-full bg-transparent flex flex-col justify-start items-center gap-y-3 md:gap-y-4 py-3 md:py-4">
-              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-gradient-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
+              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
                 Features
               </div>
-              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-gradient-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
+              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
                 How it Works
               </div>
-              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-gradient-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
+              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
                 Pricing
               </div>
               <div
-                className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-bold text-white hover:cursor-pointer bg-gradient-to-r from-yellow-400 to-amber-500 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl hover:from-yellow-500 hover:to-amber-600 hover:scale-[1.02] mt-3 md:mt-4 shadow-lg hover:shadow-xl border border-yellow-300/50"
+                className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-bold text-white hover:cursor-pointer bg-linear-to-r from-yellow-400 to-amber-500 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl hover:from-yellow-500 hover:to-amber-600 hover:scale-[1.02] mt-3 md:mt-4 shadow-lg hover:shadow-xl border border-yellow-300/50"
                 onClick={() => router.push("/login")}
               >
                 Sign In

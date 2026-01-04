@@ -14,18 +14,7 @@ import { UserContext } from "../layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import useDataFetch from "@/hooks/useDataFetch";
 //Type Definition:
-type accountDataType = {
-  id: string;
-  name: string;
-  type: string;
-  balance: number;
-  isDefault: boolean;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  transactions: [];
-  familyMembers: [];
-};
+import { Account } from "@/types/account.type";
 const Page = () => {
   const currentUser = useContext(UserContext);
   //Using The Hook (only fetches if user role is USER)
@@ -34,7 +23,7 @@ const Page = () => {
     data: accountInfo,
     loading,
     refetch,
-  } = useDataFetch<accountDataType[]>(
+  } = useDataFetch<Account[]>(
     shouldFetch ? getAccountsInfo : () => Promise.resolve({ data: {} }),
     "accountInfo",
     [currentUser?.id, currentUser?.role]
@@ -102,7 +91,7 @@ const Page = () => {
       {currentUser?.role === "USER" ? (
         <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
           {loading !== true ? (
-            accountInfo?.map((account: accountDataType) => (
+            accountInfo?.map((account: Account) => (
               <AccountInfoCard
                 key={account.id}
                 accountInfo={{ ...account, userId: currentUser?.id || "" }}

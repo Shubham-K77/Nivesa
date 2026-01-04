@@ -15,23 +15,12 @@ import { GrTransaction } from "react-icons/gr";
 import { Skeleton } from "@/components/ui/skeleton";
 import TransactionTable from "@/components/custom/TransactionTable";
 //Type
-type accountDataType = {
-  id: string;
-  name: string;
-  type: string;
-  balance: number;
-  isDefault: boolean;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  transactions: [];
-  familyMembers: [];
-};
+import { Account } from "@/types/account.type";
 const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const router = useRouter();
   //useDataFetchHook
-  const { data: accountInfo, loading } = useDataFetch<accountDataType>(
+  const { data: accountInfo, loading } = useDataFetch<Account>(
     () => getSpecificAccountInfo(id),
     "accountInfo",
     [id]

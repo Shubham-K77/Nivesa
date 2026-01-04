@@ -10,7 +10,18 @@ import { FaHome } from "react-icons/fa";
 import { MdAccountBalanceWallet } from "react-icons/md";
 import { FaRegUserCircle } from "react-icons/fa";
 import { toast } from "sonner";
-import { logout } from "@/actions/users.api";
+import { getCurrentUser, logout } from "@/actions/users.api";
+import { userInfo } from "@/types/user.type";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 //Sheet Component From ShadCn
 import {
   Sheet,
@@ -18,22 +29,33 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import useDataFetch from "@/hooks/useDataFetch";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 const Sidebar = () => {
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const pathName = usePathname();
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  //Get Current User
+  const { data: userInfo, loading } = useDataFetch<userInfo>(
+    getCurrentUser,
+    "currentUser"
+  );
   //Function to initiate logout:
   const logoutUser = async () => {
-    setLoading(true);
+    setLogoutLoading(true);
     try {
       const response = await logout();
       toast.success(response?.data?.message);
-      setLoading(false);
       return router.push("/");
     } catch (error: any) {
-      setLoading(false);
       console.error(error);
       return toast.error(error?.response?.data?.message);
+    } finally {
+      setLogoutLoading(false);
+      setShowLogoutDialog(false);
     }
   };
   //Render:
@@ -48,7 +70,7 @@ const Sidebar = () => {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="bg-gray-950/80 border-0 w-[250px] md:w-[350px] lg:w-[300px] [&>button]:text-white"
+        className="bg-black border-r border-white/5 w-[250px] md:w-[350px] lg:w-[300px] [&>button]:text-white"
       >
         <SheetTitle className="sr-only">Sidebar Navigation</SheetTitle>
         <div className="w-full h-screen flex flex-col justify-start items-start">
@@ -77,14 +99,14 @@ const Sidebar = () => {
             <div
               className={`w-[90%] h-1/10 rounded-lg hover:cursor-pointer flex justify-start items-center gap-x-4 p-3 hover:ml-4 ${
                 pathName === "/home"
-                  ? "bg-yellow-900/20 text-yellow-400/80 font-semibold"
-                  : "bg-transparent hover:bg-gray-400/10 text-white"
+                  ? "bg-white/10 text-orange-500 font-semibold"
+                  : "bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
               }`}
               onClick={() => router.push("/home")}
             >
               {/* Indicator of active */}
               {pathName === "/home" ? (
-                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-amber-400/80"></div>
+                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-orange-500"></div>
               ) : (
                 ""
               )}
@@ -97,14 +119,14 @@ const Sidebar = () => {
             <div
               className={`w-[90%] h-1/10 rounded-lg hover:cursor-pointer flex justify-start items-center gap-x-4 p-3 hover:ml-4 ${
                 pathName === "/finances"
-                  ? "bg-yellow-900/20 text-yellow-400/80 font-semibold"
-                  : "bg-transparent hover:bg-gray-400/10 text-white"
+                  ? "bg-white/10 text-orange-500 font-semibold"
+                  : "bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
               }`}
               onClick={() => router.push("/finances")}
             >
               {/* Indicator of active */}
               {pathName === "/finances" ? (
-                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-amber-400/80"></div>
+                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-orange-500"></div>
               ) : (
                 ""
               )}
@@ -117,14 +139,14 @@ const Sidebar = () => {
             <div
               className={`w-[90%] h-1/10 rounded-lg hover:cursor-pointer flex justify-start items-center gap-x-4 p-3 hover:ml-4 ${
                 pathName === "/profile"
-                  ? "bg-yellow-900/20 text-yellow-400/80 font-semibold"
-                  : "bg-transparent hover:bg-gray-400/10 text-white"
+                  ? "bg-white/10 text-orange-500 font-semibold"
+                  : "bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
               }`}
               onClick={() => router.push("/profile")}
             >
               {/* Indicator of active */}
               {pathName === "/profile" ? (
-                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-amber-400/80"></div>
+                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-orange-500"></div>
               ) : (
                 ""
               )}
@@ -137,28 +159,90 @@ const Sidebar = () => {
           {/* Bottom Section With Logout */}
           <div className="w-full h-1/10 bg-transparent flex justify-center items-center mb-4">
             {/* Logout Button */}
-            <div
-              className="group w-[90%] h-[70%] rounded-lg bg-transparent hover:cursor-pointer hover:bg-red-900/20 flex justify-start items-center gap-x-4 p-3"
-              onClick={() => logoutUser()}
-            >
-              {loading === true ? (
-                <div className="w-full flex justify-center items-center">
-                  <ImSpinner8 className="text-white" size={25} />
-                </div>
-              ) : (
-                <>
-                  {/* Icon */}
-                  <MdLogout
-                    className="text-gray-300 group-hover:text-red-400/80"
-                    size={22}
-                  />
-                  {/* Text */}
-                  <div className="text-gray-400 group-hover:text-red-400/80 text-md">
-                    Logout
+            {loading ? (
+              <Skeleton className="w-[95%] h-[8vh] rounded-lg bg-gray-900/60 border border-white/5" />
+            ) : (
+              <Dialog
+                open={showLogoutDialog}
+                onOpenChange={setShowLogoutDialog}
+              >
+                <DialogTrigger asChild>
+                  <div className="w-[95%] bg-white/3 rounded-lg border border-white/5 flex justify-start items-center gap-x-4 p-2 hover:cursor-pointer">
+                    {/* Avatar */}
+                    {userInfo?.imageUrl.trim() ? (
+                      <div
+                        className="w-12 h-12 rounded-full"
+                        style={{
+                          backgroundImage: `url(${userInfo?.imageUrl})`,
+                          backgroundPosition: "center",
+                          backgroundSize: "cover",
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      ></div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-400/80 via-cyan-400/80 to-emerald-400/80 text-center text-white">
+                        {userInfo?.name ? (
+                          <>
+                            {userInfo.name.split(" ")[0].charAt(0)}
+                            {userInfo.name.split(" ")[1]?.charAt(0) ?? ""}
+                          </>
+                        ) : (
+                          "?"
+                        )}
+                      </div>
+                    )}
+                    {/* Name Render */}
+                    <div className="flex flex-col justify-start items-start gap-y-1">
+                      <div className="text-white text-sm">
+                        {userInfo?.name ? userInfo?.name : "?"}
+                      </div>
+                      <div className="text-white/35 text-sm">Basic Plan</div>
+                    </div>
+                    {/* Icon For Logout */}
+                    <Button
+                      className="hover:text-white text-white"
+                      size="icon"
+                      disabled
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
                   </div>
-                </>
-              )}
-            </div>
+                </DialogTrigger>
+                <DialogContent className="bg-gray-950/90 text-white">
+                  {/* For title and description */}
+                  <DialogHeader>
+                    <DialogTitle>Confirm Logout</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to log out? Logging out will end
+                      your current session.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button
+                        variant="destructive"
+                        className="text-white hover:cursor-pointer hover:bg-red-400/80"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      className="bg-orange-500/80 text-white hover:cursor-pointer hover:bg-orange-400/80"
+                      onClick={logoutUser}
+                    >
+                      {logoutLoading ? (
+                        <>
+                          Logging Out
+                          <ImSpinner8 className="w-4 h-4 text-white animate-spin" />
+                        </>
+                      ) : (
+                        "Logout"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </SheetContent>

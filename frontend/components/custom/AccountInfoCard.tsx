@@ -1,15 +1,6 @@
 "use client";
 //Type:
-interface accountDetails {
-  id: string;
-  name: string;
-  type: string;
-  balance: number;
-  isDefault: boolean;
-  createdAt: string;
-  userId: string;
-  familyMembers: Array<{ id: string; name: string }>;
-}
+import { Account } from "@/types/account.type";
 //Hooks:
 import { useRouter } from "next/navigation";
 //Icons:
@@ -23,7 +14,7 @@ const AccountInfoCard = ({
   accountInfo,
   onDefaultChanged,
 }: {
-  accountInfo: accountDetails;
+  accountInfo: Account;
   onDefaultChanged?: () => void;
 }) => {
   const router = useRouter();
@@ -116,11 +107,11 @@ const AccountInfoCard = ({
           <div className="flex -space-x-3">
             {accountInfo.familyMembers.map((member) => (
               <div
-                key={member.id}
+                key={member?.id}
                 className="w-[4.5vh] h-[4.5vh] rounded-full bg-linear-to-br from-emerald-300/80 to-green-600/80 flex justify-center items-center"
               >
                 <div className="text-white text-md md:text-lg lg:text-sm">
-                  {member.name
+                  {member?.name
                     .split(" ")
                     .map((word: string) => word[0])
                     .join("")}
