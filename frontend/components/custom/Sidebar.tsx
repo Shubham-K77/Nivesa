@@ -10,7 +10,7 @@ import { FaHome } from "react-icons/fa";
 import { MdAccountBalanceWallet } from "react-icons/md";
 import { FaRegUserCircle } from "react-icons/fa";
 import { toast } from "sonner";
-import { getCurrentUser, logout } from "@/actions/users.api";
+import { logout } from "@/actions/users.api";
 import { userInfo } from "@/types/user.type";
 import {
   Dialog,
@@ -29,20 +29,19 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import useDataFetch from "@/hooks/useDataFetch";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
 const Sidebar = () => {
   const router = useRouter();
   const pathName = usePathname();
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   //Get Current User
-  const { data: userInfo, loading } = useDataFetch<userInfo>(
-    getCurrentUser,
-    "currentUser"
-  );
+  const { data, isLoading } = useQuery(getActiveUser());
+  const userInfo: userInfo = data?.data?.currentUser;
   //Function to initiate logout:
   const logoutUser = async () => {
     setLogoutLoading(true);
@@ -159,7 +158,7 @@ const Sidebar = () => {
           {/* Bottom Section With Logout */}
           <div className="w-full h-1/10 bg-transparent flex justify-center items-center mb-4">
             {/* Logout Button */}
-            {loading ? (
+            {isLoading ? (
               <Skeleton className="w-[95%] h-[8vh] rounded-lg bg-gray-900/60 border border-white/5" />
             ) : (
               <Dialog
@@ -208,7 +207,7 @@ const Sidebar = () => {
                     </Button>
                   </div>
                 </DialogTrigger>
-                <DialogContent className="bg-gray-950/90 text-white">
+                <DialogContent className="bg-gray-950/75 text-white border border-white/5">
                   {/* For title and description */}
                   <DialogHeader>
                     <DialogTitle>Confirm Logout</DialogTitle>

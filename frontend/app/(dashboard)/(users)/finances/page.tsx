@@ -1,10 +1,8 @@
 "use client";
-import { getEveryAccountInfo } from "@/actions/accounts.api";
 import AccountInfoCard from "@/components/custom/AccountInfoCard";
 import DrawerComponent from "@/components/custom/DrawerComponent";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import useDataFetch from "@/hooks/useDataFetch";
 import {
   ArrowDown,
   ArrowUp,
@@ -14,7 +12,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useContext } from "react";
 import { IoMdAdd } from "react-icons/io";
 import {
   Select,
@@ -26,6 +24,9 @@ import {
 //Define type
 import { Account } from "@/types/account.type";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import getAllAccounts from "@/queries/account/getAllAccounts.queryOption";
+import { UserContext } from "../../layout";
 const FinancePage = () => {
   //useState
   type SortDirection = "Ascending" | "Descending" | null;
@@ -33,12 +34,12 @@ const FinancePage = () => {
   const [amountSort, setAmountSort] = useState<SortDirection>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  //useDataHook
-  const {
-    data: accountInfo,
-    loading,
-    refetch,
-  } = useDataFetch<Account[]>(getEveryAccountInfo, "accountInfo", []);
+  //useQueryHook
+  const currentUser = useContext(UserContext);
+  const { data, isLoading, refetch } = useQuery(
+    getAllAccounts(currentUser?.id || "")
+  );
+  const accountInfo: Account[] = data?.data?.accountInfo;
   //Filtering Logic
   const sortedAndFilteredData = useMemo(() => {
     let data = [...(accountInfo ?? [])];
@@ -161,9 +162,11 @@ const FinancePage = () => {
         </Select>
         {/* Date Select */}
         <Select
-          value={dateSort ?? undefined}
-          onValueChange={(value: "Ascending" | "Descending") =>
-            setDateSort(value)
+          value={dateSort ?? ""}
+          onValueChange={(value) =>
+            setDateSort(
+              value === "" ? null : (value as "Ascending" | "Descending")
+            )
           }
         >
           <SelectTrigger className="bg-transparent text-white">
@@ -189,9 +192,11 @@ const FinancePage = () => {
         </Select>
         {/* Balance Select */}
         <Select
-          value={amountSort ?? undefined}
-          onValueChange={(value: "Ascending" | "Descending") =>
-            setAmountSort(value)
+          value={amountSort ?? ""}
+          onValueChange={(value) =>
+            setAmountSort(
+              value === "" ? null : (value as "Ascending" | "Descending")
+            )
           }
         >
           <SelectTrigger className="bg-transparent text-white">
@@ -229,13 +234,9 @@ const FinancePage = () => {
       </div>
       {/* Cards Display */}
       <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
-        {loading !== true ? (
+        {isLoading !== true ? (
           sortedAndFilteredData?.map((account) => (
-            <AccountInfoCard
-              key={account.id}
-              accountInfo={account}
-              onDefaultChanged={refetch}
-            />
+            <AccountInfoCard key={account.id} accountInfo={account} />
           ))
         ) : (
           <>

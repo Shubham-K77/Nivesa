@@ -1,8 +1,7 @@
 "use client";
-import { getCurrentUser, updateProfile } from "@/actions/users.api";
+import { updateProfile } from "@/actions/users.api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import useDataFetch from "@/hooks/useDataFetch";
 import {
   LoaderIcon,
   Lock,
@@ -27,13 +26,14 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { userInfo, UserData } from "@/types/user.type";
+import { useQuery } from "@tanstack/react-query";
+import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
+import { useUpdateUser } from "@/queries/user/editUserInfo.mutation";
 const ProfilePage = () => {
   //Get Current User
-  const {
-    data: userInfo,
-    loading,
-    refetch,
-  } = useDataFetch<userInfo>(getCurrentUser, "currentUser");
+  const { data, isLoading } = useQuery(getActiveUser());
+  const userInfo: userInfo = data?.data?.currentUser;
+  const updateUserMutation = useUpdateUser();
   //Use State Variables
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -42,8 +42,6 @@ const ProfilePage = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassowrd, setConfirmNewPassword] = useState("");
-  const [loader, setLoader] = useState(false);
-  const [loadingState, setLoadingState] = useState("");
   //Update Name, Picture, Contact At Initial Mount
   useEffect(() => {
     if (userInfo) {
@@ -68,21 +66,17 @@ const ProfilePage = () => {
   };
   //Handle The Changes
   const handleChange = async () => {
-    setLoadingState("save");
     if (currentPassword || newPassword || confirmNewPassowrd) {
       if (!currentPassword || !newPassword || !confirmNewPassowrd) {
-        discardChange();
         return toast.error("Please fill all password fields");
       }
       if (newPassword !== confirmNewPassowrd) {
-        discardChange();
         return toast.error("Passwords do not match");
       }
       //Check If Password Matches The Regex
       const passwordRegex =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
       if (!passwordRegex.test(newPassword)) {
-        discardChange();
         return toast.error(
           "Please ensure your password meets all the requirements listed."
         );
@@ -96,26 +90,27 @@ const ProfilePage = () => {
       ...(currentPassword && { password: currentPassword, newPassword }),
     };
     //Call The Function
-    try {
-      setLoader(true);
-      const response = await updateProfile(userData);
-      toast.success(response?.data?.message);
-      // Clear preview states after successful upload
-      setProfilePic(null);
-      setPreviewUrl(null);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
-      await refetch();
-    } catch (error: any) {
-      return toast.error(error?.response?.data?.message);
-    } finally {
-      setLoader(false);
-    }
+    updateUserMutation.mutate(userData, {
+      onSuccess: (response) => {
+        toast.success(
+          response?.data?.message || "Profile updated successfully"
+        );
+        setProfilePic(null);
+        setPreviewUrl(null);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+      },
+      onError: (error: any) => {
+        console.error(error);
+        toast.error(
+          error?.response?.data?.message || "Failed to update profile"
+        );
+      },
+    });
   };
   //Discard The Changes
   const discardChange = () => {
-    setLoadingState("discard");
     setProfilePic(null);
     setPreviewUrl(null);
     setName(userInfo?.name || "");
@@ -152,7 +147,7 @@ const ProfilePage = () => {
         ></div>
       </div>
       {/* Basic Information Edit */}
-      {loading !== true ? (
+      {isLoading !== true ? (
         <div className="w-full rounded-lg bg-[#0A0A0A] border border-white/10 flex flex-col justify-start items-start p-8 gap-y-6">
           {/* Title And Description */}
           <div className="flex flex-col justify-start items-start gap-y-2">
@@ -310,7 +305,7 @@ const ProfilePage = () => {
         </>
       )}
       {/* Password Change Edit */}
-      {loading !== true ? (
+      {isLoading !== true ? (
         <div className="w-full rounded-lg bg-[#0A0A0A] border border-white/10 flex flex-col justify-start items-start p-8 gap-y-6 mb-4">
           {/* Title And Description */}
           <div className="flex flex-col justify-start items-start gap-y-2">
@@ -428,8 +423,9 @@ const ProfilePage = () => {
           <Button
             className="flex h-[7.5vh] justify-center items-center gap-x-2 bg-green-500/80 text-white hover:cursor-pointer hover:bg-green-400/80 p-2"
             onClick={handleChange}
+            disabled={updateUserMutation.isPending}
           >
-            {loadingState === "save" && loader === true ? (
+            {updateUserMutation.isPending ? (
               <>
                 Saving Changes
                 <LoaderIcon className="text-white w-4 h-4 animate-spin" />
@@ -445,18 +441,10 @@ const ProfilePage = () => {
           <Button
             className="flex h-[7.5vh] justify-center items-center gap-x-2 bg-red-500/80 text-white hover:cursor-pointer hover:bg-red-400/80 p-2"
             onClick={discardChange}
+            disabled={updateUserMutation.isPending}
           >
-            {loadingState === "discard" && loader === true ? (
-              <>
-                Discarding changes
-                <LoaderIcon className="w-4 h-4 text-white animate-spin" />
-              </>
-            ) : (
-              <>
-                <X className="w-3 h-3 text-white" />
-                Discard Changes
-              </>
-            )}
+            <X className="w-3 h-3 text-white" />
+            Discard Changes
           </Button>
         </div>
       )}

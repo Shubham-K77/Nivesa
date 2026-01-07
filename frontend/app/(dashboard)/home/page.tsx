@@ -8,26 +8,21 @@ import { GrTransaction } from "react-icons/gr";
 import { useContext } from "react";
 //My Components:
 import AccountInfoCard from "@/components/custom/AccountInfoCard";
-//API Actions:
-import { getAccountsInfo } from "@/actions/accounts.api";
 import { UserContext } from "../layout";
 import { Skeleton } from "@/components/ui/skeleton";
-import useDataFetch from "@/hooks/useDataFetch";
+import { useQuery } from "@tanstack/react-query";
 //Type Definition:
 import { Account } from "@/types/account.type";
+import getAccountsInitial from "@/queries/account/getAccountsInitial.queryOption";
 const Page = () => {
   const currentUser = useContext(UserContext);
-  //Using The Hook (only fetches if user role is USER)
-  const shouldFetch = currentUser?.role === "USER";
-  const {
-    data: accountInfo,
-    loading,
-    refetch,
-  } = useDataFetch<Account[]>(
-    shouldFetch ? getAccountsInfo : () => Promise.resolve({ data: {} }),
-    "accountInfo",
-    [currentUser?.id, currentUser?.role]
-  );
+  //Tanstack Query => Refetch When The Role Is User
+  const { data, isLoading, refetch } = useQuery({
+    ...getAccountsInitial(currentUser?.id || ""),
+    enabled: currentUser?.role === "USER" && !!currentUser?.id,
+  });
+  const accountInfo = data?.data?.accountInfo as Account[] | undefined;
+
   return (
     <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
       {/* Motif Display */}
@@ -61,7 +56,7 @@ const Page = () => {
             </div>
             {/* To Open Account */}
             {currentUser?.role === "USER" ? (
-              <DrawerComponent onSuccess={refetch}>
+              <DrawerComponent>
                 <div className="relative w-full h-full overflow-visible isolation-isolate">
                   <div className="w-full bg-linear-to-br from-white/25 to-gray-950 backdrop-blur-md rounded-lg h-[12vh] md:h-[8.5vh] lg:h-[12vh] flex justify-center items-center gap-x-2 transition-all ease-in-out duration-150 hover:cursor-pointer">
                     <IoMdAdd className="text-white" size={22} />
@@ -90,12 +85,11 @@ const Page = () => {
       {/* Cards For Showing The Current Accounts In The System */}
       {currentUser?.role === "USER" ? (
         <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
-          {loading !== true ? (
-            accountInfo?.map((account: Account) => (
+          {!isLoading && accountInfo ? (
+            accountInfo.map((account: Account) => (
               <AccountInfoCard
                 key={account.id}
                 accountInfo={{ ...account, userId: currentUser?.id || "" }}
-                onDefaultChanged={refetch}
               />
             ))
           ) : (

@@ -9,30 +9,26 @@ import { FiUsers } from "react-icons/fi";
 import { MdOutlineSavings } from "react-icons/md";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { updateDefaultFlag } from "@/actions/accounts.api";
-const AccountInfoCard = ({
-  accountInfo,
-  onDefaultChanged,
-}: {
-  accountInfo: Account;
-  onDefaultChanged?: () => void;
-}) => {
+import { makeAccountDefault } from "@/queries/account/updateAccountDefault.mutation";
+const AccountInfoCard = ({ accountInfo }: { accountInfo: Account }) => {
   const router = useRouter();
+  const updateAccountDefaultMutation = makeAccountDefault();
   const handleDefaultChange = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      if (accountInfo.isDefault) {
-        return toast.warning("This account is already set as your default.");
-      }
-      const response = await updateDefaultFlag({
-        userId: accountInfo.userId,
-        accountId: accountInfo.id,
-      });
-      toast.success(response.data.message);
-      return onDefaultChanged?.();
-    } catch (error: any) {
-      return toast.error(error?.response?.data?.message);
+    if (accountInfo.isDefault) {
+      return toast.warning("This account is already set as your default.");
     }
+    updateAccountDefaultMutation.mutate(
+      { userId: accountInfo.userId, accountId: accountInfo.id },
+      {
+        onSuccess: (response) => {
+          toast.success(response.data.message);
+        },
+        onError: (error: any) => {
+          return toast.error(error?.response?.data?.message);
+        },
+      }
+    );
   };
   return (
     <div

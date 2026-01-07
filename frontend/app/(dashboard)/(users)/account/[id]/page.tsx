@@ -1,6 +1,4 @@
 "use client";
-import { getSpecificAccountInfo } from "@/actions/accounts.api";
-import useDataFetch from "@/hooks/useDataFetch";
 import { use } from "react";
 import { useRouter } from "next/navigation";
 //Icons
@@ -14,21 +12,20 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { GrTransaction } from "react-icons/gr";
 import { Skeleton } from "@/components/ui/skeleton";
 import TransactionTable from "@/components/custom/TransactionTable";
+import { useQuery } from "@tanstack/react-query";
+import getSpecificAccount from "@/queries/account/getSpecificAccountInfo.queryOption";
 //Type
 import { Account } from "@/types/account.type";
 const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const router = useRouter();
-  //useDataFetchHook
-  const { data: accountInfo, loading } = useDataFetch<Account>(
-    () => getSpecificAccountInfo(id),
-    "accountInfo",
-    [id]
-  );
+  //useQuery
+  const { data, isLoading } = useQuery(getSpecificAccount(id));
+  const accountInfo: Account = data?.data?.accountInfo;
   return (
     <div className="w-full min-h-screen flex flex-col justify-start items-center gap-y-8 bg-transparent">
       {/* Top Banner */}
-      {loading !== true ? (
+      {!isLoading ? (
         <div
           className={`w-full h-screen lg:h-[55vh] bg-linear-to-br grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 ${
             accountInfo?.type === "FAMILY"

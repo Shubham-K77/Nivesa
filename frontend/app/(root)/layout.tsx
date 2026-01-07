@@ -4,25 +4,28 @@ import Footer from "@/components/custom/Footer";
 import Navbar from "@/components/custom/Navbar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { getCurrentUser } from "../../actions/users.api";
-import { toast } from "sonner";
+//Tanstack Query
+import { useQuery } from "@tanstack/react-query";
+import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
 
 export default function HomeLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  //Constant:
   const router = useRouter();
-  //UseEffect To Fetch The Current User:
+
+  const { data, isLoading } = useQuery(getActiveUser());
+  const statusCode = data?.data?.statusCode;
+
   useEffect(() => {
-    const getActiveUser = async () => {
-      const response = await getCurrentUser();
-      if (response.data?.statusCode === 200) {
-        toast.info("User is already logged in.");
-        return router.push("/home");
-      }
-    };
-    getActiveUser();
-  }, [router]);
+    if (statusCode === 200) {
+      router.push("/home");
+    }
+  }, [statusCode, router]);
+
+  if (isLoading) {
+    return null;
+  }
+
   return (
     <>
       <div className="w-full flex flex-col min-h-screen justify-start items-center bg-gray-900 text-white">

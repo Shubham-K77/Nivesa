@@ -3,22 +3,23 @@ import { BackgroundGradientAnimation } from "@/components/ui/background-gradient
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { IoMdArrowBack } from "react-icons/io";
-import { getCurrentUser } from "../../../actions/users.api";
+import { useQuery } from "@tanstack/react-query";
+import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
 import { toast } from "sonner";
+
 export default function VerifyLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
+  const { data } = useQuery(getActiveUser());
+  const statusCode = data?.data?.statusCode;
+
   useEffect(() => {
-    const getActiveUser = async () => {
-      const response = await getCurrentUser();
-      if (response.data?.statusCode === 200) {
-        toast.info("User is already logged in.");
-        return router.push("/home");
-      }
-    };
-    getActiveUser();
-  }, [router]);
+    if (statusCode === 200) {
+      toast.info("User is already logged in.");
+      router.push("/home");
+    }
+  }, [statusCode, router]);
   return (
     <>
       <BackgroundGradientAnimation className="w-full flex flex-col justify-start items-center text-white gap-y-4">

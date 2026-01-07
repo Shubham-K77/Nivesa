@@ -46,16 +46,13 @@ import { toast } from "sonner";
 import { ImSpinner8 } from "react-icons/im";
 //React
 import { useContext, useState } from "react";
-import {
-  createNewAccount,
-  createNewFamilyAccount,
-} from "@/actions/accounts.api";
 import { UserContext } from "@/app/(dashboard)/layout";
 import FamilyMembersList, { FamilyMember } from "./FamilyMemberFormList";
+//TanStack Query
+import { useCreateAccount } from "@/queries/account/createAccount.mutation";
 
-const DrawerComponent = ({ children, onSuccess }: any) => {
+const DrawerComponent = ({ children }: any) => {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const currentUser = useContext(UserContext);
   const [members, setMembers] = useState<FamilyMember[]>([
     { id: Date.now(), name: "", email: "", phoneNumber: "" },
@@ -70,55 +67,40 @@ const DrawerComponent = ({ children, onSuccess }: any) => {
       userId: currentUser?.id || "",
     },
   });
+  const createAccountMutation = useCreateAccount();
+
   async function onSubmit(values: any) {
-    try {
-      setLoading(true);
-      const { name, type, balance, isDefault, userId } = values;
-      let response;
-      if (type === "CURRENT" || type === "SAVINGS") {
-        response = await createNewAccount({
-          name,
-          type,
-          balance,
-          isDefault,
-          userId,
-        });
-        toast.success(response?.data.message);
-        setLoading(false);
-        setOpen(false);
-        form.reset();
-        if (onSuccess) onSuccess();
-      } else {
-        //Creating the family account
-        const familyMemberInfo = members.map(({ id, ...rest }) => ({
+    const { name, type, balance, isDefault, userId } = values;
+    const payload = {
+      name,
+      type,
+      balance,
+      isDefault,
+      userId,
+      ...(type === "FAMILY" && {
+        familyMemberInfo: members.map(({ id, ...rest }) => ({
           name: rest.name,
           email: rest.email || undefined,
           phoneNumber: rest.phoneNumber || undefined,
-        }));
-        response = await createNewFamilyAccount({
-          name,
-          type,
-          balance,
-          isDefault,
-          userId,
-          familyMemberInfo,
-        });
+        })),
+      }),
+    };
+    createAccountMutation.mutate(payload, {
+      onSuccess: (response) => {
         toast.success(response?.data.message);
-        setLoading(false);
         setOpen(false);
         form.reset();
-        if (onSuccess) onSuccess();
-      }
-    } catch (error: any) {
-      setLoading(false);
-      console.error(error);
-      return toast.error(error?.response?.data?.message);
-    }
+      },
+      onError: (error: any) => {
+        console.error(error);
+        toast.error(error?.response?.data?.message);
+      },
+    });
   }
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent className="bg-gray-950/80 max-h-[90vh] pointer-events-auto">
+      <DrawerContent className="bg-gray-950 max-h-[90vh] pointer-events-auto">
         <DrawerHeader>
           <DrawerTitle className="text-white">Create New Account</DrawerTitle>
         </DrawerHeader>
@@ -252,7 +234,7 @@ const DrawerComponent = ({ children, onSuccess }: any) => {
                   type="submit"
                   className="w-[45%] lg:w-[12%] h-[7.5vh] md:h-[6vh] lg:h-[7.5vh] bg-linear-to-br from-yellow-400/80 to-amber-800/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-md md:text-lg lg:text-sm hover:cursor-pointer"
                 >
-                  {loading === true ? (
+                  {createAccountMutation.isPending ? (
                     <ImSpinner8 className="text-white animate-spin" size={25} />
                   ) : (
                     "Create"
