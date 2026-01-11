@@ -190,7 +190,7 @@ export class UserController {
 
   //3. Put Requests:
   //Update User Profile
-  @Put()
+  @Put('/')
   @UseGuards(UserLoginGuard)
   async updateProfile(@Body() userData: UpdateUserDto, @Req() req: Request) {
     const userId = req['current_user']?.id;

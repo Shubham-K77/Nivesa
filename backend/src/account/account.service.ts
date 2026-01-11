@@ -242,16 +242,12 @@ export class AccountService {
           'Must provide a user info for this request.',
         );
       }
-      //Check The User
       const userExists = await this.prisma.user.findFirst({
-        where: {
-          id: newFamilyAccount.userId,
-        },
+        where: { id: newFamilyAccount.userId },
       });
       if (!userExists) {
         throw new UnauthorizedException("The provided user doesn't exist.");
       }
-      //Validate family member Info
       if (
         !newFamilyAccount.familyMemberInfo ||
         newFamilyAccount.familyMemberInfo.length === 0
@@ -260,53 +256,49 @@ export class AccountService {
           "Add at least one family member's details to continue.",
         );
       }
-      //If This is only account make this default
-      const existingAccounts = await this.prisma.account.findMany({
-        where: {
-          userId: userExists.id,
-        },
-      });
-      if (existingAccounts.length === 0) {
-        newFamilyAccount.isDefault = true;
-      } else if (newFamilyAccount.isDefault === true) {
-        await this.prisma.account.updateMany({
-          where: { userId: newFamilyAccount.userId },
-          data: { isDefault: false },
+      return await this.prisma.$transaction(async (txn) => {
+        // Check existing accounts
+        const existingAccounts = await txn.account.findMany({
+          where: { userId: userExists.id },
         });
-      }
-      //Create a new Account
-      const { familyMemberInfo, ...newAccountInfo } = newFamilyAccount;
-      const newAccount = await this.prisma.account.create({
-        data: {
-          userId: newAccountInfo.userId,
-          name: newAccountInfo.name,
-          type: newAccountInfo.type,
-          balance: newAccountInfo.balance ?? 0,
-          isDefault: newAccountInfo.isDefault ?? false,
-        },
-      });
-      if (!newAccount) {
-        throw new ServiceUnavailableException(
-          'Account creation failed. Please check the details and retry.',
-        );
-      }
-      //Loop Through The Family Member And Send It To Family Member Create Method
-      const memberResults: any[] = [];
-      for (const familyMember of familyMemberInfo) {
-        const result = await this.createNewFamilyMember({
-          ...familyMember,
-          accountId: newAccount.id,
-          userId: newFamilyAccount.userId,
+        if (existingAccounts.length === 0) {
+          newFamilyAccount.isDefault = true;
+        } else if (newFamilyAccount.isDefault === true) {
+          await txn.account.updateMany({
+            where: { userId: newFamilyAccount.userId },
+            data: { isDefault: false },
+          });
+        }
+        const { familyMemberInfo, ...newAccountInfo } = newFamilyAccount;
+        // Create Account
+        const newAccount = await txn.account.create({
+          data: {
+            userId: newAccountInfo.userId,
+            name: newAccountInfo.name,
+            type: newAccountInfo.type,
+            balance: newAccountInfo.balance ?? 0,
+            isDefault: newAccountInfo.isDefault ?? false,
+          },
         });
-        memberResults.push(result);
-      }
-      //Response
-      return {
-        message: 'Successfully Created New Account!',
-        statusCode: 201,
-        account: newAccount,
-        memberResults,
-      };
+        // Create Family Members
+        const memberResults: any[] = [];
+        for (const familyMember of familyMemberInfo) {
+          const result = await txn.familyMember.create({
+            data: {
+              ...familyMember,
+              accountId: newAccount.id,
+              userId: newFamilyAccount.userId,
+            },
+          });
+          memberResults.push(result);
+        }
+        return {
+          message: 'Successfully Created New Account!',
+          statusCode: 201,
+          account: newAccount,
+          memberResults,
+        };
+      });
     } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;
