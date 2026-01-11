@@ -183,6 +183,7 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <TransactionTable
         transactions={accountInfo?.transactions}
         type={accountInfo?.type}
+        accountId={id}
       />
     </div>
   );

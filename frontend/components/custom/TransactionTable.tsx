@@ -3,6 +3,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -51,15 +52,24 @@ import {
   TransactionType,
   TransactionCategory,
 } from "@/types/transaction.type";
+//Delete Mutation
+import { useDeleteTransactions } from "@/queries/transaction/deleteBulkTransactions.mutation";
+import { toast } from "sonner";
+import BarLoader from "./BarLoader";
 const TransactionTable = ({
   transactions = [],
-  type = "",
+  type,
+  accountId,
 }: {
   transactions?: Transaction[];
   type?: string;
+  accountId?: string;
 }) => {
   //Constants
   const router = useRouter();
+  //Delete Mutation
+  const deleteMutation = useDeleteTransactions(accountId || "");
+  const isDeleting = deleteMutation.isPending;
   //UseState Variables
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState({
@@ -70,6 +80,9 @@ const TransactionTable = ({
   const [typeFilter, setTypeFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  //Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   //Multiple Select Handling
   const handleSelect = (id: string) => {
     setSelectedIds((current) =>
@@ -86,7 +99,43 @@ const TransactionTable = ({
     );
   };
   //Handle Bulk Delete
-  const handleBulkDelete = () => {};
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    deleteMutation.mutate(
+      { transactions: selectedIds },
+      {
+        onSuccess: (data) => {
+          setSelectedIds([]);
+          toast.success(
+            data?.data?.message || "Transactions deleted successfully."
+          );
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to delete transactions."
+          );
+        },
+      }
+    );
+  };
+  //Handle Single Delete
+  const deleteTransaction = (transaction: Array<string>) => {
+    deleteMutation.mutate(
+      { transactions: transaction },
+      {
+        onSuccess: (data) => {
+          toast.success(
+            data?.data?.message || "Transaction deleted successfully."
+          );
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to delete transaction."
+          );
+        },
+      }
+    );
+  };
   //Sorting Function
   const filteredAndSortedTransactions = useMemo(() => {
     let result = [...transactions];
@@ -160,6 +209,23 @@ const TransactionTable = ({
     setRecurringFilter("");
     setSelectedIds([]);
   };
+  //Pagination Logic
+  const totalPages = Math.ceil(
+    filteredAndSortedTransactions.length / itemsPerPage
+  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTransactions = filteredAndSortedTransactions.slice(
+    startIndex,
+    endIndex
+  );
+  //Pagination Handlers
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
   //Color Mapping
   const colorMap: Record<string, string> = {
     FAMILY: "from-emerald-500/10 to-teal-500/10",
@@ -183,8 +249,6 @@ const TransactionTable = ({
     BUSINESS: "bg-amber-600/10 text-amber-500",
     OTHER: "bg-slate-600/10 text-slate-400",
   };
-  //Delete Transaction Function
-  const deleteTransaction = (transactionIds: string[]) => {};
   return (
     <div className="w-full flex flex-col justify-center items-center mb-4 gap-y-4">
       {/* Filters */}
@@ -255,8 +319,12 @@ const TransactionTable = ({
           {/* Delete Button */}
           {selectedIds.length > 0 && (
             <div>
-              <Button className="text-white text-center" variant="destructive">
-                <Trash className="w-2 h-2 mr-1" onClick={handleBulkDelete} />
+              <Button
+                className="text-white text-center hover:cursor-pointer"
+                variant="destructive"
+                onClick={handleBulkDelete}
+              >
+                <Trash className="w-2 h-2 mr-1" />
                 {selectedIds.length === filteredAndSortedTransactions.length
                   ? "Delete All"
                   : `Delete Selected (${selectedIds.length})`}
@@ -276,14 +344,16 @@ const TransactionTable = ({
           )}
         </div>
       </div>
+      {/* Loader For Delete */}
+      {isDeleting && <BarLoader />}
       {/* Transaction Table */}
       <div className="w-[95%] flex justify-center items-center rounded-md border border-white/20">
         <Table className="rounded-md min-w-full">
           {/* Table Header */}
           <TableHeader
             className={`bg-linear-to-r ${
-              colorMap[type] ?? "from-gray-900 to-slate-900"
-            }text-gray-300 hover:text-white font-semibold sticky left-0`}
+              colorMap[type || ""] ?? "from-gray-900 to-slate-900"
+            } text-gray-300 hover:text-white font-semibold sticky left-0`}
           >
             <TableRow className="bg-transparent hover:bg-transparent">
               {/* CheckBox */}
@@ -365,7 +435,7 @@ const TransactionTable = ({
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAndSortedTransactions.map((transaction) => (
+              paginatedTransactions.map((transaction) => (
                 <TableRow className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40 border-white/20">
                   {/* CheckBox */}
                   <TableCell className="sticky left-0">
@@ -478,6 +548,63 @@ const TransactionTable = ({
             )}
           </TableBody>
           {/* Table Footer */}
+          {totalPages > 1 && (
+            <TableFooter className="bg-transparent rounded-bl-lg rounded-br-lg">
+              <TableRow className="hover:bg-transparent border-t border-white/20">
+                <TableCell colSpan={7} className="py-4 bg-transparent">
+                  <div className="w-full flex justify-between items-center">
+                    {/* Left side - Info */}
+                    <div className="text-sm text-gray-400">
+                      Showing {startIndex + 1} to{" "}
+                      {Math.min(endIndex, filteredAndSortedTransactions.length)}{" "}
+                      of {filteredAndSortedTransactions.length} transactions
+                    </div>
+                    {/* Right side - Controls */}
+                    <div className="flex items-center gap-2">
+                      {/* Previous button */}
+                      <Button
+                        className="hover:cursor-pointer bg-linear-to-br from-amber-400/80 via-orange-400/80 to-yellow-400/80 hover:bg-amber-500/90 text-white disabled:opacity-80 disabled:cursor-not-allowed"
+                        size="sm"
+                        onClick={goToPreviousPage}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      {/* Page numbers */}
+                      <div className="flex gap-1">
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1
+                        ).map((num) => (
+                          <Button
+                            key={num}
+                            size="sm"
+                            onClick={() => setCurrentPage(num)}
+                            className={
+                              currentPage === num
+                                ? "bg-linear-to-br from-emerald-400/80 via-green-400/80 to-teal-400/80 hover:from-emerald-500 hover:via-green-500 hover:to-teal-500 text-white"
+                                : "bg-transparent border border-white/20 hover:bg-gray-600 text-white hover:cursor-pointer"
+                            }
+                          >
+                            {num}
+                          </Button>
+                        ))}
+                      </div>
+                      {/* Next button */}
+                      <Button
+                        className="hover:cursor-pointer bg-linear-to-br from-amber-400/80 via-orange-400/80 to-yellow-400/80 hover:bg-amber-500/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="sm"
+                        onClick={goToNextPage}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
     </div>
