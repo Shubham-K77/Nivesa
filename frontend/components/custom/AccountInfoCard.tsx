@@ -83,7 +83,7 @@ const AccountInfoCard = ({ accountInfo }: { accountInfo: Account }) => {
           Available Balance
         </div>
         <div className="text-2xl text-white font-semibold">
-          NPR {accountInfo.balance}
+          NPR {Number(accountInfo.balance).toFixed(2)}
         </div>
       </div>
       {/* Created At & Members Display */}

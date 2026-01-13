@@ -11,9 +11,20 @@ export function useDeleteTransactions(accountId: string) {
     mutationFn: async (data: TransactionsArray) => {
       return deleteBulkTransactions(data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate and refetch the account query
-      queryClient.invalidateQueries({ queryKey: ["account", accountId] });
+      if (accountId) {
+        await queryClient.invalidateQueries({
+          queryKey: ["account", accountId],
+          refetchType: "active",
+        });
+      } else {
+        // If no specific accountId, invalidate all account queries
+        await queryClient.invalidateQueries({
+          queryKey: ["account"],
+          refetchType: "active",
+        });
+      }
     },
   });
 }

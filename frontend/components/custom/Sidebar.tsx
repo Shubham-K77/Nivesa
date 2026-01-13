@@ -32,11 +32,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
 const Sidebar = () => {
   const router = useRouter();
   const pathName = usePathname();
+  const queryClient = useQueryClient();
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   //Get Current User
@@ -47,12 +48,16 @@ const Sidebar = () => {
     setLogoutLoading(true);
     try {
       const response = await logout();
+      // Clear all React Query cache
+      queryClient.clear();
       toast.success(response?.data?.message);
-      return router.push("/");
+      router.replace("/");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
     } catch (error: any) {
       console.error(error);
-      return toast.error(error?.response?.data?.message);
-    } finally {
+      toast.error(error?.response?.data?.message);
       setLogoutLoading(false);
       setShowLogoutDialog(false);
     }
@@ -207,7 +212,7 @@ const Sidebar = () => {
                     </Button>
                   </div>
                 </DialogTrigger>
-                <DialogContent className="bg-gray-950/75 text-white border border-white/5">
+                <DialogContent className="bg-linear-to-br from-black/90 to-gray-950 backdrop-blur-sm text-white border border-white/5">
                   {/* For title and description */}
                   <DialogHeader>
                     <DialogTitle>Confirm Logout</DialogTitle>

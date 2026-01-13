@@ -82,7 +82,7 @@ const TransactionTable = ({
   const [categoryFilter, setCategoryFilter] = useState("");
   //Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(10);
   //Multiple Select Handling
   const handleSelect = (id: string) => {
     setSelectedIds((current) =>
@@ -99,42 +99,28 @@ const TransactionTable = ({
     );
   };
   //Handle Bulk Delete
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    deleteMutation.mutate(
-      { transactions: selectedIds },
-      {
-        onSuccess: (data) => {
-          setSelectedIds([]);
-          toast.success(
-            data?.data?.message || "Transactions deleted successfully."
-          );
-        },
-        onError: (error: any) => {
-          toast.error(
-            error?.response?.data?.message || "Failed to delete transactions."
-          );
-        },
-      }
-    );
+    try {
+      await deleteMutation.mutateAsync({ transactions: selectedIds });
+      setSelectedIds([]);
+      toast.success("Transactions deleted successfully.");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete transactions."
+      );
+    }
   };
   //Handle Single Delete
-  const deleteTransaction = (transaction: Array<string>) => {
-    deleteMutation.mutate(
-      { transactions: transaction },
-      {
-        onSuccess: (data) => {
-          toast.success(
-            data?.data?.message || "Transaction deleted successfully."
-          );
-        },
-        onError: (error: any) => {
-          toast.error(
-            error?.response?.data?.message || "Failed to delete transaction."
-          );
-        },
-      }
-    );
+  const deleteTransaction = async (transaction: Array<string>) => {
+    try {
+      await deleteMutation.mutateAsync({ transactions: transaction });
+      toast.success("Transaction deleted successfully.");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete transaction."
+      );
+    }
   };
   //Sorting Function
   const filteredAndSortedTransactions = useMemo(() => {
@@ -252,22 +238,22 @@ const TransactionTable = ({
   return (
     <div className="w-full flex flex-col justify-center items-center mb-4 gap-y-4">
       {/* Filters */}
-      <div className="w-[95%] flex flex-col justify-start items-start lg:flex-row lg:items-center gap-4">
+      <div className="w-[95%] flex flex-col justify-start items-start gap-3 sm:gap-4">
         {/* Search Bar */}
-        <div className="relative flex-1">
+        <div className="relative w-full">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            className="pl-8 text-white font-semibold"
+            className="pl-8 text-white font-semibold text-sm sm:text-base"
             placeholder="Search Transactions..."
             onChange={(e) => setSearchTerm(e.target.value)}
             value={searchTerm}
           />
         </div>
         {/* DropDown Options */}
-        <div className="flex justify-start items-center text-white gap-x-2">
+        <div className="w-full flex flex-wrap justify-start items-center text-white gap-2">
           {/* Type Of Transaction */}
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full sm:w-auto min-w-[140px]">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent className="bg-black/75 text-white">
@@ -284,7 +270,7 @@ const TransactionTable = ({
           </Select>
           {/* Type Of Recurring */}
           <Select value={recurringFilter} onValueChange={setRecurringFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full sm:w-auto min-w-40">
               <SelectValue placeholder="All Transactions" />
             </SelectTrigger>
             <SelectContent className="bg-black/75 text-white">
@@ -301,7 +287,7 @@ const TransactionTable = ({
           </Select>
           {/* Type Of Category */}
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full sm:w-auto min-w-[150px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent className="bg-black/75 text-white">
@@ -318,18 +304,19 @@ const TransactionTable = ({
           </Select>
           {/* Delete Button */}
           {selectedIds.length > 0 && (
-            <div>
-              <Button
-                className="text-white text-center hover:cursor-pointer"
-                variant="destructive"
-                onClick={handleBulkDelete}
-              >
-                <Trash className="w-2 h-2 mr-1" />
+            <Button
+              className="text-white text-center hover:cursor-pointer text-xs sm:text-sm w-full sm:w-auto"
+              variant="destructive"
+              onClick={handleBulkDelete}
+            >
+              <Trash className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span className="hidden sm:inline">
                 {selectedIds.length === filteredAndSortedTransactions.length
                   ? "Delete All"
                   : `Delete Selected (${selectedIds.length})`}
-              </Button>
-            </div>
+              </span>
+              <span className="sm:hidden">Delete ({selectedIds.length})</span>
+            </Button>
           )}
           {/* Clear Filter */}
           {(searchTerm || typeFilter || recurringFilter || categoryFilter) && (
@@ -337,7 +324,7 @@ const TransactionTable = ({
               size="icon"
               title="Clear Filters"
               onClick={handleClearFilters}
-              className="hover:cursor-pointer text-white bg-emerald-400/80 hover:bg-emerald-300/80"
+              className="hover:cursor-pointer text-white bg-emerald-400/80 hover:bg-emerald-300/80 shrink-0"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -347,7 +334,7 @@ const TransactionTable = ({
       {/* Loader For Delete */}
       {isDeleting && <BarLoader />}
       {/* Transaction Table */}
-      <div className="w-[95%] flex justify-center items-center rounded-md border border-white/20">
+      <div className="w-[95%] flex justify-center items-center rounded-md border border-white/20 overflow-x-auto">
         <Table className="rounded-md min-w-full">
           {/* Table Header */}
           <TableHeader
@@ -357,7 +344,7 @@ const TransactionTable = ({
           >
             <TableRow className="bg-transparent hover:bg-transparent">
               {/* CheckBox */}
-              <TableHead className="w-10 sm:w-[50px] text-white hover:cursor-pointer rounded-tl-md sticky left-0 bg-inherit">
+              <TableHead className="hidden sm:table-cell w-8 sm:w-10 md:w-[50px] text-white hover:cursor-pointer rounded-tl-md sticky left-0 bg-inherit text-xs sm:text-sm">
                 <Checkbox
                   className="hover:cursor-pointer"
                   onCheckedChange={() => handleSelectAll()}
@@ -370,10 +357,10 @@ const TransactionTable = ({
               </TableHead>
               {/* Date */}
               <TableHead
-                className="text-white hover:cursor-pointer min-w-[100px] sm:min-w-auto"
+                className="text-white hover:cursor-pointer min-w-[70px] sm:min-w-20 text-xs sm:text-sm"
                 onClick={() => handleSort("date")}
               >
-                <div className="w-full flex justify-start items-center gap-x-2">
+                <div className="w-full flex justify-start items-center gap-x-1">
                   <div className="font-semibold">Date</div>
                   {sortConfig.field === "date" &&
                     (sortConfig.direction === "asc" ? (
@@ -384,15 +371,15 @@ const TransactionTable = ({
                 </div>
               </TableHead>
               {/* Description */}
-              <TableHead className="text-white min-w-[150px] sm:min-w-auto">
+              <TableHead className="text-white min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm">
                 Description
               </TableHead>
               {/* Category */}
               <TableHead
-                className="text-white hover:cursor-pointer min-w-[120px] sm:min-w-auto hidden sm:table-cell"
+                className="text-white hover:cursor-pointer min-w-[100px] sm:min-w-[120px] hidden sm:table-cell text-xs sm:text-sm"
                 onClick={() => handleSort("category")}
               >
-                <div className="w-full flex justify-start items-center gap-x-2">
+                <div className="w-full flex justify-start items-center gap-x-1 sm:gap-x-2">
                   <div className="font-semibold">Category</div>
                   {sortConfig.field === "category" &&
                     (sortConfig.direction === "asc" ? (
@@ -404,10 +391,10 @@ const TransactionTable = ({
               </TableHead>
               {/* Amount */}
               <TableHead
-                className="text-white hover:cursor-pointer min-w-[100px] sm:min-w-auto"
+                className="text-white hover:cursor-pointer min-w-20 sm:min-w-[90px] text-xs sm:text-sm"
                 onClick={() => handleSort("amount")}
               >
-                <div className="w-full flex justify-start items-center gap-x-2">
+                <div className="w-full flex justify-start items-center gap-x-1">
                   <div className="font-semibold">Amount</div>
                   {sortConfig.field === "amount" &&
                     (sortConfig.direction === "asc" ? (
@@ -418,17 +405,20 @@ const TransactionTable = ({
                 </div>
               </TableHead>
               {/* Recurring */}
-              <TableHead className="text-white hidden md:table-cell">
+              <TableHead className="text-white hidden md:table-cell text-xs sm:text-sm">
                 Recurring
               </TableHead>
               {/* Actions */}
-              <TableHead className="w-10 sm:w-[50px] rounded-tr-xl"></TableHead>
+              <TableHead className="w-8 sm:w-10 md:w-[50px] rounded-tr-md"></TableHead>
             </TableRow>
           </TableHeader>
           {/* Table Body */}
           <TableBody className="text-gray-300 hover:text-white font-semibold rounded-md">
             {filteredAndSortedTransactions?.length === 0 ? (
-              <TableRow className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40">
+              <TableRow
+                key="no-transactions"
+                className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40"
+              >
                 <TableCell colSpan={7} className="text-center">
                   {" "}
                   No Transactions Found!{" "}
@@ -436,9 +426,12 @@ const TransactionTable = ({
               </TableRow>
             ) : (
               paginatedTransactions.map((transaction) => (
-                <TableRow className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40 border-white/20">
+                <TableRow
+                  key={transaction.id}
+                  className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40 border-white/20"
+                >
                   {/* CheckBox */}
-                  <TableCell className="sticky left-0">
+                  <TableCell className="hidden sm:table-cell sticky left-0">
                     <Checkbox
                       className="hover:cursor-pointer"
                       onCheckedChange={() => handleSelect(transaction?.id)}
@@ -446,17 +439,17 @@ const TransactionTable = ({
                     />
                   </TableCell>
                   {/* Date */}
-                  <TableCell className="text-xs sm:text-sm text-whiite">
-                    {format(new Date(transaction.date), "PP")}
+                  <TableCell className="text-[10px] sm:text-xs md:text-sm text-white">
+                    {format(new Date(transaction.date), "MMM dd")}
                   </TableCell>
                   {/* Description */}
-                  <TableCell className="text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">
+                  <TableCell className="text-[10px] sm:text-xs md:text-sm truncate max-w-20 sm:max-w-[120px] md:max-w-none">
                     {transaction.description}
                   </TableCell>
                   {/* Category */}
-                  <TableCell className="p-4">
+                  <TableCell className="hidden sm:table-cell p-2 sm:p-4">
                     <span
-                      className={`inline-block px-1 py-0.5 rounded-sm text-xs font-semibold ${
+                      className={`inline-block px-1 py-0.5 rounded-sm text-[10px] sm:text-xs font-semibold ${
                         categoryColorMap[transaction.category] ??
                         "bg-slate-500/10 text-slate-400"
                       }`}
@@ -466,14 +459,20 @@ const TransactionTable = ({
                   </TableCell>
                   {/* Amount */}
                   <TableCell
-                    className={`text-xs sm:text-sm font-bold ${
+                    className={`text-[10px] sm:text-xs md:text-sm font-bold ${
                       transaction.type === TransactionType.EXPENSE
                         ? "text-red-500"
                         : "text-green-500"
                     }`}
                   >
-                    {transaction.type === TransactionType.EXPENSE ? "-" : "+"}{" "}
-                    रु {transaction.amount}
+                    <span className="hidden sm:inline">
+                      {transaction.type === TransactionType.EXPENSE ? "-" : "+"}{" "}
+                      रु {transaction.amount}
+                    </span>
+                    <span className="sm:hidden">
+                      {transaction.type === TransactionType.EXPENSE ? "-" : "+"}
+                      {transaction.amount}
+                    </span>
                   </TableCell>
                   {/* Recurring */}
                   <TableCell>
@@ -513,14 +512,14 @@ const TransactionTable = ({
                     )}
                   </TableCell>
                   {/* Actions */}
-                  <TableCell>
+                  <TableCell className="p-1 sm:p-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="h-8 w-8 p-0 hover:cursor-pointer"
+                          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:cursor-pointer"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-gray-950/95 font-semibold border-gray-800 z-10">
@@ -551,19 +550,19 @@ const TransactionTable = ({
           {totalPages > 1 && (
             <TableFooter className="bg-transparent rounded-bl-lg rounded-br-lg">
               <TableRow className="hover:bg-transparent border-t border-white/20">
-                <TableCell colSpan={7} className="py-4 bg-transparent">
-                  <div className="w-full flex justify-between items-center">
+                <TableCell colSpan={7} className="py-3 sm:py-4 bg-transparent">
+                  <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
                     {/* Left side - Info */}
-                    <div className="text-sm text-gray-400">
+                    <div className="text-xs sm:text-sm text-gray-400 text-center sm:text-left">
                       Showing {startIndex + 1} to{" "}
                       {Math.min(endIndex, filteredAndSortedTransactions.length)}{" "}
                       of {filteredAndSortedTransactions.length} transactions
                     </div>
                     {/* Right side - Controls */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
                       {/* Previous button */}
                       <Button
-                        className="hover:cursor-pointer bg-linear-to-br from-amber-400/80 via-orange-400/80 to-yellow-400/80 hover:bg-amber-500/90 text-white disabled:opacity-80 disabled:cursor-not-allowed"
+                        className="hover:cursor-pointer bg-linear-to-br from-amber-400/80 via-orange-400/80 to-yellow-400/80 hover:bg-amber-500/90 text-white disabled:opacity-80 disabled:cursor-not-allowed text-xs sm:text-sm px-2 sm:px-4"
                         size="sm"
                         onClick={goToPreviousPage}
                         disabled={currentPage === 1}
@@ -580,11 +579,11 @@ const TransactionTable = ({
                             key={num}
                             size="sm"
                             onClick={() => setCurrentPage(num)}
-                            className={
+                            className={`text-xs sm:text-sm px-2 sm:px-3 ${
                               currentPage === num
                                 ? "bg-linear-to-br from-emerald-400/80 via-green-400/80 to-teal-400/80 hover:from-emerald-500 hover:via-green-500 hover:to-teal-500 text-white"
                                 : "bg-transparent border border-white/20 hover:bg-gray-600 text-white hover:cursor-pointer"
-                            }
+                            }`}
                           >
                             {num}
                           </Button>
@@ -592,7 +591,7 @@ const TransactionTable = ({
                       </div>
                       {/* Next button */}
                       <Button
-                        className="hover:cursor-pointer bg-linear-to-br from-amber-400/80 via-orange-400/80 to-yellow-400/80 hover:bg-amber-500/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="hover:cursor-pointer bg-linear-to-br from-amber-400/80 via-orange-400/80 to-yellow-400/80 hover:bg-amber-500/90 text-white disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm px-2 sm:px-4"
                         size="sm"
                         onClick={goToNextPage}
                         disabled={currentPage === totalPages}

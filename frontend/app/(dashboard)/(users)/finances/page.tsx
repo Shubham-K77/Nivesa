@@ -240,9 +240,9 @@ const FinancePage = () => {
           ))
         ) : (
           <>
-            <Skeleton className="w-full h-[35vh] rounded-lg bg-gray-800/80" />
-            <Skeleton className="w-full h-[35vh] rounded-lg bg-gray-800/80" />
-            <Skeleton className="w-full h-[35vh] rounded-lg bg-gray-800/80" />
+            <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
+            <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
+            <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
           </>
         )}
       </div>

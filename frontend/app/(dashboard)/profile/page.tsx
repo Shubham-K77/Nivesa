@@ -301,7 +301,7 @@ const ProfilePage = () => {
         </div>
       ) : (
         <>
-          <Skeleton className="w-full h-[40vh] rounded-lg bg-[#0A0A0A] border border-white/10" />
+          <Skeleton className="w-full h-[40vh] rounded-lg bg-white/2 border border-white/10" />
         </>
       )}
       {/* Password Change Edit */}
@@ -405,7 +405,7 @@ const ProfilePage = () => {
         </div>
       ) : (
         <>
-          <Skeleton className="w-full h-[40vh] rounded-lg bg-[#0A0A0A] border border-white/10" />
+          <Skeleton className="w-full h-[40vh] rounded-lg bg-white/2 border border-white/10" />
         </>
       )}
       {/* For Save Changes CTA */}
