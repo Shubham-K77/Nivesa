@@ -11,6 +11,7 @@ import { AccountModule } from './account/account.module';
 import { FamilyMemberModule } from './family-member/family-member.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { BudgetModule } from './budget/budget.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     FamilyMemberModule,
     TransactionModule,
     CloudinaryModule,
+    BudgetModule,
   ],
 })
 export class AppModule {

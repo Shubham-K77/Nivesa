@@ -168,6 +168,53 @@ export class AccountService {
       throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
+  async getFamilyMembersInfo(userId: string, accountId: string) {
+    try {
+      //Check The Parameters:
+      if (!userId || !userId.trim()) {
+        throw new BadRequestException("Must provide the loggedIn user's info.");
+      }
+      if (!accountId || !accountId.trim()) {
+        throw new BadRequestException("Must provide the account's info.");
+      }
+      //Check For User
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException("The provided user doesn't exist.");
+      }
+      //Get The Account
+      const accountInfo = await this.prisma.account.findUnique({
+        where: { userId, id: accountId },
+        include: {
+          familyMembers: {
+            select: {
+              id: true,
+              name: true,
+              phoneNumber: true,
+            },
+          },
+        },
+      });
+      if (!accountInfo) {
+        throw new ServiceUnavailableException(
+          'Unable to retrieve at the moment. Please, try again!',
+        );
+      }
+      //Return
+      return {
+        message: 'Successfully Retrieved',
+        statusCode: 200,
+        familyMembersInfo: accountInfo.familyMembers, //Returns an array of familyMembers Info
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
   //Post Request
   async createAccount(newAccountInfo: CreateAccountDto) {
     try {
