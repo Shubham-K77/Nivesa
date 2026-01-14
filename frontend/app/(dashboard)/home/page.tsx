@@ -14,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 //Type Definition:
 import { Account } from "@/types/account.type";
 import getAccountsInitial from "@/queries/account/getAccountsInitial.queryOption";
+import getDefaultAccountBudget from "@/queries/budget/getCurrentBudget.query";
+import BudgetProgress from "@/components/custom/BudgetProgress";
 const Page = () => {
   const currentUser = useContext(UserContext);
   //Tanstack Query => Refetch When The Role Is User
@@ -22,6 +24,12 @@ const Page = () => {
     enabled: currentUser?.role === "USER" && !!currentUser?.id,
   });
   const accountInfo = data?.data?.accountInfo as Account[] | undefined;
+  const defaultAccount = accountInfo?.find((account) => account.isDefault);
+  //Budget Info
+  const { data: budgetResponse } = useQuery({
+    ...getDefaultAccountBudget(defaultAccount?.id || ""),
+  });
+  const budgetData = budgetResponse?.data;
 
   return (
     <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
@@ -82,6 +90,22 @@ const Page = () => {
           }}
         ></div>
       </div>
+      {/* For Displaying Budget Overview*/}
+      {currentUser?.role === "USER" ? (
+        !isLoading ? (
+          // Budget Overview
+          <BudgetProgress
+            initialBudget={budgetData?.budget}
+            currentExpenses={budgetData?.currentExpenses || 0}
+          />
+        ) : (
+          <>
+            <Skeleton className="w-full h-[25vh] bg-white/2" />
+          </>
+        )
+      ) : (
+        <></>
+      )}
       {/* Cards For Showing The Current Accounts In The System */}
       {currentUser?.role === "USER" ? (
         <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
