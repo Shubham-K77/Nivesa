@@ -6,15 +6,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-
 type TransactionsArray = {
   transactions: Array<string>;
 };
-
 @Injectable()
 export class TransactionService {
   constructor(private readonly prisma: PrismaService) {}
-  //Seed Transactions
   //Bulk Delete Function
   async bulkDeleteTransaction(
     userId: string,

@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Req,
+  UseGuards,
+  Patch,
+  Body,
+} from '@nestjs/common';
 import { BudgetService } from './budget.service';
 import type { Request } from 'express';
 import { UserLoginGuard } from 'src/guard/user.login.guard';
@@ -18,6 +26,24 @@ export class BudgetController {
       id,
       currentUser.id,
       currentUser.role as 'USER' | 'FAMILY_MEMBER',
+    );
+    return response;
+  }
+  @Patch('/:id')
+  @UseGuards(UserLoginGuard)
+  async createBudget(
+    @Param('id') id: string,
+    @Body('amount') amount: number,
+    @Req() req: Request,
+  ) {
+    const currentUser = req['current_user'];
+    if (!currentUser) {
+      return;
+    }
+    const response = await this.budgetService.updateBudget(
+      id,
+      currentUser?.id,
+      amount,
     );
     return response;
   }

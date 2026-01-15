@@ -37,6 +37,8 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "inngest": "^3.49.1",
+    "nestjs-inngest": "^1.2.3",
     "nodemailer": "^7.0.10",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"

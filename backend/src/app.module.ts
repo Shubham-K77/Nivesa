@@ -1,4 +1,4 @@
-import { Module, DynamicModule } from '@nestjs/common';
+import { Module, DynamicModule, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
@@ -12,6 +12,8 @@ import { FamilyMemberModule } from './family-member/family-member.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { BudgetModule } from './budget/budget.module';
+import { AppService } from './app.service';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { BudgetModule } from './budget/budget.module';
     CloudinaryModule,
     BudgetModule,
   ],
+  controllers: [AppController],
+  providers: [AppService, Logger],
 })
 export class AppModule {
   static async registerAsync(): Promise<DynamicModule> {
