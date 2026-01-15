@@ -4,13 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, Pencil, X } from "lucide-react";
 import { Budget } from "@/types/budget.type";
+import createUpdateBudget from "@/queries/budget/createUpdateBudget.mutation";
+import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 interface BudgetProgressProps {
   initialBudget: Budget | null;
   currentExpenses: number;
+  accountId: string;
 }
 const BudgetProgress = ({
   initialBudget,
   currentExpenses,
+  accountId,
 }: BudgetProgressProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newBudget, setNewBudget] = useState(
@@ -19,8 +24,34 @@ const BudgetProgress = ({
   const percentageUsed = initialBudget
     ? (currentExpenses / initialBudget.amount) * 100
     : 0;
+  const mutation = createUpdateBudget();
   //Functions
-  const handleUpdateBudget = () => {};
+  const handleUpdateBudget = () => {
+    //Check Amount First
+    const amount = Number(newBudget);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid number");
+      setIsEditing(false);
+      return;
+    }
+    //Call Update Function
+    mutation.mutate(
+      {
+        accountId,
+        amount,
+      },
+      {
+        onSuccess: (data) => {
+          setIsEditing(false);
+          toast.success(`${data?.data?.message}`);
+        },
+        onError: (error) => {
+          console.error("Failed to update budget:", error);
+          toast.error("Failed to update/create the budget.");
+        },
+      }
+    );
+  };
   const handleCancel = () => {
     setNewBudget(initialBudget?.amount?.toString() || "");
     setIsEditing(false);
@@ -40,9 +71,11 @@ const BudgetProgress = ({
               type="number"
               value={newBudget}
               onChange={(e) => setNewBudget(e.target.value)}
-              className="w-32"
+              className="w-32 text-white/85"
               placeholder="Enter amount"
+              title="Update Budget"
               autoFocus
+              disabled={mutation.isPending}
             />
             {/* CTA's */}
             <Button
@@ -83,6 +116,20 @@ const BudgetProgress = ({
               <Pencil className="h-3 w-3 text-white" />
             </Button>
           </div>
+        )}
+      </div>
+      {/* Displaying The Progress Bar */}
+      <div className="w-full flex flex-col justify-start items-start gap-y-2">
+        {initialBudget && (
+          <>
+            <Progress
+              value={percentageUsed}
+              className="w-full bg-white/45 [&>div]:bg-green-500"
+            />
+            <p className="text-xs text-muted-foreground text-right w-full">
+              {percentageUsed.toFixed(1)}% used
+            </p>
+          </>
         )}
       </div>
     </div>

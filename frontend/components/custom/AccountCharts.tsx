@@ -37,6 +37,7 @@ const AccountCharts = ({
   transactions?: Transaction[];
 }) => {
   const [dateRange, setDateRange] = useState<DateRangeKey>("1M");
+
   //Filtering Transactions
   const filteredTransactions = useMemo(() => {
     const range = Date_Ranges[dateRange];
@@ -44,31 +45,48 @@ const AccountCharts = ({
     const startDate = range.days
       ? startOfDay(subDays(now, range.days))
       : startOfDay(new Date(0));
-    //Filtering The Days
-    const filtered = transactions.filter(
-      (t) => new Date(t.date) >= startDate && new Date(t.date) <= endOfDay(now)
-    );
+
+    //Filtering The Days - Parse dates properly
+    const filtered = transactions.filter((t) => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= endOfDay(now);
+    });
+
     //Getting The Income And Expense Values
     const grouped = filtered.reduce<
-      Record<string, { date: string; income: number; expense: number }>
+      Record<
+        string,
+        { date: string; sortDate: Date; income: number; expense: number }
+      >
     >((acc, transaction) => {
-      const date = format(new Date(transaction.date), "MMM dd");
+      const transactionDate = new Date(transaction.date);
+      const dateKey = format(transactionDate, "MMM dd");
+
       //If Date Doesn't Exist In The Accumulator
-      if (!acc[date]) {
-        acc[date] = { date, income: 0, expense: 0 };
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          date: dateKey,
+          sortDate: transactionDate,
+          income: 0,
+          expense: 0,
+        };
       }
-      //Check Exisitng Transactions Type
+
+      //Check Exisitng Transactions Type - Convert string amount to number
+      const amount = Number(transaction.amount) || 0;
       if (transaction.type === "INCOME") {
-        acc[date].income += transaction.amount;
+        acc[dateKey].income += amount;
       } else {
-        acc[date].expense += transaction.amount;
+        acc[dateKey].expense += amount;
       }
+
       //Return Accumulator
       return acc;
     }, {});
-    //Return Grouped Object To Array
+
+    //Return Grouped Object To Array sorted by actual date
     return Object.values(grouped).sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      (a, b) => a.sortDate.getTime() - b.sortDate.getTime()
     );
   }, [transactions, dateRange]);
   //Calculating Totals For Given Periods

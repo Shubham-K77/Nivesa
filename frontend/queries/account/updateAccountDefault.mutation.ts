@@ -16,10 +16,10 @@ export function makeAccountDefault() {
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+      queryClient.refetchQueries({
         queryKey: ["initialAccount", variables.userId],
       });
-      queryClient.invalidateQueries({
+      queryClient.refetchQueries({
         queryKey: ["allAccounts", variables.userId],
       });
     },

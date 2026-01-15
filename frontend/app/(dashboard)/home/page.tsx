@@ -97,6 +97,7 @@ const Page = () => {
           <BudgetProgress
             initialBudget={budgetData?.budget}
             currentExpenses={budgetData?.currentExpenses || 0}
+            accountId={defaultAccount?.id || ""}
           />
         ) : (
           <>

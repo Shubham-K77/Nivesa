@@ -5,5 +5,18 @@ const getBudgetInfo = async (id: string) => {
     withCredentials: true,
   });
 };
+const createBudget = async ({
+  accountId,
+  amount,
+}: {
+  accountId: string;
+  amount: number;
+}) => {
+  return axios.patch(
+    `http://localhost:3001/api/v1/budget/${accountId}`,
+    { amount },
+    { withCredentials: true }
+  );
+};
 
-export { getBudgetInfo };
+export { getBudgetInfo, createBudget };

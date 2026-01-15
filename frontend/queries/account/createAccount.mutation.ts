@@ -17,10 +17,10 @@ export function useCreateAccount() {
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch account queries
-      queryClient.invalidateQueries({
+      queryClient.refetchQueries({
         queryKey: ["initialAccount", variables.userId],
       });
-      queryClient.invalidateQueries({
+      queryClient.refetchQueries({
         queryKey: ["allAccounts", variables.userId],
       });
     },

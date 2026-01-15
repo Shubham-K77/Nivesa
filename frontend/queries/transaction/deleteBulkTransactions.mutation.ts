@@ -14,15 +14,13 @@ export function useDeleteTransactions(accountId: string) {
     onSuccess: async () => {
       // Invalidate and refetch the account query
       if (accountId) {
-        await queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ["account", accountId],
-          refetchType: "active",
         });
       } else {
         // If no specific accountId, invalidate all account queries
-        await queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ["account"],
-          refetchType: "active",
         });
       }
     },

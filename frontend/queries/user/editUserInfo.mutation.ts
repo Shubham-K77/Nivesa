@@ -8,7 +8,7 @@ export function useUpdateUser() {
       return updateProfile(userData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      queryClient.refetchQueries({ queryKey: ["currentUser"] });
     },
   });
 }
