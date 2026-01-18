@@ -312,7 +312,6 @@ export class MailerService {
       throw new Error(`Internal Server Error: ${error.message}`);
     }
   }
-
   //For Resetting The Password:
   async resetPasswordMail(email: string) {
     try {
@@ -384,6 +383,112 @@ export class MailerService {
     } catch (error: any) {
       console.error(error);
       throw new Error(`Internal Server Error: ${error.message}`);
+    }
+  }
+  //For Normal Email
+  async sendBudgetAlertMail(
+    email: string,
+    userName: string,
+    percentageUsed: number,
+    accountName: string,
+    budgetAmount: number,
+    totalExpenses: number,
+  ) {
+    try {
+      const remainingAmount = budgetAmount - totalExpenses;
+      const mailer = await this.configMailer();
+      const info = await mailer.sendMail({
+        from: '"Nivēśa" <nivesa.project@gmail.com>',
+        to: email,
+        subject: `Budget Alert: ${accountName} - ${percentageUsed.toFixed(0)}% Used`,
+        html: `
+        <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Budget Alert</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f8f9fa;
+                        margin: 0;
+                        padding: 0;
+                        color: #333;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        padding: 30px;
+                        border: 1px solid #e5e5e5;
+                    }
+                    h2 {
+                        color: #856404;
+                        margin-bottom: 20px;
+                        font-size: 22px;
+                    }
+                    .budget-info {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 6px;
+                        margin: 20px 0;
+                    }
+                    .budget-info p {
+                        margin: 10px 0;
+                        font-size: 15px;
+                    }
+                    .budget-info strong {
+                        color: #000;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        padding-top: 20px;
+                        border-top: 1px solid #e5e5e5;
+                        font-size: 13px;
+                        color: #6c757d;
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>⚠️ Budget Alert</h2>
+
+                    <p>Dear ${userName},</p>
+
+                    <p>Your account <strong>"${accountName}"</strong> has reached <strong>${percentageUsed.toFixed(1)}%</strong> of the allocated budget.</p>
+
+                    <div class="budget-info">
+                        <p><strong>Budget Allocation:</strong> NPR ${budgetAmount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Amount Spent:</strong> NPR ${totalExpenses.toLocaleString('en-NP', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Remaining Balance:</strong> NPR ${remainingAmount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}</p>
+                    </div>
+
+                    <p>Please review your recent transactions and adjust your spending accordingly.</p>
+
+                    <p>If you notice any unauthorized transactions, please contact our support team immediately.</p>
+
+                    <p style="margin-top: 25px;">
+                        Best regards,<br>
+                        <strong>Nivēśa Team</strong>
+                    </p>
+
+                    <div class="footer">
+                        <p>This is an automated notification. Please do not reply to this email.</p>
+                        <p>© ${new Date().getFullYear()} Nivēśa. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+        </html>
+        `,
+      });
+      console.log('Budget alert email sent:', info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error: any) {
+      console.error('Failed to send budget alert email:', error);
+      throw new Error(`Failed to send email: ${error.message}`);
     }
   }
 }

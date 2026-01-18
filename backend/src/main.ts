@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -10,6 +9,9 @@ import cors from 'cors';
 import { json, urlencoded } from 'express';
 import { inngest } from './inngest/client';
 import { getInngestFunctions } from './inngest/functions';
+import { PrismaService } from './prisma/prisma.service';
+import { WhatsappService } from './whatsapp/whatsapp.service';
+import { MailerService } from './mailer/mailer.service';
 
 async function bootstrap() {
   //Dynamic App Module For Arject
@@ -31,10 +33,16 @@ async function bootstrap() {
   // Inject Dependencies into inngest functions
   const logger = app.get(Logger);
   const appService = app.get(AppService);
+  const prismaService = app.get(PrismaService);
+  const whatsappService = app.get(WhatsappService);
+  const mailerService = app.get(MailerService);
   // Get inngest functions with dependencies
   const inngestFunctions = getInngestFunctions({
     appService,
     logger,
+    prismaService,
+    whatsappService,
+    mailerService,
   });
   // Register inngest endpoint
   app.use(

@@ -14,6 +14,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { BudgetModule } from './budget/budget.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { AppController } from './app.controller';
     TransactionModule,
     CloudinaryModule,
     BudgetModule,
+    WhatsappModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],

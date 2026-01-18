@@ -40,8 +40,10 @@
     "inngest": "^3.49.1",
     "nestjs-inngest": "^1.2.3",
     "nodemailer": "^7.0.10",
+    "qrcode-terminal": "^0.12.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "whatsapp-web.js": "^1.34.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
