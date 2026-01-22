@@ -6,6 +6,7 @@ import { IoMdAdd } from "react-icons/io";
 import { GrTransaction } from "react-icons/gr";
 //React Components:
 import { useContext } from "react";
+import { useRouter } from "next/navigation";
 //My Components:
 import AccountInfoCard from "@/components/custom/AccountInfoCard";
 import { UserContext } from "../layout";
@@ -18,6 +19,7 @@ import getDefaultAccountBudget from "@/queries/budget/getCurrentBudget.query";
 import BudgetProgress from "@/components/custom/BudgetProgress";
 const Page = () => {
   const currentUser = useContext(UserContext);
+  const router = useRouter();
   //Tanstack Query => Refetch When The Role Is User
   const { data, isLoading, refetch } = useQuery({
     ...getAccountsInitial(currentUser?.id || ""),
@@ -56,7 +58,10 @@ const Page = () => {
             }`}
           >
             {/* To Create Transaction */}
-            <div className="w-full h-[12vh] md:h-[8.5vh] lg:h-[12vh] rounded-md bg-linear-to-br from-yellow-400 via-amber-500 to-orange-500 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80 gap-x-4">
+            <div
+              className="w-full h-[12vh] md:h-[8.5vh] lg:h-[12vh] rounded-md bg-linear-to-br from-yellow-400 via-amber-500 to-orange-500 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80 gap-x-4"
+              onClick={() => router.push("/transaction/create")}
+            >
               <GrTransaction className="text-white" size={22} />
               <div className="text-white font-semibold text-2xl md:text-xl lg:text-lg">
                 New Transaction
