@@ -110,8 +110,8 @@ model FamilyBudget{
 model Transaction{
     id String @id @default(uuid()) @unique
     type TransactionType
-    userId String //Get the transaction for the user
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String? //Get the transaction for the user
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
     amount Decimal @default(0) @db.Decimal
     accountId String //Get the transaction for the specific account
     account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)

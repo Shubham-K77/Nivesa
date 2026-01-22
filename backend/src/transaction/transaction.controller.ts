@@ -2,6 +2,7 @@ import { Controller, Post, UseGuards, Req, Body } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { UserLoginGuard } from 'src/guard/user.login.guard';
 import type { Request } from 'express';
+import { CreateTransactionDto } from './dto/createTransaction.dto';
 
 type TransactionsArray = {
   transactions: Array<string>;
@@ -24,6 +25,14 @@ export class TransactionController {
       currentUser?.id || '',
       transactionsArray,
     );
+    return response;
+  }
+  //Create New Transaction
+  @Post('/')
+  @UseGuards(UserLoginGuard)
+  async createNewTransaction(@Body() transactionInfo: CreateTransactionDto) {
+    const response =
+      await this.transactionService.createNewTransaction(transactionInfo);
     return response;
   }
 }
