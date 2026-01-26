@@ -25,11 +25,16 @@ export enum RecurringInterval {
   YEARLY = "YEARLY",
 }
 export type Transaction = {
-  id: string;
+  id?: string;
   type: TransactionType;
   description: string;
   amount: number;
   date: Date;
+  accountId: string;
+  userId?: string;
+  familyMemberId?: string;
+  status?: "PENDING" | "COMPLETED" | "FAILED";
+  lastProcessed?: Date;
   category: TransactionCategory;
   isRecurring: boolean;
   recurringInterval?: RecurringInterval;

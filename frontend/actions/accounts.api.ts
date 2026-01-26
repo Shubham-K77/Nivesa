@@ -12,6 +12,12 @@ type createNewFamilyMemberData = {
   name: string;
   email?: string;
   phoneNumber?: string;
+  imageUrl?: string;
+  invitationToken?: string;
+  invitationExpiry?: Date;
+  accountId?: string;
+  userId?: string;
+  isActive?: boolean;
 };
 
 type createFamilyAccountData = {
@@ -34,7 +40,7 @@ const createNewAccount = async (data: createAccountData) => {
     data,
     {
       withCredentials: true,
-    }
+    },
   );
   return result;
 };
@@ -67,7 +73,7 @@ const updateDefaultFlag = async (data: isDefaultUpdateData) => {
   return axios.patch(
     `http://localhost:3001/api/v1/accounts/${data.accountId}`,
     {},
-    { withCredentials: true }
+    { withCredentials: true },
   );
 };
 

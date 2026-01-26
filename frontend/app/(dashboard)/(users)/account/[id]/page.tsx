@@ -32,8 +32,8 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
             accountInfo?.type === "FAMILY"
               ? "from-emerald-500/10 to-teal-500/10"
               : accountInfo?.type === "CURRENT"
-              ? "from-blue-500/10 to-cyan-500/10"
-              : "from-amber-500/10 to-orange-500/10"
+                ? "from-blue-500/10 to-cyan-500/10"
+                : "from-amber-500/10 to-orange-500/10"
           }`}
         >
           {/* Basic Info */}
@@ -109,9 +109,10 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   accountInfo?.type === "FAMILY"
                     ? "from-emerald-500/10 to-teal-500/10 shadow-teal-500/30 border-teal-500/30"
                     : accountInfo?.type === "CURRENT"
-                    ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
-                    : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
+                      ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
+                      : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
                 }`}
+                onClick={() => router.push("/transaction/create")}
               >
                 <GrTransaction className="text-white w-8 h-8 lg:w-6 lg:h-6" />
                 <div className="text-white font-semibold text-sm md:text-lg lg:text-sm">
@@ -128,8 +129,8 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 accountInfo?.type === "FAMILY"
                   ? "from-emerald-500/10 to-teal-500/10 shadow-teal-500/30 border-teal-500/30"
                   : accountInfo?.type === "CURRENT"
-                  ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
-                  : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
+                    ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
+                    : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
               }`}
             >
               {/* Title */}

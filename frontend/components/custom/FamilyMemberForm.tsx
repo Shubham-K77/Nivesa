@@ -21,11 +21,11 @@ const FamilyMemberForm = ({ member, onChange, onRemove }: any) => {
         {/* Email Field */}
         <div className="w-full flex flex-col space-y-2 justify-start items-start">
           <label className="font-normal text-sm md:text-lg lg:text-sm text-white">
-            Member Email (Optional)
+            Member Email (Optional - for login access)
           </label>
           <Input
             placeholder="e.g., john.doe@gmail.com"
-            type="text"
+            type="email"
             className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
             value={member.email}
             onChange={(e) => onChange(member.id, "email", e.target.value)}

@@ -9,6 +9,10 @@ export interface FamilyMember {
   name: string;
   email?: string;
   phoneNumber?: string;
+  imageUrl?: string;
+  invitationToken?: string;
+  invitationExpiry?: Date;
+  isActive?: boolean;
 }
 
 interface FamilyMembersListProps {
@@ -20,15 +24,12 @@ const FamilyMembersList = ({ members, setMembers }: FamilyMembersListProps) => {
   //Update a member's data
   const handleMemberChange = (id: number, field: any, value: any) => {
     setMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m)),
     );
   };
   //Add new member's data
   const addMember = () => {
-    setMembers([
-      ...members,
-      { id: Date.now(), name: "", email: "", phoneNumber: "" },
-    ]);
+    setMembers([...members, { id: Date.now(), name: "", phoneNumber: "" }]);
   };
   //Remove existing member's data
   const removeMember = (id: any) => {

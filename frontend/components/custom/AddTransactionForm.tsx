@@ -8,8 +8,10 @@ interface AddTransactionFormProps {
 //React Hook Form
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useContext } from "react";
 //Next Components
 import { useRouter } from "next/navigation";
+import { UserContext } from "@/app/(dashboard)/layout";
 //Components
 import {
   Select,
@@ -27,9 +29,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "../ui/switch";
+import { Transaction } from "@/types/transaction.type";
+import { createTransactions } from "@/queries/transaction/createTransactionMutation";
+import { toast } from "sonner";
 //Enums
 enum TransactionType {
   INCOME = "INCOME",
@@ -116,11 +121,12 @@ const transactionSchema = z
       });
     }
   });
+//Form For Creating Transaction
 const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
   //Router
   const router = useRouter();
-  //Submit Function
-  const onSubmit = async () => {};
+  //Get Current User
+  const currentUser = useContext(UserContext);
   //Creating Form
   const {
     register,
@@ -144,8 +150,39 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
   const type = watch("type");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
+  const accountId = watch("accountId");
+
+  //Create Mutation
+  const transactionMutation = createTransactions(accountId);
+  const { isPending } = transactionMutation;
+
+  //Submit Function
+  const onSubmit = async (data: z.infer<typeof transactionSchema>) => {
+    if (!currentUser) {
+      toast.error("User not authenticated");
+      return;
+    }
+    try {
+      const formData = {
+        ...data,
+        amount: parseFloat(data.amount.toString()),
+        ...(currentUser.role === "USER"
+          ? { userId: currentUser.id, familyMemberId: undefined }
+          : { familyMemberId: currentUser.id, userId: undefined }),
+      };
+      await transactionMutation.mutateAsync(formData as Transaction);
+      toast.success("Transaction created successfully!");
+      reset();
+      router.back();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to create transaction",
+      );
+    }
+  };
+
   return (
-    <div className="w-full flex justify-center items-center p-8 bg-white/2 border border-white/5 rounded-xl">
+    <div className="w-full flex justify-center items-center p-8 bg-white/2 border border-white/5 rounded-xl mb-6">
       <form
         className="w-full flex flex-col justify-start items-start gap-y-2"
         onSubmit={handleSubmit(onSubmit)}
@@ -327,6 +364,7 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
             <Input
               type="text"
               placeholder="Enter description"
+              className="text-white"
               {...register("description")}
             />
             {/* Error Message */}
@@ -398,7 +436,7 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
           )}
         </div>
         {/* CTA BUTTONS */}
-        <div className="w-full grid grid-cols-2 gap-x-6 mt-4">
+        <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-x-6 mt-4">
           <Button
             type="button"
             className="w-full text-white h-[8.5vh] font-semibold text-md bg-red-400/40 hover:cursor-pointer hover:bg-red-500"
@@ -408,9 +446,17 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
           </Button>
           <Button
             type="submit"
-            className="w-full bg-linear-to-br from-yellow-400/80 via-orange-400/80 to-amber-400/80 text-white h-[8.5vh] font-semibold text-md hover:cursor-pointer hover:bg-amber-400/80"
+            disabled={isPending}
+            className="w-full bg-linear-to-br from-yellow-400/80 via-orange-400/80 to-amber-400/80 text-white h-[8.5vh] font-semibold text-md hover:cursor-pointer hover:bg-amber-400/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Transaction
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Transaction"
+            )}
           </Button>
         </div>
       </form>

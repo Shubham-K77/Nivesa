@@ -30,7 +30,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { Handshake, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
@@ -158,6 +158,26 @@ const Sidebar = () => {
               <FaRegUserCircle size={22} />
               {/* Text */}
               <div className="text-md">Edit Profile</div>
+            </div>
+            {/* Create Transactions */}
+            <div
+              className={`w-[90%] h-1/10 rounded-lg hover:cursor-pointer flex justify-start items-center gap-x-4 p-3 hover:ml-4 ${
+                pathName === "/transaction/create"
+                  ? "bg-white/10 text-orange-500 font-semibold"
+                  : "bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
+              }`}
+              onClick={() => router.push("/transaction/create")}
+            >
+              {/* Indicator of active */}
+              {pathName === "/transaction/create" ? (
+                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-orange-500"></div>
+              ) : (
+                ""
+              )}
+              {/* Icon */}
+              <Handshake size={22} />
+              {/* Text */}
+              <div className="text-md">New Transaction</div>
             </div>
           </div>
           {/* Bottom Section With Logout */}
