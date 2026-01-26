@@ -1,7 +1,6 @@
-import { Module, DynamicModule, Logger } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -15,6 +14,7 @@ import { BudgetModule } from './budget/budget.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
+import { ArcjetModule } from './arcjet/arcjet.module';
 
 @Module({
   imports: [
@@ -38,37 +38,9 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     CloudinaryModule,
     BudgetModule,
     WhatsappModule,
+    ArcjetModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
 })
-export class AppModule {
-  static async registerAsync(): Promise<DynamicModule> {
-    const arcjetNest = await import('@arcjet/nest');
-    const { ArcjetModule, ArcjetGuard, shield, fixedWindow } = arcjetNest;
-
-    return {
-      module: AppModule,
-      imports: [
-        ArcjetModule.forRoot({
-          isGlobal: true,
-          key: process.env.ARJECT_KEY!,
-          rules: [
-            shield({ mode: 'DRY_RUN' }),
-            fixedWindow({
-              mode: 'DRY_RUN',
-              window: '60s',
-              max: 1000,
-            }),
-          ],
-        }),
-      ],
-      providers: [
-        {
-          provide: APP_GUARD,
-          useClass: ArcjetGuard,
-        },
-      ],
-    };
-  }
-}
+export class AppModule {}

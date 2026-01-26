@@ -2,7 +2,6 @@ import {
   IsString,
   IsEmail,
   IsOptional,
-  IsStrongPassword,
   Matches,
   IsBoolean,
   IsNotEmpty,
@@ -16,11 +15,7 @@ export class FamilyMemberDto {
   @IsString()
   @IsEmail()
   @IsOptional()
-  email?: string; //Optional field but required for login
-  @IsString()
-  @IsStrongPassword()
-  @IsOptional()
-  password?: string; //Optional field during the creation
+  email?: string;
   @IsString()
   @Matches(/^\+977\d{10}$/, {
     message:
@@ -30,17 +25,20 @@ export class FamilyMemberDto {
   phoneNumber?: string; //Optional field only for whatsapp notifications
   @IsString()
   @IsOptional()
+  imageUrl?: string;
+  @IsString()
+  @IsOptional()
   invitationToken?: string;
   @IsDate()
   @IsOptional()
   invitationExpiry?: Date;
   @IsString()
   @IsOptional()
-  accountId: string;
+  accountId?: string;
   @IsString()
   @IsOptional()
-  userId: string;
+  userId?: string;
   @IsBoolean()
   @IsOptional()
-  isActive: boolean;
+  isActive?: boolean;
 }

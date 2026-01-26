@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@arcjet/nest": "^1.0.0-beta.14",
+    "@arcjet/nest": "^1.0.0",
+    "@arcjet/node": "^1.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -38,6 +39,7 @@
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "inngest": "^3.49.1",
+    "inngest-cli": "^1.16.1",
     "nestjs-inngest": "^1.2.3",
     "nodemailer": "^7.0.10",
     "qrcode-terminal": "^0.12.0",

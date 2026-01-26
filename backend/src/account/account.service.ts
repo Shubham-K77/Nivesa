@@ -12,11 +12,15 @@ import { CreateAccountDto } from './dto/create_account.dto';
 import { createFamilyAccountDto } from './dto/create_family_account.dto';
 import { FamilyMemberService } from 'src/family-member/family-member.service';
 import { FamilyMemberDto } from 'src/family-member/dto/familyMember.create.dto';
+import { MailerService } from 'src/mailer/mailer.service';
+import * as crypto from 'crypto';
+
 @Injectable()
 export class AccountService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly familyMemberService: FamilyMemberService,
+    private readonly mailer: MailerService,
   ) {}
   //Get Request
   async getUserAccounts(userId: string) {
@@ -303,8 +307,9 @@ export class AccountService {
           "Add at least one family member's details to continue.",
         );
       }
-      return await this.prisma.$transaction(async (txn) => {
-        // Check existing accounts
+
+      const result = await this.prisma.$transaction(async (txn) => {
+        // Step 1: Check existing accounts and handle isDefault flag
         const existingAccounts = await txn.account.findMany({
           where: { userId: userExists.id },
         });
@@ -316,36 +321,112 @@ export class AccountService {
             data: { isDefault: false },
           });
         }
-        const { familyMemberInfo, ...newAccountInfo } = newFamilyAccount;
-        // Create Account
+
+        // Step 2: Create Family Account first
         const newAccount = await txn.account.create({
           data: {
-            userId: newAccountInfo.userId,
-            name: newAccountInfo.name,
-            type: newAccountInfo.type,
-            balance: newAccountInfo.balance ?? 0,
-            isDefault: newAccountInfo.isDefault ?? false,
+            userId: newFamilyAccount.userId,
+            name: newFamilyAccount.name,
+            type: newFamilyAccount.type,
+            balance: newFamilyAccount.balance ?? 0,
+            isDefault: newFamilyAccount.isDefault ?? false,
           },
         });
-        // Create Family Members
-        const memberResults: any[] = [];
-        for (const familyMember of familyMemberInfo) {
-          const result = await txn.familyMember.create({
-            data: {
-              ...familyMember,
-              accountId: newAccount.id,
+
+        // Step 3: Loop through and create each family member individually
+        const createdMembers: any[] = [];
+        for (const memberData of newFamilyAccount.familyMemberInfo) {
+          // Check if family member with same name already exists for this user
+          const existingMember = await txn.familyMember.findFirst({
+            where: {
               userId: newFamilyAccount.userId,
+              name: memberData.name,
             },
           });
-          memberResults.push(result);
+
+          if (existingMember) {
+            // Update existing member to link with this account if not already linked
+            if (existingMember.accountId !== newAccount.id) {
+              const updated = await txn.familyMember.update({
+                where: { id: existingMember.id },
+                data: { accountId: newAccount.id },
+              });
+              createdMembers.push(updated);
+            } else {
+              createdMembers.push(existingMember);
+            }
+            continue;
+          }
+
+          // Generate invitation token if email is provided
+          let invitationToken: string | undefined;
+          let invitationExpiry: Date | undefined;
+
+          if (memberData.email?.trim()) {
+            // Check if email already exists for FAMILY_MEMBER role
+            const existingLoginCredential =
+              await txn.loginCredentials.findFirst({
+                where: {
+                  email: memberData.email,
+                  role: 'FAMILY_MEMBER',
+                },
+              });
+
+            if (existingLoginCredential) {
+              throw new BadRequestException(
+                `The email ${memberData.email} is already registered to another family member.`,
+              );
+            }
+
+            invitationToken = crypto.randomBytes(32).toString('hex');
+            invitationExpiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+          }
+
+          // Create new family member
+          const newMember = await txn.familyMember.create({
+            data: {
+              name: memberData.name,
+              phoneNumber: memberData.phoneNumber,
+              imageUrl: memberData.imageUrl,
+              invitationToken,
+              invitationExpiry,
+              isActive: false,
+              userId: newFamilyAccount.userId,
+              accountId: newAccount.id,
+            },
+          });
+
+          createdMembers.push(newMember);
         }
+
         return {
-          message: 'Successfully Created New Account!',
+          message: 'Successfully Created Family Account with Members!',
           statusCode: 201,
           account: newAccount,
-          memberResults,
+          familyMembers: createdMembers,
         };
       });
+
+      // Send invitation emails AFTER transaction completes
+      for (const member of result.familyMembers) {
+        const memberData = newFamilyAccount.familyMemberInfo.find(
+          (m) => m.name === member.name,
+        );
+        if (memberData?.email?.trim() && member.invitationToken) {
+          try {
+            await this.mailer.familyMemberInvitationMail(
+              memberData.email,
+              member.invitationToken,
+              userExists.name,
+            );
+          } catch (emailError) {
+            console.error('Failed to send email:', emailError);
+            // Don't fail the entire operation if email fails
+          }
+        }
+      }
+
+      return result;
     } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;

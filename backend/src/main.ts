@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -14,10 +15,7 @@ import { WhatsappService } from './whatsapp/whatsapp.service';
 import { MailerService } from './mailer/mailer.service';
 
 async function bootstrap() {
-  //Dynamic App Module For Arject
-  const dynamicAppModule = await AppModule.registerAsync();
-  const app =
-    await NestFactory.create<NestExpressApplication>(dynamicAppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   //Increase payload size limit for base64 images
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ limit: '10mb', extended: true }));
@@ -25,7 +23,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
       credentials: true,
     }),
   );

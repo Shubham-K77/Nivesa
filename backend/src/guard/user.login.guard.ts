@@ -25,6 +25,11 @@ export class UserLoginGuard implements CanActivate {
     //Request:
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
+
+    // Set fallback userId for Arcjet (in case authentication fails)
+    // This ensures Arcjet can still track rate limits by IP
+    request['userId'] = request.ip || 'anonymous';
+
     //Get The Http Only Cookies:
     try {
       //Get the Access Token First:
@@ -35,6 +40,8 @@ export class UserLoginGuard implements CanActivate {
             secret: this.configService.get<string>('access_token_secret'),
           });
           request['current_user'] = payload;
+          // Set userId for Arcjet rate limiting
+          request['userId'] = payload.id;
           return true;
         } catch (error: any) {
           console.error(error.message);
@@ -74,6 +81,8 @@ export class UserLoginGuard implements CanActivate {
       });
       // Use refresh token payload since we just generated access token from it
       request['current_user'] = payload;
+      // Set userId for Arcjet rate limiting
+      request['userId'] = payload.id;
       return Promise.resolve(true);
     } catch (error: any) {
       if (error instanceof HttpException) {

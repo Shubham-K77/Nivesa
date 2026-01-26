@@ -65,81 +65,33 @@ export class FamilyMemberService {
         };
       }
       //Check if login credentials with same email already exist for FAMILY_MEMBER role
-      const { email, ...userData } = familyMemberInfo;
-      if (email?.trim()) {
-        const existingLoginCredential =
-          await this.prisma.loginCredentials.findFirst({
-            where: {
-              email: email,
-              role: 'FAMILY_MEMBER',
-            },
-            include: {
-              familyMember: true,
-            },
-          });
-        if (existingLoginCredential && existingLoginCredential.familyMember) {
-          // Email exists - check if it belongs to the same person
-          if (
-            existingLoginCredential.familyMember.name === familyMemberInfo.name
-          ) {
-            // Same person, same email - return success (already exists)
-            return {
-              message:
-                'This family member already exists in the system. No new member was created.',
-              statusCode: 200,
-              newFamilyMember: existingLoginCredential.familyMember,
-            };
-          } else {
-            // Different person trying to use the same email - throw error
-            throw new BadRequestException(
-              'This email is already registered to another family member. Please use a different email address.',
-            );
-          }
-        }
+      const { accountId, userId, ...createData } = familyMemberInfo;
+
+      // Validate required fields for Prisma
+      if (!accountId || !userId) {
+        throw new BadRequestException('Account ID and User ID are required');
       }
+
       //Create the familyMember Account And LoginCredential
       let message: string;
       const newFamilyMember = await this.prisma.familyMember.create({
-        data: userData,
+        data: {
+          name: createData.name,
+          phoneNumber: createData.phoneNumber,
+          imageUrl: createData.imageUrl,
+          invitationToken: createData.invitationToken,
+          invitationExpiry: createData.invitationExpiry,
+          isActive: createData.isActive ?? false,
+          accountId: accountId,
+          userId: userId,
+        },
       });
       if (!newFamilyMember) {
         throw new ServiceUnavailableException(
           'Internal Server Error. Failed To Create New Family Member!',
         );
       }
-      //Create the new invitationToken and invitationExpiry
-      if (email?.trim()) {
-        message =
-          'New member added successfully. Please verify the email within 3 days to access the system.';
-        const invitationToken = crypto.randomBytes(32).toString('hex');
-        const invitationExpiry = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
-        await this.prisma.familyMember.update({
-          where: { id: newFamilyMember.id },
-          data: { invitationToken, invitationExpiry },
-        });
-        //Create new login credential:
-        const newLoginCredential = await this.prisma.loginCredentials.create({
-          data: {
-            email,
-            password: '',
-            role: 'FAMILY_MEMBER',
-            familyMemberId: newFamilyMember.id,
-          },
-        });
-        if (!newLoginCredential) {
-          throw new ServiceUnavailableException(
-            'Unable to create the new family member!',
-          );
-        }
-        //Send The Email To Setup The Account
-        await this.mailer.familyMemberInvitationMail(
-          email,
-          invitationToken,
-          userExists.name,
-        );
-      } else {
-        message = 'Successfully Added The New Family Member!';
-      }
+      message = 'Successfully Added The New Family Member!';
       //Response
       return {
         message,
@@ -157,9 +109,11 @@ export class FamilyMemberService {
   async validate({
     token,
     newPassword,
+    email,
   }: {
     token: string;
     newPassword: string;
+    email: string;
   }) {
     try {
       //Check For The Token
@@ -169,6 +123,10 @@ export class FamilyMemberService {
       //Check For The Password
       if (!newPassword || !newPassword.trim()) {
         throw new BadRequestException('Must provide a valid password');
+      }
+      //Check For The Email
+      if (!email || !email.trim()) {
+        throw new BadRequestException('Must provide a valid email');
       }
       //Then, Check For The Token
       const familyMemberExists = await this.prisma.familyMember.findFirst({
@@ -186,44 +144,77 @@ export class FamilyMemberService {
           throw new UnauthorizedException('The token has already expired.');
         }
       }
-      const loginCredentialsExists =
-        await this.prisma.loginCredentials.findUnique({
+
+      // Check if LoginCredentials already exist
+      let loginCredentialsExists = await this.prisma.loginCredentials.findFirst(
+        {
           where: {
             familyMemberId: familyMemberExists.id,
             role: 'FAMILY_MEMBER',
           },
-        });
+        },
+      );
+
+      // If not exists, create LoginCredentials
       if (!loginCredentialsExists) {
-        throw new UnauthorizedException(
-          'There was no such member found in the system',
-        );
-      }
-      //The token is valid, then after process
-      const hashedPassword = await this.bcrypt.encrypt(newPassword);
-      if (!hashedPassword) {
-        throw new ServiceUnavailableException(
-          'The password encryption failed!',
-        );
-      }
-      //Update the instance
-      const updatedLoginCredentials = await this.prisma.loginCredentials.update(
-        {
+        // Check if email is already used by another family member
+        const emailExists = await this.prisma.loginCredentials.findFirst({
+          where: {
+            email: email,
+            role: 'FAMILY_MEMBER',
+          },
+        });
+
+        if (emailExists) {
+          throw new BadRequestException(
+            'This email is already registered to another family member.',
+          );
+        }
+
+        // The token is valid, hash the password
+        const hashedPassword = await this.bcrypt.encrypt(newPassword);
+        if (!hashedPassword) {
+          throw new ServiceUnavailableException(
+            'The password encryption failed!',
+          );
+        }
+
+        // Create LoginCredentials
+        loginCredentialsExists = await this.prisma.loginCredentials.create({
+          data: {
+            email: email,
+            password: hashedPassword,
+            role: 'FAMILY_MEMBER',
+            familyMemberId: familyMemberExists.id,
+          },
+        });
+      } else {
+        // LoginCredentials exist, just update password
+        const hashedPassword = await this.bcrypt.encrypt(newPassword);
+        if (!hashedPassword) {
+          throw new ServiceUnavailableException(
+            'The password encryption failed!',
+          );
+        }
+
+        loginCredentialsExists = await this.prisma.loginCredentials.update({
           where: {
             id: loginCredentialsExists.id,
-            familyMemberId: familyMemberExists.id,
-            role: 'FAMILY_MEMBER',
           },
           data: {
             password: hashedPassword,
           },
-        },
-      );
-      if (!updatedLoginCredentials) {
+        });
+      }
+
+      if (!loginCredentialsExists) {
         throw new ServiceUnavailableException('Internal Server Error!');
       }
+
+      // Update family member to set isActive to true
       const updatedUser = await this.prisma.familyMember.update({
-        where: { id: updatedLoginCredentials.familyMemberId || '' },
-        data: { invitationToken: '', invitationExpiry: null, isActive: true },
+        where: { id: familyMemberExists.id },
+        data: { invitationToken: null, invitationExpiry: null, isActive: true },
       });
       if (!updatedUser) {
         throw new ServiceUnavailableException('Internal Server Error');
@@ -290,7 +281,7 @@ export class FamilyMemberService {
       //Send The Email To Setup The Account
       await this.mailer.familyMemberInvitationMail(
         loginCredentialsExists.email,
-        familyMemberExists.invitationToken,
+        familyMemberExists.invitationToken!,
         familyMemberExists.user.name,
       );
       //Response:
