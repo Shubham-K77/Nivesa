@@ -4,8 +4,9 @@ import { TransactionService } from './transaction.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ArcjetModule } from 'src/arcjet/arcjet.module';
+import { ConfigModule } from '@nestjs/config';
 @Module({
-  imports: [PrismaModule, JwtModule, ArcjetModule],
+  imports: [PrismaModule, JwtModule, ArcjetModule, ConfigModule],
   controllers: [TransactionController],
   providers: [TransactionService],
 })

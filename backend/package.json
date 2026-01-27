@@ -38,6 +38,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "groq-sdk": "^0.37.0",
     "inngest": "^3.49.1",
     "inngest-cli": "^1.16.1",
     "nestjs-inngest": "^1.2.3",

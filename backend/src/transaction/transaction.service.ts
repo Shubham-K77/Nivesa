@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   BadRequestException,
@@ -8,12 +10,22 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTransactionDto } from './dto/createTransaction.dto';
+import { ConfigService } from '@nestjs/config';
+import Groq from 'groq-sdk';
 type TransactionsArray = {
   transactions: Array<string>;
 };
 @Injectable()
 export class TransactionService {
-  constructor(private readonly prisma: PrismaService) {}
+  private groq: Groq;
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {
+    this.groq = new Groq({
+      apiKey: this.config.get<string>('GROQ_API_KEY') || '',
+    });
+  }
   //Bulk Delete Function
   async bulkDeleteTransaction(
     userId: string,
@@ -255,6 +267,106 @@ export class TransactionService {
         throw error;
       }
       throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
+  //AI Receipt Scanning
+  async scanReceipt(file: Express.Multer.File) {
+    try {
+      //Convert File To Base64String
+      const base64String = file.buffer.toString('base64');
+      const imageUrl = `data:${file.mimetype};base64,${base64String}`;
+      // Updated prompt to include transaction type
+      const prompt = `Analyze this receipt image and extract the following information in JSON format:
+    - Total amount (just the number, must be in NPR if provided other currencies then convert it and provide me the value, number only.)
+    - Date (in ISO format)
+    - Description or items purchased (brief summary)
+    - Merchant/store name
+    - Suggested category (one of: FOOD, TRANSPORT, HOUSING, UTILITIES, ENTERTAINMENT, HEALTHCARE, EDUCATION, SHOPPING, TRAVEL, SALARY, FREELANCE, INVESTMENT, BUSINESS, OTHER {Everything is capitalized!})
+    - Transaction type (either "INCOME" or "EXPENSE" - most receipts are EXPENSE unless they're for salary, freelance payment, business income, or investment returns)
+    
+    Only respond with valid JSON in this exact format:
+    {
+      "amount": number,
+      "date": "ISO date string",
+      "description": "string",
+      "merchantName": "string",
+      "category": "string",
+      "type": "INCOME" or "EXPENSE"
+    }
+
+    If its not a receipt, return an empty object {}`;
+      //Response From API
+      const result = await this.groq.chat.completions.create({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: prompt,
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageUrl,
+                },
+              },
+            ],
+          },
+        ],
+        temperature: 0,
+        max_tokens: 150,
+      });
+      //Cleaning The Response
+      const text = result.choices[0]?.message?.content || '{}';
+      const cleaned = text.replace(/```(?:json)?\n?/g, '').trim();
+      if (!cleaned || cleaned === '{}') {
+        return {
+          message: 'No receipt detected',
+          statusCode: 200,
+          transactionInfo: null,
+        };
+      }
+      //Converting The String Response To JSON
+      try {
+        const data = JSON.parse(cleaned);
+        // Fallback: Determine type from category if not provided
+        const determineType = (
+          category: string,
+          providedType?: string,
+        ): string => {
+          if (providedType && ['INCOME', 'EXPENSE'].includes(providedType)) {
+            return providedType;
+          }
+          const incomeCategories = [
+            'SALARY',
+            'FREELANCE',
+            'INVESTMENT',
+            'BUSINESS',
+          ];
+          return incomeCategories.includes(category) ? 'INCOME' : 'EXPENSE';
+        };
+        console.log(data);
+        return {
+          message: 'Successfully scanned!',
+          statusCode: 200,
+          transactionInfo: {
+            amount: data.amount ? parseFloat(data.amount) : null,
+            date: data.date ? new Date(data.date) : new Date(),
+            description: data.description,
+            category: data.category,
+            merchantName: data.merchantName,
+            type: determineType(data.category, data.type), // Add type detection
+          },
+        };
+      } catch (parseError) {
+        console.error('Error parsing JSON response:', parseError);
+        throw new Error('Invalid response format from Groq');
+      }
+    } catch (error: any) {
+      console.error('Error Scanning The Receipt: ', error.message);
+      throw new ServiceUnavailableException('Failed to scan receipt!');
     }
   }
 }

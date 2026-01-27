@@ -10,12 +10,16 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  BadRequestException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { ArcjetService } from '../arcjet/arcjet.service';
 import { UserLoginGuard } from 'src/guard/user.login.guard';
 import type { Request } from 'express';
 import { CreateTransactionDto } from './dto/createTransaction.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 type TransactionsArray = {
   transactions: Array<string>;
 };
@@ -96,5 +100,15 @@ export class TransactionController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+  @Post('/scan')
+  @UseGuards(UserLoginGuard)
+  @UseInterceptors(FileInterceptor('receipt'))
+  async scanReceipts(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const response = await this.transactionService.scanReceipt(file);
+    return response;
   }
 }
