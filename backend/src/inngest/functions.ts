@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Logger } from '@nestjs/common';
 import { inngest } from './client';
@@ -17,14 +20,12 @@ interface InngestDependencies {
 export const getInngestFunctions = (deps: InngestDependencies) => {
   const { logger, appService, prismaService, whatsappService, mailerService } =
     deps;
-
   const isNewMonth = (lastAlertDate: Date, currentDate: Date) => {
     return (
       lastAlertDate.getMonth() !== currentDate.getMonth() ||
       lastAlertDate.getFullYear() !== currentDate.getFullYear()
     );
   };
-
   const checkDailyBudgets = inngest.createFunction(
     { id: 'check-budget-alerts' },
     { cron: '0 */6 * * *' }, //Every 6-Hours Cron Job Will Be Triggered
@@ -181,6 +182,157 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
       }
     },
   );
+  const triggerRecurringTransactions = inngest.createFunction(
+    {
+      id: 'trigger-recurring-transactions',
+      name: 'trigger-recurring-transactions',
+    },
+    { cron: '0 0 * * *' },
+    async ({ step }) => {
+      try {
+        //1. Event for fetching the recurring transactions through the system
+        const recurringTransactions = await step.run(
+          'fetch-recurring-transactions',
+          async () => {
+            return await prismaService.transaction.findMany({
+              where: {
+                isRecurring: true,
+                status: 'COMPLETED',
+                OR: [
+                  { lastProcessed: null },
+                  { nextRecurringDate: { lte: new Date() } },
+                ],
+              },
+            });
+          },
+        );
+        //2. Creating events for each transactions
+        if (recurringTransactions.length > 0) {
+          const events = recurringTransactions.map((transaction) => ({
+            name: 'transaction.recurring.process',
+            data: {
+              transactionId: transaction.id,
+              userId: transaction.userId,
+            },
+          }));
+          //3. Send All Events To Be Processed By Inngest
+          await inngest.send(events);
+        }
+        return { triggered: recurringTransactions.length };
+      } catch (error) {
+        logger.error('Error in creating new transaction', error);
+        throw error;
+      }
+    },
+  );
+  //Worker Function
+  const processRecurringTransactions = inngest.createFunction(
+    {
+      id: 'process-recurring-transactions',
+      name: 'process-recurring-transactions',
+      throttle: {
+        limit: 10, // Only process 10 transactions
+        period: '1m', // per minute
+        key: 'event.data.userId', //Per User
+      },
+    },
+    { event: 'transaction.recurring.process' },
+    async ({ event, step }) => {
+      try {
+        //Validate The Event Data
+        if (!event?.data?.transactionId || !event?.data?.userId) {
+          logger.error('Invalid Event Data!', event);
+          return {
+            error: 'Missing required event data',
+          };
+        }
+        await step.run('process-transaction', async () => {
+          const transaction = await prismaService.transaction.findUnique({
+            where: {
+              id: event?.data?.transactionId,
+              userId: event?.data?.userId,
+            },
+            include: {
+              account: true,
+            },
+          });
+          if (!transaction || !isTransactionDue(transaction)) return;
+          await prismaService.$transaction(async (txn) => {
+            //Create New Transaction
+            await txn.transaction.create({
+              data: {
+                type: transaction.type,
+                amount: transaction.amount,
+                description: `${transaction.description} (Recurring)`,
+                date: new Date(),
+                category: transaction.category,
+                userId: transaction.userId,
+                accountId: transaction.accountId,
+                isRecurring: false,
+              },
+            });
+            //Update The Existing Balance
+            const balanceChange =
+              transaction.type == 'EXPENSE'
+                ? -transaction.amount.toNumber()
+                : transaction.amount.toNumber();
+            //Update The Balance
+            await txn.account.update({
+              where: { id: transaction.accountId },
+              data: { balance: { increment: balanceChange } },
+            });
+            //Lastly, Update The Transaction
+            await txn.transaction.update({
+              where: { id: transaction.id },
+              data: {
+                lastProcessed: new Date(),
+                nextRecurringDate: calculateNextReccuringDate(
+                  new Date(),
+                  transaction.recurringInterval,
+                ),
+              },
+            });
+          });
+        });
+      } catch (error) {
+        logger.error(error);
+        throw new Error('Unable to process the recurring transactions');
+      }
+    },
+  );
+  //Calculate Next Recurring Date:
+  function calculateNextReccuringDate(currentDate, interval) {
+    const date = new Date(currentDate);
+    switch (interval) {
+      case 'DAILY':
+        date.setDate(date.getDate() + 1);
+        break;
+      case 'WEEKLY':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'MONTHLY':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case 'YEARLY':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+    }
+    return date;
+  }
+  //Checking Due Transactions
+  function isTransactionDue(transaction) {
+    //If no lastProcessed date, transaction is due
+    if (!transaction.lastProcessed) return true;
 
-  return [checkDailyBudgets];
+    const today = new Date();
+    const nextDue = new Date(transaction.nextRecurringDate);
+
+    //Compare with nextDue date
+    return nextDue <= today;
+  }
+  return [
+    checkDailyBudgets,
+    triggerRecurringTransactions,
+    processRecurringTransactions,
+  ];
 };

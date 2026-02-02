@@ -120,7 +120,7 @@ export class TransactionService {
         date.setDate(date.getDate() + 7);
         break;
       case 'MONTHLY':
-        date.setDate(date.getMonth() + 1);
+        date.setMonth(date.getMonth() + 1);
         break;
       case 'YEARLY':
         date.setFullYear(date.getFullYear() + 1);
