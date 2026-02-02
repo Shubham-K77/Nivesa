@@ -11,10 +11,10 @@ export default function Home() {
   return (
     <div className="w-full flex flex-col justify-start items-center">
       {/* Hero Section     */}
-      <BackgroundBeamsWithCollision className="relative z-0">
-        <div className="w-full h-[100vh] md:h-[90vh] lg:h-[105vh] flex flex-col justify-center items-center bg-transparent gap-y-3 md:gap-y-4 relative z-10 px-4">
+      <BackgroundBeamsWithCollision className="relative z-0 mt-8">
+        <div className="w-full h-screen md:h-[90vh] lg:h-[105vh] flex flex-col justify-center items-center bg-transparent gap-y-3 md:gap-y-4 relative z-10 px-4">
           {/* Tagline */}
-          <div className="w-[85%] md:w-[60%] lg:w-[20%] rounded-2xl bg-gradient-to-r from-amber-500/50 to-yellow-500/50 backdrop-blur-md border-2 border-amber-400/70 flex justify-center items-center p-3 md:p-4 mb-4 md:mb-6 shadow-xl">
+          <div className="w-[85%] md:w-[60%] lg:w-[20%] rounded-2xl bg-linear-to-r from-amber-500/50 to-yellow-500/50 backdrop-blur-md border-2 border-amber-400/70 flex justify-center items-center p-3 md:p-4 mb-4 md:mb-6 shadow-xl">
             <div className="text-xs md:text-base lg:text-sm font-bold text-yellow-100 text-center">
               🧠 Powered by AI & Machine Learning
             </div>
@@ -41,7 +41,7 @@ export default function Home() {
             </div>
           </div>
           {/* CTA */}
-          <div className="w-[85%] h-[8vh] md:w-[60%] md:h-[9vh] lg:w-[20%] lg:h-[8.5vh] rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 flex justify-center items-center hover:cursor-pointer transition-all ease-in-out duration-200 hover:scale-105 shadow-2xl hover:shadow-yellow-500/60 border-2 border-yellow-300/50 active:scale-95">
+          <div className="w-[85%] h-[8vh] md:w-[60%] md:h-[9vh] lg:w-[20%] lg:h-[8.5vh] rounded-2xl bg-linear-to-r from-yellow-400 to-amber-500 flex justify-center items-center hover:cursor-pointer transition-all ease-in-out duration-200 hover:scale-105 shadow-2xl hover:shadow-yellow-500/60 border-2 border-yellow-300/50 active:scale-95">
             <div className="text-lg md:text-xl lg:text-[1.10rem] font-bold text-white drop-shadow-md">
               Take Control Now!
             </div>
@@ -49,7 +49,7 @@ export default function Home() {
         </div>
       </BackgroundBeamsWithCollision>
       {/* Features Section */}
-      <div className="w-full lg:h-[150vh] flex flex-col justify-center items-center text-center relative py-12 md:py-16 bg-gradient-to-b from-black/90 via-black/80 to-black/90 px-4">
+      <div className="w-full lg:h-[150vh] flex flex-col justify-center items-center text-center relative py-12 md:py-16 bg-linear-to-b from-black/90 via-black/80 to-black/90 px-4">
         {/* Title Section */}
         <div className="mb-6 md:mb-8">
           {/* Title And Description */}
@@ -188,7 +188,7 @@ export default function Home() {
         </div>
       </div>
       {/* Pricing Section */}
-      <div className="w-full lg:h-[150vh] bg-gradient-to-b from-black/90 via-gray-900/80 to-black/90 flex flex-col justify-center items-center text-center relative py-12 md:py-16 gap-y-3 md:gap-y-4 px-4">
+      <div className="w-full lg:h-[150vh] bg-linear-to-b from-black/90 via-gray-900/80 to-black/90 flex flex-col justify-center items-center text-center relative py-12 md:py-16 gap-y-3 md:gap-y-4 px-4">
         {/* Title Section */}
         <div className="mb-6 md:mb-8">
           {/* Title And Description */}
@@ -273,8 +273,8 @@ export default function Home() {
         </div>
       </div>
       {/* Banner */}
-      <div className="w-full px-4 sm:px-6 md:px-12 pt-0 pb-16 md:pb-20 bg-gradient-to-b from-black/90 to-black/95">
-        <div className="max-w-7xl mx-auto bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 p-6 sm:p-8 md:p-12 text-center shadow-2xl rounded-2xl md:rounded-3xl backdrop-blur-sm border-2 border-yellow-400/30">
+      <div className="w-full px-4 sm:px-6 md:px-12 pt-0 pb-16 md:pb-20 bg-linear-to-b from-black/90 to-black/95">
+        <div className="max-w-7xl mx-auto bg-linear-to-br from-yellow-500 via-amber-500 to-orange-600 p-6 sm:p-8 md:p-12 text-center shadow-2xl rounded-2xl md:rounded-3xl backdrop-blur-sm border-2 border-yellow-400/30">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 md:mb-4 leading-tight">
             Ready to Take Control of Your Finances?
           </h2>
