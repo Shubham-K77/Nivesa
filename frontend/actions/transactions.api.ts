@@ -1,4 +1,4 @@
-import { Transaction } from "@/types/transaction.type";
+import { Transaction, UpdateTransaction } from "@/types/transaction.type";
 import axios from "axios";
 
 type TransactionsArray = {
@@ -30,5 +30,26 @@ const scanRecepitImage = async (file: File) => {
     },
   );
 };
-
-export { deleteBulkTransactions, createTransaction, scanRecepitImage };
+const getSpecificTransactionInfo = async (transactionId: string) => {
+  return axios.get(
+    `http://localhost:3001/api/v1/transactions/${transactionId}`,
+    { withCredentials: true },
+  );
+};
+const updateSpecificTransaction = async (
+  transactionId: string,
+  transactionData: UpdateTransaction,
+) => {
+  return axios.patch(
+    `http://localhost:3001/api/v1/transactions/${transactionId}`,
+    transactionData,
+    { withCredentials: true },
+  );
+};
+export {
+  deleteBulkTransactions,
+  createTransaction,
+  scanRecepitImage,
+  getSpecificTransactionInfo,
+  updateSpecificTransaction,
+};

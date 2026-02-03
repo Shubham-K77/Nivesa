@@ -40,3 +40,6 @@ export type Transaction = {
   recurringInterval?: RecurringInterval;
   nextRecurringDate?: Date;
 };
+
+// Partial type for updates - all fields optional (matches backend EditTransactionDto)
+export type UpdateTransaction = Partial<Transaction>;

@@ -8,11 +8,31 @@ import { FaRegUser } from "react-icons/fa";
 import { FiUsers } from "react-icons/fi";
 import { MdOutlineSavings } from "react-icons/md";
 import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 import { toast } from "sonner";
 import { makeAccountDefault } from "@/queries/account/updateAccountDefault.mutation";
+import deleteAccountMutation from "@/queries/transaction/deleteAccountMutation";
+import { Delete, Eye, Loader2, ToolCase, Trash, X } from "lucide-react";
+import { useState } from "react";
 const AccountInfoCard = ({ accountInfo }: { accountInfo: Account }) => {
   const router = useRouter();
   const updateAccountDefaultMutation = makeAccountDefault();
+  const deleteAccountMut = deleteAccountMutation();
   const handleDefaultChange = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (accountInfo.isDefault) {
@@ -27,47 +47,164 @@ const AccountInfoCard = ({ accountInfo }: { accountInfo: Account }) => {
         onError: (error: any) => {
           return toast.error(error?.response?.data?.message);
         },
-      }
+      },
     );
   };
+  const [open, setOpen] = useState(false);
+  const [dropDownOpen, setDropDownOpen] = useState(false);
   return (
     <div
       className={`w-full rounded-xl bg-linear-to-br flex flex-col justify-start items-center gap-y-6 transition-all ease-in-out duration-150 ${
         accountInfo.type === "FAMILY"
           ? "from-emerald-500/10 to-teal-500/10 shadow-teal-500/30 border-teal-500/30"
           : accountInfo.type === "CURRENT"
-          ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
-          : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
+            ? "from-blue-500/10 to-cyan-500/10 shadow-cyan-500/30 border-cyan-500/30"
+            : "from-amber-500/10 to-orange-500/10 shadow-orange-500/30 border-orange-500/30"
       } hover:cursor-pointer hover:shadow-md hover:border hover:scale-95`}
       onClick={() => router.push(`/account/${accountInfo.id}`)}
     >
       {/* Motif and Title */}
-      <div className="w-full pl-8 flex justify-start items-center gap-x-6 mt-4">
-        {/* Motif */}
-        <div className="w-[7.5vh] h-[7.5vh] bg-black rounded-full flex justify-center items-center">
-          {accountInfo.type === "FAMILY" ? (
-            <FiUsers className="font-semibold text-emerald-400/80" size={32} />
-          ) : accountInfo.type === "CURRENT" ? (
-            <FaRegUser className="font-semibold text-sky-400/80" size={32} />
-          ) : (
-            <MdOutlineSavings
-              className="font-semibold text-orange-400/80"
-              size={32}
-            />
-          )}
-        </div>
-        {/* Name & Type */}
-        <div className="flex flex-col justify-start items-start">
-          <div className="font-semibold text-white text-xl">
-            {accountInfo.name}
+      <div className="w-full px-4 flex justify-between items-center gap-x-4 mt-4">
+        <div className="flex items-center gap-x-4 flex-1 min-w-0">
+          {/* Motif */}
+          <div className="w-[7.5vh] h-[7.5vh] aspect-square bg-black rounded-full flex justify-center items-center shrink-0">
+            {accountInfo.type === "FAMILY" ? (
+              <FiUsers
+                className="font-semibold text-emerald-400/80"
+                size={32}
+              />
+            ) : accountInfo.type === "CURRENT" ? (
+              <FaRegUser className="font-semibold text-sky-400/80" size={28} />
+            ) : (
+              <MdOutlineSavings
+                className="font-semibold text-orange-400/80"
+                size={32}
+              />
+            )}
           </div>
-          <div className="text-gray-400/80 text-md">
-            {accountInfo.type[0] + accountInfo.type.slice(1).toLowerCase()}
+          {/* Name & Type */}
+          <div className="flex flex-col justify-start items-start min-w-0 flex-1">
+            <div className="font-semibold text-white text-xl line-clamp-1 truncate w-full">
+              {accountInfo.name}
+            </div>
+            <div className="text-gray-400/80 text-md">
+              {accountInfo.type[0] + accountInfo.type.slice(1).toLowerCase()}
+            </div>
           </div>
         </div>
+        {/* CTA Select For Edit, Delete And View */}
+        <DropdownMenu open={dropDownOpen} onOpenChange={setDropDownOpen}>
+          <DropdownMenuTrigger asChild>
+            <div
+              className="w-[6vh] h-[6vh] rounded-md bg-white/10 hover:bg-white/15 flex justify-center items-center hover:cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ToolCase className="w-6 h-6 text-white" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-52 border border-white/10 text-white bg-[oklch(0.16_0_0)]">
+            {/* CTA To Navigate */}
+            <DropdownMenuItem className="group border-0">
+              <div
+                className="w-full flex justify-start items-center p-2 gap-x-4 hover:cursor-pointer"
+                onClick={() => router.push(`/account/${accountInfo.id}`)}
+              >
+                <Eye className="w-6 h-6 text-orange-600" />
+                <div className="text-white font-semibold text-md group-hover:text-black">
+                  View Details
+                </div>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-white/5" />
+            {/* CTA To Delete */}
+            <DropdownMenuItem
+              className="border-0 hover:bg-red-500/10"
+              onSelect={(e) => e.preventDefault()}
+            >
+              {/* Dialog For Deleting The Account */}
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <div
+                    className="w-full flex justify-start items-center p-2 gap-x-4 hover:cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Trash className="w-6 h-6 text-destructive" />
+                    <div className="text-destructive font-semibold text-md">
+                      Delete Account
+                    </div>
+                  </div>
+                </DialogTrigger>
+                <DialogContent
+                  className="bg-gray-950 text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <DialogHeader>
+                    <DialogTitle>
+                      Are you sure you want to delete: {accountInfo.name}?
+                    </DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your account and remove your data from our servers.
+                    </DialogDescription>
+                  </DialogHeader>
+                  {/* CTA Buttons */}
+                  <div className="w-full grid grid-cols-2 gap-x-4">
+                    {/* Delete Button */}
+                    <div
+                      className={`w-full h-[7.5vh] rounded-md bg-red-600/80 flex justify-center items-center gap-x-4 hover:cursor-pointer hover:bg-red-600/90 transition-colors ${deleteAccountMut.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (deleteAccountMut.isPending) return;
+                        deleteAccountMut.mutate(accountInfo.id, {
+                          onSuccess: (response) => {
+                            toast.success(
+                              response.data.message ||
+                                "Account deleted successfully",
+                            );
+                            setOpen(false);
+                            setDropDownOpen(false);
+                          },
+                          onError: (error: any) => {
+                            console.error("Delete error:", error);
+                            toast.error(
+                              error?.response?.data?.message ||
+                                "Failed to delete account",
+                            );
+                          },
+                        });
+                      }}
+                    >
+                      {deleteAccountMut.isPending ? (
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      ) : (
+                        <Delete className="w-6 h-6 text-white" />
+                      )}
+                      <div className="text-white">
+                        {deleteAccountMut.isPending
+                          ? "Deleting..."
+                          : "Delete Account"}
+                      </div>
+                    </div>
+                    {/* Cancel Button */}
+                    <div
+                      className="w-full h-[7.5vh] rounded-md bg-blue-600/80 flex justify-center items-center gap-x-4 hover:cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpen(false);
+                      }}
+                    >
+                      <X className="w-6 h-6 text-white" />
+                      <div className="text-white"> Cancel </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       {/* Switch */}
-      <div className="w-full flex justify-center items-center gap-x-6">
+      <div className="w-[85%] flex justify-between items-center gap-x-6 p-2 bg-white/5 rounded-md">
         <div className="text-md md:text-lg lg:text-sm text-gray-400/80">
           Default Payment Account:
         </div>

@@ -4,13 +4,15 @@ import { Account } from "@/types/account.type";
 import { zodResolver } from "@hookform/resolvers/zod";
 interface AddTransactionFormProps {
   accounts: Account[];
+  editMode: boolean;
+  initialData: Transaction | null;
 }
 //React Hook Form
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 //Next Components
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UserContext } from "@/app/(dashboard)/layout";
 //Components
 import {
@@ -37,6 +39,8 @@ import { createTransactions } from "@/queries/transaction/createTransactionMutat
 import { toast } from "sonner";
 import ReceiptScanner from "./ReceiptScanner";
 import { scanReceiptMutation } from "@/queries/transaction/scanReceiptMutation";
+import getTransactionInfo from "@/queries/transaction/getTransactionInfo.query";
+import updateTransactionMutation from "@/queries/transaction/updateTransactionInfo.mutation";
 //Enums
 enum TransactionType {
   INCOME = "INCOME",
@@ -124,9 +128,15 @@ const transactionSchema = z
     }
   });
 //Form For Creating Transaction
-const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
+const AddTransactionForm = ({
+  accounts,
+  editMode,
+  initialData,
+}: AddTransactionFormProps) => {
   //Router
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   //Get Current User
   const currentUser = useContext(UserContext);
   //Creating Form
@@ -140,24 +150,58 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
     reset,
   } = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      type: TransactionType.EXPENSE,
-      amount: 0,
-      description: "",
-      accountId: accounts?.find((acc) => acc.isDefault)?.id,
-      date: new Date(),
-      isRecurring: false,
-    },
+    defaultValues:
+      editMode && editId && initialData
+        ? {
+            type: initialData.type,
+            amount: Number(initialData.amount),
+            description: initialData.description || "",
+            accountId: initialData.accountId,
+            category: initialData.category,
+            date: new Date(initialData.date),
+            isRecurring: initialData.isRecurring,
+            ...(initialData.recurringInterval && {
+              recurringInterval: initialData.recurringInterval,
+            }),
+          }
+        : {
+            type: TransactionType.EXPENSE,
+            amount: 0,
+            description: "",
+            accountId: accounts?.find((acc) => acc.isDefault)?.id,
+            date: new Date(),
+            isRecurring: false,
+          },
   });
   const type = watch("type");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
   const accountId = watch("accountId");
   const category = watch("category");
+  // Reset form with initialData when it becomes available in edit mode
+  useEffect(() => {
+    if (editMode && initialData) {
+      reset({
+        type: initialData.type,
+        amount: Number(initialData.amount),
+        description: initialData.description || "",
+        accountId: initialData.accountId,
+        category: initialData.category,
+        date: new Date(initialData.date),
+        isRecurring: initialData.isRecurring,
+        ...(initialData.recurringInterval && {
+          recurringInterval: initialData.recurringInterval,
+        }),
+      });
+    }
+  }, [editMode, initialData, reset]);
   //Create Mutation
   const transactionMutation = createTransactions(accountId);
+  const updateMutation = updateTransactionMutation();
   const receiptMutation = scanReceiptMutation();
-  const { isPending } = transactionMutation;
+  const isPending = editMode
+    ? updateMutation.isPending
+    : transactionMutation.isPending;
   //Submit Function
   const onSubmit = async (data: z.infer<typeof transactionSchema>) => {
     if (!currentUser) {
@@ -172,8 +216,16 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
           ? { userId: currentUser.id, familyMemberId: undefined }
           : { familyMemberId: currentUser.id, userId: undefined }),
       };
-      await transactionMutation.mutateAsync(formData as Transaction);
-      toast.success("Transaction created successfully!");
+      if (editMode && editId) {
+        await updateMutation.mutateAsync({
+          transactionId: editId,
+          transactionData: formData,
+        });
+        toast.success("Transaction updated successfully!");
+      } else {
+        await transactionMutation.mutateAsync(formData as Transaction);
+        toast.success("Transaction created successfully!");
+      }
       reset();
       router.back();
     } catch (error: any) {
@@ -225,10 +277,12 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
   return (
     <>
       {/* Ai Receipt Scanner CTA*/}
-      <ReceiptScanner
-        onScanComplete={handleFileSubmit}
-        isScanning={receiptMutation.isPending}
-      />
+      {!editMode && (
+        <ReceiptScanner
+          onScanComplete={handleFileSubmit}
+          isScanning={receiptMutation.isPending}
+        />
+      )}
       <div className="w-full flex justify-center items-center p-8 bg-white/2 border border-white/5 rounded-xl mb-6">
         <form
           className="w-full flex flex-col justify-start items-start gap-y-2"
@@ -507,8 +561,10 @@ const AddTransactionForm = ({ accounts }: AddTransactionFormProps) => {
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {editMode ? "Updating..." : "Creating..."}
                 </>
+              ) : editMode ? (
+                "Edit Transaction"
               ) : (
                 "Create Transaction"
               )}

@@ -28,7 +28,7 @@ const Page = () => {
   const accountInfo = data?.data?.accountInfo as Account[] | undefined;
   const defaultAccount = accountInfo?.find((account) => account.isDefault);
   //Budget Info
-  const { data: budgetResponse } = useQuery({
+  const { data: budgetResponse, refetch: refetchBudget } = useQuery({
     ...getDefaultAccountBudget(defaultAccount?.id || ""),
   });
   const budgetData = budgetResponse?.data;
@@ -103,6 +103,7 @@ const Page = () => {
             initialBudget={budgetData?.budget}
             currentExpenses={budgetData?.currentExpenses || 0}
             accountId={defaultAccount?.id || ""}
+            onBudgetUpdate={() => refetchBudget()}
           />
         ) : (
           <>

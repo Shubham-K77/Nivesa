@@ -11,15 +11,17 @@ interface BudgetProgressProps {
   initialBudget: Budget | null;
   currentExpenses: number;
   accountId: string;
+  onBudgetUpdate?: () => void;
 }
 const BudgetProgress = ({
   initialBudget,
   currentExpenses,
   accountId,
+  onBudgetUpdate,
 }: BudgetProgressProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newBudget, setNewBudget] = useState(
-    initialBudget?.amount?.toString() || ""
+    initialBudget?.amount?.toString() || "",
   );
   const percentageUsed = initialBudget
     ? (currentExpenses / initialBudget.amount) * 100
@@ -44,12 +46,14 @@ const BudgetProgress = ({
         onSuccess: (data) => {
           setIsEditing(false);
           toast.success(`${data?.data?.message}`);
+          // Trigger refetch in parent component
+          onBudgetUpdate?.();
         },
         onError: (error) => {
           console.error("Failed to update budget:", error);
           toast.error("Failed to update/create the budget.");
         },
-      }
+      },
     );
   };
   const handleCancel = () => {
@@ -101,7 +105,7 @@ const BudgetProgress = ({
             <div className="text-md text-muted-foreground text-left p-2">
               {initialBudget
                 ? `NPR ${currentExpenses.toFixed(
-                    2
+                    2,
                   )} of NPR ${initialBudget.amount.toFixed(2)} spent`
                 : "No Budget Set"}
             </div>

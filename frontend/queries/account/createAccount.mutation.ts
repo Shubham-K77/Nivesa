@@ -16,12 +16,11 @@ export function useCreateAccount() {
       }
     },
     onSuccess: (_, variables) => {
-      // Invalidate and refetch account queries
+      // Refetch all account-related queries using predicate
       queryClient.refetchQueries({
-        queryKey: ["initialAccount", variables.userId],
-      });
-      queryClient.refetchQueries({
-        queryKey: ["allAccounts", variables.userId],
+        predicate: (query) =>
+          query.queryKey[0] === "initialAccount" ||
+          query.queryKey[0] === "allAccounts",
       });
     },
   });
