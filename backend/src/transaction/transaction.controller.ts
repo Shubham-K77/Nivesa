@@ -13,6 +13,9 @@ import {
   BadRequestException,
   UseInterceptors,
   UploadedFile,
+  Get,
+  Param,
+  Patch,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { ArcjetService } from '../arcjet/arcjet.service';
@@ -20,6 +23,7 @@ import { UserLoginGuard } from 'src/guard/user.login.guard';
 import type { Request } from 'express';
 import { CreateTransactionDto } from './dto/createTransaction.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { EditTransactionDto } from './dto/editTransaction.dto';
 type TransactionsArray = {
   transactions: Array<string>;
 };
@@ -30,6 +34,17 @@ export class TransactionController {
     private readonly transactionService: TransactionService,
     private readonly arcjetService: ArcjetService,
   ) {}
+  @Get('/:id')
+  @UseGuards(UserLoginGuard)
+  async getSpecificTransaction(@Param('id') id: string, @Req() req: Request) {
+    const currentUser = req['current_user'];
+    const userId = currentUser?.id || '';
+    const response = await this.transactionService.getSpecificTransaction(
+      id,
+      userId,
+    );
+    return response;
+  }
   @Post('/delete')
   @UseGuards(UserLoginGuard)
   async deleteTransactions(
@@ -109,6 +124,21 @@ export class TransactionController {
       throw new BadRequestException('No file uploaded');
     }
     const response = await this.transactionService.scanReceipt(file);
+    return response;
+  }
+  @Patch('/:id')
+  @UseGuards(UserLoginGuard)
+  async updateSpecificTransaction(
+    @Param('id') id: string,
+    @Body() transactionData: EditTransactionDto,
+    @Req() req: Request,
+  ) {
+    const currentUser = req['current_user'];
+    const response = await this.transactionService.updateExistingTransaction(
+      id,
+      transactionData,
+      currentUser?.id || '',
+    );
     return response;
   }
 }

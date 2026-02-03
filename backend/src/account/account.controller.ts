@@ -8,6 +8,7 @@ import {
   Param,
   Req,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create_account.dto';
@@ -69,6 +70,14 @@ export class AccountController {
     // @typescript-eslint/no-unsafe-member-access
     const userId: string = req.current_user!.id;
     const response = await this.accountService.makeAccountDefault(userId, id);
+    return response;
+  }
+  //iv. Delete the Account
+  @Delete('/:id')
+  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
+  async deleteAccount(@Req() req: Request, @Param('id') id: string) {
+    const userId: string = req.current_user!.id;
+    const response = await this.accountService.deleteAccount(userId, id);
     return response;
   }
 }

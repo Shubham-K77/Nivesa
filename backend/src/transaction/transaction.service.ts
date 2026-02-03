@@ -5,6 +5,7 @@ import {
   BadRequestException,
   HttpException,
   Injectable,
+  NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTransactionDto } from './dto/createTransaction.dto';
 import { ConfigService } from '@nestjs/config';
 import Groq from 'groq-sdk';
+import { EditTransactionDto } from './dto/editTransaction.dto';
 type TransactionsArray = {
   transactions: Array<string>;
 };
@@ -367,6 +369,155 @@ export class TransactionService {
     } catch (error: any) {
       console.error('Error Scanning The Receipt: ', error.message);
       throw new ServiceUnavailableException('Failed to scan receipt!');
+    }
+  }
+  //Get Specific Transaction For UserId
+  async getSpecificTransaction(transactionId: string, userId: string) {
+    try {
+      if (!transactionId || !transactionId.trim()) {
+        throw new BadRequestException('Must provide a valid transaction info!');
+      }
+      if (!userId || !userId.trim()) {
+        throw new UnauthorizedException('User authentication required!');
+      }
+      const transactionExists = await this.prisma.transaction.findUnique({
+        where: { id: transactionId },
+      });
+      if (!transactionExists) {
+        throw new NotFoundException(
+          "Provided transaction doesn't exist in the system.",
+        );
+      }
+      // Verify transaction ownership
+      if (transactionExists.userId !== userId) {
+        throw new UnauthorizedException(
+          'You do not have permission to view this transaction!',
+        );
+      }
+      //Response
+      return {
+        message: 'Successfully Retrieved',
+        transactionInfo: transactionExists,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
+  //Editing The Transaction For UserId
+  async updateExistingTransaction(
+    transactionId: string,
+    transactionData: EditTransactionDto,
+    userId: string,
+  ) {
+    try {
+      if (!transactionId || !transactionId.trim()) {
+        throw new BadRequestException('Must provide transaction info!');
+      }
+      if (!userId || !userId.trim()) {
+        throw new UnauthorizedException('User authentication required!');
+      }
+      // Validate required fields
+      if (
+        transactionData.amount === undefined ||
+        transactionData.amount === null
+      ) {
+        throw new BadRequestException('Transaction amount is required!');
+      }
+      const transactionExists = await this.prisma.transaction.findUnique({
+        where: {
+          id: transactionId,
+        },
+        include: {
+          account: true,
+        },
+      });
+      if (!transactionExists) {
+        throw new UnauthorizedException("Provided transaction wasn't found.");
+      }
+      // Verify transaction ownership
+      if (transactionExists.userId !== userId) {
+        throw new UnauthorizedException(
+          'You do not have permission to update this transaction!',
+        );
+      }
+      //Calculate the old transaction's impact on the old account
+      const oldAccountChange =
+        transactionExists.type === 'EXPENSE'
+          ? transactionExists.amount.toNumber()
+          : -transactionExists.amount.toNumber();
+      //Calculate the new transaction's impact on the new account
+      const newAccountChange =
+        transactionData.type === 'EXPENSE'
+          ? -transactionData.amount
+          : transactionData.amount;
+      //Check if account changed
+      const accountChanged =
+        transactionExists.accountId !== transactionData.accountId;
+      //Transaction To Update
+      const transaction = await this.prisma.$transaction(async (txn) => {
+        //Update The Transaction
+        const updated = await txn.transaction.update({
+          where: {
+            id: transactionId,
+          },
+          data: {
+            ...transactionData,
+            nextRecurringDate:
+              transactionData.isRecurring && transactionData.recurringInterval
+                ? this.calculateNextReccuringDate(
+                    transactionData.date,
+                    transactionData.recurringInterval,
+                  )
+                : null,
+          },
+        });
+        if (accountChanged) {
+          // Different accounts: reverse old transaction from old account
+          await txn.account.update({
+            where: { id: transactionExists.accountId },
+            data: {
+              balance: {
+                increment: oldAccountChange,
+              },
+            },
+          });
+          // Apply new transaction to new account
+          await txn.account.update({
+            where: { id: transactionData.accountId },
+            data: {
+              balance: {
+                increment: newAccountChange,
+              },
+            },
+          });
+        } else {
+          // Same account: apply net balance change
+          const netBalanceChange = newAccountChange - -oldAccountChange;
+          await txn.account.update({
+            where: { id: transactionData.accountId },
+            data: {
+              balance: {
+                increment: netBalanceChange,
+              },
+            },
+          });
+        }
+        //Return
+        return updated;
+      });
+      //Response
+      return {
+        message: 'Successfully Updated!',
+        transactionInfo: transaction,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
 }

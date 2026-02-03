@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
@@ -381,7 +382,6 @@ export class AccountService {
             invitationToken = crypto.randomBytes(32).toString('hex');
             invitationExpiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
           }
-
           // Create new family member
           const newMember = await txn.familyMember.create({
             data: {
@@ -395,10 +395,8 @@ export class AccountService {
               accountId: newAccount.id,
             },
           });
-
           createdMembers.push(newMember);
         }
-
         return {
           message: 'Successfully Created Family Account with Members!',
           statusCode: 201,
@@ -406,7 +404,6 @@ export class AccountService {
           familyMembers: createdMembers,
         };
       });
-
       // Send invitation emails AFTER transaction completes
       for (const member of result.familyMembers) {
         const memberData = newFamilyAccount.familyMemberInfo.find(
@@ -425,7 +422,6 @@ export class AccountService {
           }
         }
       }
-
       return result;
     } catch (error: any) {
       if (error instanceof HttpException) {
@@ -486,6 +482,54 @@ export class AccountService {
       throw new ServiceUnavailableException(
         'Unable to proceed the operations.',
       );
+    }
+  }
+  //Delete the account:
+  async deleteAccount(userId: string, accountId: string) {
+    try {
+      //Check The UserId
+      if (!userId || !userId.trim()) {
+        throw new BadRequestException(
+          'The specified user is not authorized. Please provide a valid platform user.!',
+        );
+      }
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        throw new UnauthorizedException('The provided user is not authorized.');
+      }
+      //Check The AccountId
+      if (!accountId || !accountId.trim()) {
+        throw new BadRequestException('Please provide a valid account Info.!');
+      }
+      const accountExists = await this.prisma.account.findUnique({
+        where: { id: accountId },
+      });
+      if (!accountExists) {
+        throw new UnauthorizedException(
+          "The provided account doesn't exist in the platform.",
+        );
+      }
+      //Delete The Account
+      const deleteAccount = await this.prisma.account.delete({
+        where: { id: accountExists.id },
+      });
+      if (!deleteAccount) {
+        throw new ServiceUnavailableException(
+          'Delete operations failed, try again later!',
+        );
+      }
+      //Response
+      return {
+        message: 'Successfully Deleted!',
+        statusCode: 200,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
 }
