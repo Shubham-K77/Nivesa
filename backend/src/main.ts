@@ -13,6 +13,7 @@ import { getInngestFunctions } from './inngest/functions';
 import { PrismaService } from './prisma/prisma.service';
 import { WhatsappService } from './whatsapp/whatsapp.service';
 import { MailerService } from './mailer/mailer.service';
+import { GroqService } from './groq/groq.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -34,6 +35,7 @@ async function bootstrap() {
   const prismaService = app.get(PrismaService);
   const whatsappService = app.get(WhatsappService);
   const mailerService = app.get(MailerService);
+  const groqService = app.get(GroqService);
   // Get inngest functions with dependencies
   const inngestFunctions = getInngestFunctions({
     appService,
@@ -41,6 +43,7 @@ async function bootstrap() {
     prismaService,
     whatsappService,
     mailerService,
+    groqService,
   });
   // Register inngest endpoint
   app.use(

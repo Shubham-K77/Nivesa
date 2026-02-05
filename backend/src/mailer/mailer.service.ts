@@ -491,4 +491,32 @@ export class MailerService {
       throw new Error(`Failed to send email: ${error.message}`);
     }
   }
+  //To Send Insights
+  async sendInsights(
+    receiver: string,
+    pdf: Buffer,
+    monthName: string,
+    htmlMessage: string,
+  ) {
+    try {
+      const mailer = await this.configMailer();
+      const info = await mailer.sendMail({
+        from: '"Nivēśa" <nivesa.project@gmail.com>',
+        to: receiver,
+        subject: `Your Monthly Financial Insights - ${monthName}`,
+        html: htmlMessage,
+        attachments: [
+          {
+            filename: 'monthly_report.pdf',
+            content: pdf,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
+      console.log('Budget alert email sent:', info.messageId);
+    } catch (error: any) {
+      console.error('Failed to send the monthly insights report.', error);
+      throw new Error(`Failed to send report: ${error.message}`);
+    }
+  }
 }

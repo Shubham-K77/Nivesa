@@ -1,13 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Logger } from '@nestjs/common';
 import { inngest } from './client';
 import { AppService } from '../app.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { MailerService } from 'src/mailer/mailer.service';
+import { GroqService } from 'src/groq/groq.service';
+import PDFDocument from 'pdfkit';
 
 interface InngestDependencies {
   appService: AppService;
@@ -15,10 +18,10 @@ interface InngestDependencies {
   prismaService: PrismaService;
   whatsappService: WhatsappService;
   mailerService: MailerService;
+  groqService: GroqService;
 }
-
 export const getInngestFunctions = (deps: InngestDependencies) => {
-  const { logger, appService, prismaService, whatsappService, mailerService } =
+  const { logger, prismaService, whatsappService, mailerService, groqService } =
     deps;
   const isNewMonth = (lastAlertDate: Date, currentDate: Date) => {
     return (
@@ -67,9 +70,7 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
             },
           });
         });
-
         logger.log(`Found ${accounts.length} accounts with budgets`);
-
         //Step-2: Loop Through Entire Budget And Check Which Are Exceeding.
         for (const account of accounts) {
           const budgetId = account?.budget?.id;
@@ -330,9 +331,396 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
     //Compare with nextDue date
     return nextDue <= today;
   }
+  //Function to send the monthly reports
+  const sendMonthlyAlerts = inngest.createFunction(
+    {
+      id: 'generate-monthly-reports',
+      name: 'Generate Monthly Reports',
+    },
+    { cron: '0 0 1 * *' },
+    async ({ step }) => {
+      //Step-1: Fetch every users in the platform
+      const users = await step.run('fetch-users', async () => {
+        return await prismaService.user.findMany({
+          include: {
+            accounts: true,
+            loginCredentials: { select: { email: true } },
+          },
+        });
+      });
+      //Step-2: Generate The Reports For The Users
+      for (const user of users) {
+        await step.run(`generate-report-${user.id}`, async () => {
+          const lastMonth = new Date();
+          lastMonth.setMonth(lastMonth.getMonth() - 1);
+          //Get The Stats From DB
+          const stats = await getMonthlyStats(user.id, lastMonth);
+          const monthName = lastMonth.toLocaleString('default', {
+            month: 'long',
+          });
+          //Get The Insights From AI
+          logger.log(`Generating insights for user ${user.id} - ${user.name}`);
+          console.log(`Generating insights for user ${user.id} - ${user.name}`);
+          const insights = await generateFinancialInsights(stats, monthName);
+          logger.log(`Insights generated:`, insights);
+          console.log(`Insights generated:`, JSON.stringify(insights));
+          //Get The Insights Pdf
+          const pdfBuffer = await generateInsightsPDF(
+            insights,
+            stats,
+            monthName,
+          );
+          logger.log(`PDF generated, buffer size: ${pdfBuffer.length}`);
+          console.log(`PDF generated, buffer size: ${pdfBuffer.length}`);
+          //Send The Mail And WhatsApp Message
+          try {
+            const formattedCategories = Object.entries(stats.byCategory)
+              .map(
+                ([category, amount]) =>
+                  `- ${category}: NPR ${(amount as number).toFixed(2)}`,
+              )
+              .join('\n');
+            const formattedCategoriesHTML = Object.entries(stats.byCategory)
+              .map(
+                ([category, amount]) =>
+                  `<li>${category}: NPR ${(amount as number).toFixed(2)}</li>`,
+              )
+              .join('');
+            const whatsAppMessage = `
+            *Monthly Financial Report* - ${monthName}
+            
+            Dear ${user.name},
+            
+            Here is your financial summary for ${monthName}:
+
+            • Total Income: NPR ${stats.totalIncome.toFixed(2)}
+            • Total Expenses: NPR ${stats.totalExpenses.toFixed(2)}
+            • Number of Transactions: ${stats.transactionCount}  
+            
+            Expenses by Category:
+            ${formattedCategories || '- No expenses recorded'}  
+
+            For detailed insights, please check the attached report.
+            
+            Best regards,
+            *Nivesa Team*`.trim();
+            const htmlMessage = `
+            <>
+              <div style="font-family: Arial, sans-serif; color: #333; background-color: #f8f9fa; padding: 20px;">
+                <div style="max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                  
+                  <h2 style="color: #1b4d3e; margin-bottom: 20px; font-size: 22px;">📊 Monthly Financial Report - ${monthName}</h2>
+
+                  <p>Dear ${user.name},</p>
+
+                  <p>We’re pleased to share your <strong>monthly financial insights</strong> for your account.</p>
+
+                  <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
+                    <p>This report provides a summarized overview of your spending patterns, budget utilization, and key observations from the past month.</p>
+                    <p>The detailed breakdown is included in the attached PDF for your reference.</p>
+                  </div>
+
+                  <p>
+                    <strong>Total Income:</strong> NPR ${stats.totalIncome.toFixed(2)}<br />
+                    <strong>Total Expenses:</strong> NPR ${stats.totalExpenses.toFixed(2)}<br />
+                    <strong>Number of Transactions:</strong> ${stats.transactionCount}
+                  </p>
+
+                  <p><strong>Expenses by Category:</strong></p>
+                  
+                  <ul>
+                    ${formattedCategoriesHTML}
+                  </ul>
+
+                  <p style="margin-top: 25px;">
+                    Reviewing these insights regularly can help you make more informed financial decisions and stay aligned with your goals.
+                  </p>
+
+                  <p>If you have any questions or notice discrepancies, feel free to reach out to our support team.</p>
+
+                  <p style="margin-top: 25px;">
+                    Warm regards,<br />
+                    <strong>Nivēśa Team</strong>
+                  </p>
+
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5; font-size: 13px; color: #6c757d; text-align: center;">
+                    <p>This is an automated email. Please do not reply to this message.</p>
+                    <p>© ${new Date().getFullYear()} Nivēśa. All rights reserved.</p>
+                  </div>
+                </div>
+              </div>
+            </>`;
+            logger.log(`Sending email to ${user.loginCredentials[0].email}`);
+            console.log(`Sending email to ${user.loginCredentials[0].email}`);
+            await mailerService.sendInsights(
+              user.loginCredentials[0].email,
+              pdfBuffer,
+              monthName,
+              htmlMessage,
+            );
+            logger.log(`Email sent successfully`);
+            console.log(`Email sent successfully`);
+
+            if (user.phoneNumber) {
+              logger.log(`User has phone number: ${user.phoneNumber}`);
+              console.log(`User has phone number: ${user.phoneNumber}`);
+              const whatsappStatus = whatsappService.getLoginStatus();
+              logger.log(`WhatsApp login status: ${whatsappStatus.isLoggedIn}`);
+              console.log(
+                `WhatsApp login status: ${whatsappStatus.isLoggedIn}`,
+              );
+
+              if (whatsappStatus.isLoggedIn) {
+                logger.log(`Sending WhatsApp message to ${user.phoneNumber}`);
+                console.log(`Sending WhatsApp message to ${user.phoneNumber}`);
+                const result = await whatsappService.sendInsights(
+                  user.phoneNumber,
+                  whatsAppMessage,
+                  pdfBuffer,
+                );
+                logger.log(`WhatsApp result:`, result);
+                console.log(`WhatsApp result:`, JSON.stringify(result));
+              } else {
+                logger.warn(`WhatsApp not logged in, skipping message`);
+                console.log(`WhatsApp not logged in, skipping message`);
+              }
+            } else {
+              logger.warn(`User ${user.name} has no phone number`);
+              console.log(`User ${user.name} has no phone number`);
+            }
+          } catch (error: any) {
+            //Log The Error
+            logger.error(error.message, error);
+            throw new Error('Unable to send the insights to the user!');
+          }
+        });
+      }
+      //Step-3: Return
+      return { processed: users.length };
+    },
+  );
+  //Helper Function To Get The Monthly Stats
+  const getMonthlyStats = async (userId: string, month: Date) => {
+    const startDate = new Date(month.getFullYear(), month.getMonth(), 1);
+    const endDate = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+    //Get The Transactions For The Mentioned Period
+    const transactions = await prismaService.transaction.findMany({
+      where: {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+    //Reduce The Transactions Into Insights
+    return transactions.reduce(
+      (stats, t) => {
+        const amount = t.amount.toNumber();
+        if (t.type === 'EXPENSE') {
+          stats.totalExpenses += amount;
+          stats.byCategory[t.category] =
+            (stats.byCategory[t.category] || 0) + amount;
+        } else {
+          stats.totalIncome += amount;
+        }
+        return stats;
+      },
+      {
+        totalExpenses: 0,
+        totalIncome: 0,
+        byCategory: {},
+        transactionCount: transactions.length,
+      },
+    );
+  };
+  //Helper Function To Generate The Insights From Groq AI 'Cloud'
+  const generateFinancialInsights = async (
+    stats: {
+      totalExpenses: number;
+      totalIncome: number;
+      byCategory: any;
+      transactionCount: number;
+    },
+    monthName: string,
+  ) => {
+    try {
+      logger.log(`Calling Groq API for insights...`);
+      console.log(`Stats:`, JSON.stringify(stats));
+      const groq = groqService.getGroq();
+      const prompt = `
+      Analyze this financial data and provide 3 concise, actionable insights.
+      Focus on spending patterns and practical advice.
+      Keep it friendly and conversational.
+
+      Financial Data for ${monthName}:
+        - Total Income: NPR${stats.totalIncome}
+        - Total Expenses: NPR${stats.totalExpenses}
+        - Net Income: NPR${stats.totalIncome - stats.totalExpenses}
+        - Expense Categories: ${Object.entries(stats.byCategory)
+          .map(([category, amount]) => `${category}: $${amount as number}`)
+          .join(', ')}
+
+      Format the response as a JSON array of strings, like this: ["insight 1", "insight 2", "insight 3"]
+      `;
+      const result = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 100,
+      });
+      const text = result.choices[0]?.message?.content || '[]';
+      const cleaned = text.replace(/```(?:json)?\n?/g, '').trim();
+      if (!cleaned || cleaned === '{}' || cleaned === '[]') {
+        return [
+          'Your highest expense category this month might need attention.',
+          'Consider setting up a budget for better financial management.',
+          'Track your recurring expenses to identify potential savings.',
+        ];
+      }
+      //Converting The String Response To JSON
+      try {
+        const data = JSON.parse(cleaned);
+        return Array.isArray(data)
+          ? data
+          : [
+              'Your highest expense category this month might need attention.',
+              'Consider setting up a budget for better financial management.',
+              'Track your recurring expenses to identify potential savings.',
+            ];
+      } catch (parseError) {
+        logger.error('Error parsing JSON response:', parseError);
+        console.error('Error parsing JSON response:', parseError);
+        return [
+          'Your highest expense category this month might need attention.',
+          'Consider setting up a budget for better financial management.',
+          'Track your recurring expenses to identify potential savings.',
+        ];
+      }
+    } catch (error: any) {
+      logger.error('Failed To Generate Insights By Groq!', error.message);
+      console.error('Failed To Generate Insights By Groq!', error);
+      return [
+        'Your highest expense category this month might need attention.',
+        'Consider setting up a budget for better financial management.',
+        'Track your recurring expenses to identify potential savings.',
+      ];
+    }
+  };
+  //Helper Function To Generate The PDF
+  const generateInsightsPDF = (
+    insights: string[],
+    stats: {
+      totalExpenses: number;
+      totalIncome: number;
+      byCategory: any;
+      transactionCount: number;
+    },
+    monthName: string,
+  ): Promise<Buffer> =>
+    new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50 });
+      const buffers: Buffer[] = [];
+
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('error', reject);
+
+      // Title - Using ASCII version to avoid encoding issues
+      doc
+        .fontSize(24)
+        .font('Helvetica-Bold')
+        .text('Nivesa', { align: 'center' });
+      doc.moveDown(0.5);
+      doc
+        .fontSize(18)
+        .font('Helvetica')
+        .text(`Monthly Financial Report - ${monthName}`, { align: 'center' });
+      doc.moveDown(2);
+
+      // Financial Summary
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text('Financial Summary:', { underline: true });
+      doc.moveDown(1);
+
+      doc
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`Total Income: NPR ${stats.totalIncome.toFixed(2)}`);
+      doc.text(`Total Expenses: NPR ${stats.totalExpenses.toFixed(2)}`);
+      doc.text(
+        `Net Savings: NPR ${(stats.totalIncome - stats.totalExpenses).toFixed(2)}`,
+      );
+      doc.text(`Total Transactions: ${stats.transactionCount}`);
+      doc.moveDown(1.5);
+
+      // Expense Breakdown
+      if (Object.keys(stats.byCategory).length > 0) {
+        doc
+          .fontSize(14)
+          .font('Helvetica-Bold')
+          .text('Expense Breakdown by Category:');
+        doc.moveDown(0.5);
+
+        Object.entries(stats.byCategory).forEach(([category, amount]) => {
+          doc
+            .fontSize(11)
+            .font('Helvetica')
+            .text(`  • ${category}: NPR ${(amount as number).toFixed(2)}`);
+        });
+        doc.moveDown(1.5);
+      }
+
+      // Insights
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text('Key Insights:', { underline: true });
+      doc.moveDown(1);
+
+      if (Array.isArray(insights) && insights.length > 0) {
+        insights.forEach((insight, index) => {
+          doc
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${index + 1}. ${insight}`, {
+              align: 'left',
+              width: 500,
+            });
+          doc.moveDown(0.8);
+        });
+      } else {
+        doc
+          .fontSize(12)
+          .font('Helvetica')
+          .text('No AI-generated insights available for this period.');
+      }
+
+      doc.moveDown(2);
+
+      // Footer
+      doc
+        .fontSize(10)
+        .font('Helvetica-Oblique')
+        .text('Generated by Nivesa Financial Management System', {
+          align: 'center',
+        });
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'center' });
+
+      doc.end();
+    });
+  //Inggest Functions Export
   return [
     checkDailyBudgets,
     triggerRecurringTransactions,
     processRecurringTransactions,
+    sendMonthlyAlerts,
   ];
 };

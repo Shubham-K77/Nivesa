@@ -11,23 +11,17 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTransactionDto } from './dto/createTransaction.dto';
-import { ConfigService } from '@nestjs/config';
-import Groq from 'groq-sdk';
+import { GroqService } from 'src/groq/groq.service';
 import { EditTransactionDto } from './dto/editTransaction.dto';
 type TransactionsArray = {
   transactions: Array<string>;
 };
 @Injectable()
 export class TransactionService {
-  private groq: Groq;
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
-  ) {
-    this.groq = new Groq({
-      apiKey: this.config.get<string>('GROQ_API_KEY') || '',
-    });
-  }
+    private readonly groqService: GroqService,
+  ) {}
   //Bulk Delete Function
   async bulkDeleteTransaction(
     userId: string,
@@ -274,11 +268,13 @@ export class TransactionService {
   //AI Receipt Scanning
   async scanReceipt(file: Express.Multer.File) {
     try {
+      const groq = this.groqService.getGroq();
       //Convert File To Base64String
       const base64String = file.buffer.toString('base64');
       const imageUrl = `data:${file.mimetype};base64,${base64String}`;
       // Updated prompt to include transaction type
-      const prompt = `Analyze this receipt image and extract the following information in JSON format:
+      const prompt = `
+      Analyze this receipt image and extract the following information in JSON format:
     - Total amount (just the number, must be in NPR if provided other currencies then convert it and provide me the value, number only.)
     - Date (in ISO format)
     - Description or items purchased (brief summary)
@@ -296,9 +292,10 @@ export class TransactionService {
       "type": "INCOME" or "EXPENSE"
     }
 
-    If its not a receipt, return an empty object {}`;
+    If its not a receipt, return an empty object {}
+      `;
       //Response From API
-      const result = await this.groq.chat.completions.create({
+      const result = await groq.chat.completions.create({
         model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages: [
           {

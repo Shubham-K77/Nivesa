@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, Logger } from '@nestjs/common';
 import { Client, LocalAuth } from 'whatsapp-web.js';
-import * as qrcode from 'qrcode-terminal';
-
+import { MessageMedia } from 'whatsapp-web.js';
 @Injectable()
 export class WhatsappService {
   private client: Client | null = null;
@@ -64,12 +64,33 @@ export class WhatsappService {
     //Creates an event when log-in was success
     this.client.on('ready', () => {
       this.logger.log('WhatsApp client is ready as a linked device!');
+      console.log('========== WHATSAPP READY EVENT FIRED ==========');
       this.isLoggedIn = true;
       this.qrCode = null;
     });
     //Creates an event to validate auth
     this.client.on('authenticated', () => {
       this.logger.log('Authenticated successfully');
+
+      // Workaround: Sometimes ready event doesn't fire, so check manually after a delay
+      setTimeout(async () => {
+        if (!this.isLoggedIn && this.client) {
+          try {
+            // Try to get client info to verify it's actually ready
+            const state = await this.client.getState();
+            this.logger.log(`Client state after auth: ${state}`);
+            if (state === 'CONNECTED') {
+              this.logger.warn(
+                'Ready event did not fire but client is CONNECTED - manually setting isLoggedIn',
+              );
+              this.isLoggedIn = true;
+              this.qrCode = null;
+            }
+          } catch (error: any) {
+            this.logger.warn('Could not get client state:', error.message);
+          }
+        }
+      }, 5000); // Wait 5 seconds after authentication
     });
     //Creates an event when auth was failed
     this.client.on('auth_failure', (msg) => {
@@ -264,7 +285,6 @@ export class WhatsappService {
       const number = phoneNumber.replace(/\D/g, '');
       // Format as chatId (add @c.us if not present)
       const chatId = number.includes('@c.us') ? number : `${number}@c.us`;
-      this.logger.log(`Sending message to ${chatId}`);
       const isRegistered = await this.client.isRegisteredUser(chatId);
       if (!isRegistered) {
         this.logger.warn(`Number ${phoneNumber} is not registered on WhatsApp`);
@@ -276,13 +296,13 @@ export class WhatsappService {
       await this.client.sendMessage(chatId, message, {
         sendSeen: false,
       });
-      this.logger.log(`✓ Message sent successfully to ${phoneNumber}`);
+      this.logger.log(`Message sent successfully to ${phoneNumber}`);
       return {
         success: true,
         message: 'Message sent successfully',
       };
     } catch (error: any) {
-      this.logger.error(`❌ Failed to send message to ${phoneNumber}:`, error);
+      this.logger.error(`Failed to send message to ${phoneNumber}:`, error);
       return {
         success: false,
         message: `Failed to send message: ${error?.message || 'Unknown error'}`,
@@ -372,6 +392,54 @@ export class WhatsappService {
       }
 
       return false;
+    }
+  }
+  async sendInsights(
+    phoneNumber: string,
+    messageText: string,
+    pdfBuffer: Buffer,
+  ): Promise<{ success: boolean; message: string }> {
+    if (!this.isLoggedIn || !this.client) {
+      return {
+        success: false,
+        message: 'WhatsApp client is not logged in. Please scan QR code first.',
+      };
+    }
+    try {
+      // Clean the phone number
+      const number = phoneNumber.replace(/\D/g, '');
+      // Format as chatId
+      const chatId = number.includes('@c.us') ? number : `${number}@c.us`;
+      const isRegistered = await this.client.isRegisteredUser(chatId);
+      if (!isRegistered) {
+        this.logger.warn(`Number ${phoneNumber} is not registered on WhatsApp`);
+        return {
+          success: false,
+          message: 'This phone number is not registered on WhatsApp',
+        };
+      }
+      // Create PDF media object
+      const pdf = new MessageMedia(
+        'application/pdf',
+        pdfBuffer.toString('base64'),
+        'monthly-report.pdf',
+      );
+      // Send the PDF with the message as caption
+      await this.client.sendMessage(chatId, pdf, {
+        caption: messageText,
+        sendSeen: false,
+      });
+      this.logger.log(`Financial report sent successfully to ${phoneNumber}`);
+      return {
+        success: true,
+        message: 'Financial report sent successfully',
+      };
+    } catch (error: any) {
+      this.logger.error(`Failed to send PDF to ${phoneNumber}:`, error);
+      return {
+        success: false,
+        message: `Failed to send PDF: ${error?.message || 'Unknown error'}`,
+      };
     }
   }
 }

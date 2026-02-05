@@ -15,6 +15,7 @@ import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { ArcjetModule } from './arcjet/arcjet.module';
+import { GroqModule } from './groq/groq.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ArcjetModule } from './arcjet/arcjet.module';
     BudgetModule,
     WhatsappModule,
     ArcjetModule,
+    GroqModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
