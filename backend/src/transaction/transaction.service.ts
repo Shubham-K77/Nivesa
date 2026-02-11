@@ -517,4 +517,29 @@ export class TransactionService {
       throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
+  //Getting The Dashboard Data
+  async getDashboardData(userId: string) {
+    try {
+      //Check The UserId
+      if (!userId || !userId.trim()) {
+        throw new UnauthorizedException('Must login to continue!');
+      }
+      //Get All The Transactions
+      const transactionsInfo = await this.prisma.transaction.findMany({
+        where: { userId },
+        orderBy: { date: 'desc' },
+      });
+      //Return Info
+      return {
+        message: 'Successfully Retrieved!',
+        statusCode: 200,
+        transactionsInfo,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
 }

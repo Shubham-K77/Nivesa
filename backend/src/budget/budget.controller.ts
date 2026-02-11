@@ -47,4 +47,58 @@ export class BudgetController {
     );
     return response;
   }
+
+  // Family Budget Routes
+  @Get('/family/members/:accountId')
+  @UseGuards(UserLoginGuard)
+  async getFamilyMembers(
+    @Param('accountId') accountId: string,
+    @Req() req: Request,
+  ) {
+    const currentUser = req['current_user'];
+    if (!currentUser) {
+      return;
+    }
+    const response = await this.budgetService.getFamilyMembersByAccount(
+      accountId,
+      currentUser.id,
+    );
+    return response;
+  }
+
+  @Get('/family/:familyMemberId')
+  @UseGuards(UserLoginGuard)
+  async getFamilyMemberBudget(
+    @Param('familyMemberId') familyMemberId: string,
+    @Req() req: Request,
+  ) {
+    const currentUser = req['current_user'];
+    if (!currentUser) {
+      return;
+    }
+    const response = await this.budgetService.getFamilyBudget(
+      familyMemberId,
+      currentUser.id,
+    );
+    return response;
+  }
+
+  @Patch('/family/:familyMemberId')
+  @UseGuards(UserLoginGuard)
+  async updateFamilyMemberBudget(
+    @Param('familyMemberId') familyMemberId: string,
+    @Body('amount') amount: number,
+    @Req() req: Request,
+  ) {
+    const currentUser = req['current_user'];
+    if (!currentUser) {
+      return;
+    }
+    const response = await this.budgetService.updateFamilyBudget(
+      familyMemberId,
+      currentUser.id,
+      amount,
+    );
+    return response;
+  }
 }

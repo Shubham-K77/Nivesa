@@ -532,4 +532,87 @@ export class AccountService {
       throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
+
+  // Get family member accounts
+  async getFamilyMemberAccounts(familyMemberId: string) {
+    try {
+      if (!familyMemberId || !familyMemberId.trim()) {
+        throw new UnauthorizedException('Must login to system to continue.');
+      }
+
+      // Find the family member
+      const familyMember = await this.prisma.familyMember.findUnique({
+        where: { id: familyMemberId },
+        include: {
+          account: {
+            include: {
+              transactions: true,
+              familyMembers: {
+                select: {
+                  id: true,
+                  name: true,
+                  phoneNumber: true,
+                  accountId: true,
+                  userId: true,
+                  isActive: true,
+                },
+              },
+            },
+          },
+          familyBudget: true,
+        },
+      });
+
+      if (!familyMember) {
+        throw new UnauthorizedException('Family member not found in system.');
+      }
+
+      // Get all family accounts this member belongs to
+      const familyAccounts = await this.prisma.account.findMany({
+        where: {
+          type: 'FAMILY',
+          familyMembers: {
+            some: {
+              id: familyMemberId,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          transactions: true,
+          familyMembers: {
+            select: {
+              id: true,
+              name: true,
+              phoneNumber: true,
+              accountId: true,
+              userId: true,
+              isActive: true,
+            },
+          },
+        },
+        take: 3,
+      });
+
+      // Get the family member's budget
+      const familyBudget = familyMember.familyBudget
+        ? {
+            ...familyMember.familyBudget,
+            amount: familyMember.familyBudget.amount.toNumber(),
+          }
+        : null;
+
+      return {
+        message: 'Successfully retrieved family accounts!',
+        statusCode: 200,
+        accountInfo: familyAccounts,
+        familyBudget: familyBudget,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
 }

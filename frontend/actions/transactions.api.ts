@@ -46,10 +46,16 @@ const updateSpecificTransaction = async (
     { withCredentials: true },
   );
 };
+const retrieveDashboardInfo = async () => {
+  return axios.get("http://localhost:3001/api/v1/transactions/dashboard", {
+    withCredentials: true,
+  });
+};
 export {
   deleteBulkTransactions,
   createTransaction,
   scanRecepitImage,
   getSpecificTransactionInfo,
   updateSpecificTransaction,
+  retrieveDashboardInfo,
 };

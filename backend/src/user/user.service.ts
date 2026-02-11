@@ -773,68 +773,142 @@ export class UserService {
     }
     throw new UnauthorizedException('Invalid role');
   }
-  async updateProfile(userData: UpdateUserDto, userId: string) {
+  async updateProfile(
+    userData: UpdateUserDto,
+    userId: string,
+    role: string = 'USER',
+  ) {
     try {
-      //Check User Exists In The System
-      const userExists = await this.prisma.user.findUnique({
-        where: { id: userId },
-        include: { loginCredentials: true },
-      });
-      if (!userExists) {
-        throw new UnauthorizedException(
-          "Provided user doesn't exist in the system.",
-        );
-      }
-      //Prepare update data
-      const updateData: any = {
-        name: userData.name,
-        phoneNumber: userData.phoneNumber,
-      };
-      if (userData.profilePic) {
-        if (userExists.imageUrl) {
-          //Delete The Old File In Cloudinary
-          const publicId = this.cloudinary.extractPublicId(userExists.imageUrl);
-          await this.cloudinary.delete(publicId, 'image');
-        }
-        updateData.imageUrl = await this.cloudinary.upload(
-          userData.profilePic,
-          'image',
-        );
-      }
-      //Handle password change
-      if (userData.password && userData.newPassword) {
-        const loginCreds = userExists.loginCredentials?.[0];
-        if (!loginCreds) {
-          throw new UnauthorizedException('Login credentials not found.');
-        }
-        const isPasswordValid = await this.bcrypt.decrypt(
-          userData.password,
-          loginCreds.password,
-        );
-        if (!isPasswordValid) {
-          throw new UnauthorizedException('Current password is incorrect.');
-        }
-        const hashedPassword = await this.bcrypt.encrypt(userData.newPassword);
-        await this.prisma.loginCredentials.update({
-          where: { id: loginCreds.id },
-          data: { password: hashedPassword },
+      if (role === 'FAMILY_MEMBER') {
+        // Handle family member profile update
+        const familyMemberExists = await this.prisma.familyMember.findUnique({
+          where: { id: userId },
+          include: { loginCredentials: true },
         });
+        if (!familyMemberExists) {
+          throw new UnauthorizedException(
+            "Provided family member doesn't exist in the system.",
+          );
+        }
+        // Prepare update data for family member
+        const updateData: any = {
+          name: userData.name,
+          phoneNumber: userData.phoneNumber,
+        };
+        if (userData.profilePic) {
+          if (familyMemberExists.imageUrl) {
+            // Delete the old file in Cloudinary
+            const publicId = this.cloudinary.extractPublicId(
+              familyMemberExists.imageUrl,
+            );
+            await this.cloudinary.delete(publicId, 'image');
+          }
+          updateData.imageUrl = await this.cloudinary.upload(
+            userData.profilePic,
+            'image',
+          );
+        }
+        // Handle password change for family member
+        if (userData.password && userData.newPassword) {
+          const loginCreds = familyMemberExists.loginCredentials;
+          if (!loginCreds) {
+            throw new UnauthorizedException('Login credentials not found.');
+          }
+          const isPasswordValid = await this.bcrypt.decrypt(
+            userData.password,
+            loginCreds.password,
+          );
+          if (!isPasswordValid) {
+            throw new UnauthorizedException('Current password is incorrect.');
+          }
+          const hashedPassword = await this.bcrypt.encrypt(
+            userData.newPassword,
+          );
+          await this.prisma.loginCredentials.update({
+            where: { id: loginCreds.id },
+            data: { password: hashedPassword },
+          });
+        }
+        // Update family member data
+        const updatedFamilyMember = await this.prisma.familyMember.update({
+          where: { id: userId },
+          data: updateData,
+        });
+        if (!updatedFamilyMember) {
+          throw new ServiceUnavailableException(
+            'Failed to update the profile information',
+          );
+        }
+        return {
+          message: 'Successfully updated!',
+          statusCode: 200,
+        };
+      } else {
+        // Handle regular user profile update (existing code)
+        const userExists = await this.prisma.user.findUnique({
+          where: { id: userId },
+          include: { loginCredentials: true },
+        });
+        if (!userExists) {
+          throw new UnauthorizedException(
+            "Provided user doesn't exist in the system.",
+          );
+        }
+        //Prepare update data
+        const updateData: any = {
+          name: userData.name,
+          phoneNumber: userData.phoneNumber,
+        };
+        if (userData.profilePic) {
+          if (userExists.imageUrl) {
+            //Delete The Old File In Cloudinary
+            const publicId = this.cloudinary.extractPublicId(
+              userExists.imageUrl,
+            );
+            await this.cloudinary.delete(publicId, 'image');
+          }
+          updateData.imageUrl = await this.cloudinary.upload(
+            userData.profilePic,
+            'image',
+          );
+        }
+        //Handle password change
+        if (userData.password && userData.newPassword) {
+          const loginCreds = userExists.loginCredentials?.[0];
+          if (!loginCreds) {
+            throw new UnauthorizedException('Login credentials not found.');
+          }
+          const isPasswordValid = await this.bcrypt.decrypt(
+            userData.password,
+            loginCreds.password,
+          );
+          if (!isPasswordValid) {
+            throw new UnauthorizedException('Current password is incorrect.');
+          }
+          const hashedPassword = await this.bcrypt.encrypt(
+            userData.newPassword,
+          );
+          await this.prisma.loginCredentials.update({
+            where: { id: loginCreds.id },
+            data: { password: hashedPassword },
+          });
+        }
+        //Update The User Data
+        const updatedUser = await this.prisma.user.update({
+          where: { id: userId },
+          data: updateData,
+        });
+        if (!updatedUser) {
+          throw new ServiceUnavailableException(
+            'Failed to update the profile information',
+          );
+        }
+        //Response
+        return {
+          message: 'Successfully updated!',
+          statusCode: 200,
+        };
       }
-      //Update The User Data
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: updateData,
-      });
-      if (!updatedUser) {
-        throw new ServiceUnavailableException(
-          'Failed to update the profile information',
-        );
-      }
-      //Response
-      return {
-        message: 'Successfully updated!',
-        statusCode: 200,
-      };
     } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;

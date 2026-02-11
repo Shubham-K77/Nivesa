@@ -34,6 +34,14 @@ export class TransactionController {
     private readonly transactionService: TransactionService,
     private readonly arcjetService: ArcjetService,
   ) {}
+  @Get('/dashboard')
+  @UseGuards(UserLoginGuard)
+  async getDashboardData(@Req() req: Request) {
+    const currentUser = req['current_user'];
+    const userId = currentUser?.id || '';
+    const response = await this.transactionService.getDashboardData(userId);
+    return response;
+  }
   @Get('/:id')
   @UseGuards(UserLoginGuard)
   async getSpecificTransaction(@Param('id') id: string, @Req() req: Request) {

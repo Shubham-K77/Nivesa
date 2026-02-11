@@ -204,4 +204,172 @@ export class BudgetService {
       throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
+
+  // Family Budget Methods
+  async getFamilyMembersByAccount(accountId: string, userId: string) {
+    try {
+      // Verify user owns this account
+      const account = await this.prisma.account.findFirst({
+        where: {
+          id: accountId,
+          userId: userId,
+        },
+        include: {
+          familyMembers: {
+            select: {
+              id: true,
+              name: true,
+              phoneNumber: true,
+              imageUrl: true,
+              isActive: true,
+            },
+          },
+        },
+      });
+
+      if (!account) {
+        throw new UnauthorizedException(
+          'Account not found or you do not have access to it.',
+        );
+      }
+
+      if (account.type !== 'FAMILY') {
+        throw new BadRequestException(
+          'This endpoint is only for family accounts.',
+        );
+      }
+
+      return {
+        message: 'Family members retrieved successfully!',
+        statusCode: 200,
+        familyMembers: account.familyMembers,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
+
+  async getFamilyBudget(familyMemberId: string, userId: string) {
+    try {
+      // Verify the family member exists and belongs to user's account
+      const familyMember = await this.prisma.familyMember.findFirst({
+        where: {
+          id: familyMemberId,
+          userId: userId,
+        },
+        include: {
+          familyBudget: true,
+        },
+      });
+
+      if (!familyMember) {
+        throw new UnauthorizedException(
+          'Family member not found or you do not have access.',
+        );
+      }
+
+      // Get monthly expenses for this family member
+      const currentDate = new Date();
+      const startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1,
+      );
+      const endOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
+
+      const expenses = await this.prisma.transaction.aggregate({
+        where: {
+          familyMemberId: familyMemberId,
+          type: 'EXPENSE',
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      return {
+        message: 'Family budget retrieved successfully!',
+        statusCode: 200,
+        budget: familyMember.familyBudget
+          ? {
+              ...familyMember.familyBudget,
+              amount: familyMember.familyBudget.amount.toNumber(),
+            }
+          : null,
+        currentExpenses: expenses._sum.amount
+          ? expenses._sum.amount.toNumber()
+          : 0,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
+
+  async updateFamilyBudget(
+    familyMemberId: string,
+    userId: string,
+    amount: number,
+  ) {
+    try {
+      // Verify the family member exists and belongs to user's account
+      const familyMember = await this.prisma.familyMember.findFirst({
+        where: {
+          id: familyMemberId,
+          userId: userId,
+        },
+      });
+
+      if (!familyMember) {
+        throw new UnauthorizedException(
+          'Family member not found or you do not have access.',
+        );
+      }
+
+      // Upsert the family budget
+      const familyBudget = await this.prisma.familyBudget.upsert({
+        where: {
+          familyMemberId: familyMemberId,
+        },
+        update: {
+          amount,
+        },
+        create: {
+          familyMemberId,
+          amount,
+        },
+      });
+
+      return {
+        message: 'Family budget updated successfully!',
+        statusCode: 201,
+        budgetInfo: {
+          ...familyBudget,
+          amount: familyBudget.amount.toNumber(),
+        },
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
 }

@@ -9,6 +9,7 @@ import {
   Req,
   Patch,
   Delete,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create_account.dto';
@@ -78,6 +79,22 @@ export class AccountController {
   async deleteAccount(@Req() req: Request, @Param('id') id: string) {
     const userId: string = req.current_user!.id;
     const response = await this.accountService.deleteAccount(userId, id);
+    return response;
+  }
+
+  // Family Member Endpoints
+  @Get('/family-member/accounts')
+  @UseGuards(UserLoginGuard)
+  async getFamilyMemberAccounts(@Req() req: Request) {
+    const currentUser = req['current_user'];
+    if (!currentUser || currentUser.role !== 'FAMILY_MEMBER') {
+      throw new UnauthorizedException(
+        'This endpoint is only for family members.',
+      );
+    }
+    const response = await this.accountService.getFamilyMemberAccounts(
+      currentUser.id,
+    );
     return response;
   }
 }

@@ -73,6 +73,16 @@ const deleteAccount = async (accountId: string) => {
     withCredentials: true,
   });
 };
+
+const getFamilyMemberAccounts = async () => {
+  return axios.get(
+    `http://localhost:3001/api/v1/accounts/family-member/accounts`,
+    {
+      withCredentials: true,
+    },
+  );
+};
+
 export {
   createNewAccount,
   getAccountsInfo,
@@ -81,4 +91,5 @@ export {
   createNewFamilyAccount,
   updateDefaultFlag,
   deleteAccount,
+  getFamilyMemberAccounts,
 };

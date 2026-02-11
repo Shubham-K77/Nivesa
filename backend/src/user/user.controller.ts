@@ -194,10 +194,11 @@ export class UserController {
   @UseGuards(UserLoginGuard)
   async updateProfile(@Body() userData: UpdateUserDto, @Req() req: Request) {
     const userId = req['current_user']?.id;
+    const role = req['current_user']?.role;
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');
     }
-    const result = await this.userService.updateProfile(userData, userId);
+    const result = await this.userService.updateProfile(userData, userId, role);
     return result;
   }
 }

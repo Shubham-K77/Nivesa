@@ -5,8 +5,9 @@ import DrawerComponent from "@/components/custom/DrawerComponent";
 import { IoMdAdd } from "react-icons/io";
 import { GrTransaction } from "react-icons/gr";
 //React Components:
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 //My Components:
 import AccountInfoCard from "@/components/custom/AccountInfoCard";
 import { UserContext } from "../layout";
@@ -14,9 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 //Type Definition:
 import { Account } from "@/types/account.type";
+import { Transaction } from "@/types/transaction.type";
 import getAccountsInitial from "@/queries/account/getAccountsInitial.queryOption";
+import getFamilyMemberAccountsQuery from "@/queries/account/getFamilyMemberAccounts.queryOption";
 import getDefaultAccountBudget from "@/queries/budget/getCurrentBudget.query";
 import BudgetProgress from "@/components/custom/BudgetProgress";
+import DashboardOverview from "@/components/custom/DashboardOverview";
+import getDashboardInfo from "@/queries/transaction/getDashboardData.query";
 const Page = () => {
   const currentUser = useContext(UserContext);
   const router = useRouter();
@@ -27,11 +32,34 @@ const Page = () => {
   });
   const accountInfo = data?.data?.accountInfo as Account[] | undefined;
   const defaultAccount = accountInfo?.find((account) => account.isDefault);
+
+  // Fetch family member accounts
+  const { data: familyMemberData, isLoading: familyMemberLoading } = useQuery({
+    ...getFamilyMemberAccountsQuery(),
+    enabled: currentUser?.role === "FAMILY_MEMBER" && !!currentUser?.id,
+  });
+  const familyAccountInfo = familyMemberData?.data?.accountInfo as
+    | Account[]
+    | undefined;
+  const familyBudget = familyMemberData?.data?.familyBudget;
+
   //Budget Info
   const { data: budgetResponse, refetch: refetchBudget } = useQuery({
     ...getDefaultAccountBudget(defaultAccount?.id || ""),
+    enabled: currentUser?.role === "USER" && !!defaultAccount?.id,
   });
   const budgetData = budgetResponse?.data;
+  //Transactions Info
+  const {
+    data: transactions,
+    isPending: transactionsLoading,
+    refetch: transactionsRefetch,
+  } = useQuery({
+    ...getDashboardInfo(currentUser?.id || ""),
+  });
+  const transactionInfo = transactions?.data?.transactionsInfo as
+    | Transaction[]
+    | undefined;
 
   return (
     <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
@@ -103,6 +131,7 @@ const Page = () => {
             initialBudget={budgetData?.budget}
             currentExpenses={budgetData?.currentExpenses || 0}
             accountId={defaultAccount?.id || ""}
+            accountType={defaultAccount?.type || "CURRENT"}
             onBudgetUpdate={() => refetchBudget()}
           />
         ) : (
@@ -113,6 +142,19 @@ const Page = () => {
       ) : (
         <></>
       )}
+      {/* For Displaying The Pie-Chart And Overview */}
+      {transactionsLoading === true ? (
+        <>
+          <Skeleton className="w-full h-[50vh] rounded-xl bg-white/5" />
+        </>
+      ) : (
+        <>
+          <DashboardOverview
+            accounts={accountInfo ?? []}
+            transactions={transactionInfo ?? []}
+          />
+        </>
+      )}
       {/* Cards For Showing The Current Accounts In The System */}
       {currentUser?.role === "USER" ? (
         <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
@@ -121,6 +163,26 @@ const Page = () => {
               <AccountInfoCard
                 key={account.id}
                 accountInfo={{ ...account, userId: currentUser?.id || "" }}
+                userRole="USER"
+              />
+            ))
+          ) : (
+            <>
+              <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
+              <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
+              <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
+            </>
+          )}
+        </div>
+      ) : currentUser?.role === "FAMILY_MEMBER" ? (
+        <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
+          {!familyMemberLoading && familyAccountInfo ? (
+            familyAccountInfo.map((account: Account) => (
+              <AccountInfoCard
+                key={account.id}
+                accountInfo={{ ...account, userId: currentUser?.id || "" }}
+                userRole="FAMILY_MEMBER"
+                familyBudget={familyBudget}
               />
             ))
           ) : (
