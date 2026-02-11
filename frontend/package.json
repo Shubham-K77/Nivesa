@@ -21,6 +21,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@recharts/devtools": "^0.0.8",
     "@studio-freight/lenis": "^1.0.42",
     "@tanstack/react-query": "^5.90.16",
     "axios": "^1.13.2",
