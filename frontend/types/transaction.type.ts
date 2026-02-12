@@ -33,6 +33,11 @@ export type Transaction = {
   accountId: string;
   userId?: string;
   familyMemberId?: string;
+  familyMember?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
   status?: "PENDING" | "COMPLETED" | "FAILED";
   lastProcessed?: Date;
   category: TransactionCategory;

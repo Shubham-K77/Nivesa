@@ -150,7 +150,11 @@ const Page = () => {
       ) : (
         <>
           <DashboardOverview
-            accounts={accountInfo ?? []}
+            accounts={
+              currentUser?.role === "FAMILY_MEMBER"
+                ? (familyAccountInfo ?? [])
+                : (accountInfo ?? [])
+            }
             transactions={transactionInfo ?? []}
           />
         </>

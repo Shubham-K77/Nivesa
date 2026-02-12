@@ -1,3 +1,5 @@
+import { Transaction } from "./transaction.type";
+
 export type FamilyMember = {
   id: string;
   name: string;
@@ -12,6 +14,6 @@ export type Account = {
   userId: string;
   createdAt: string;
   updatedAt: string;
-  transactions: [];
+  transactions: Transaction[];
   familyMembers: FamilyMember[];
 };

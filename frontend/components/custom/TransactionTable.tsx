@@ -80,6 +80,7 @@ const TransactionTable = ({
   const [typeFilter, setTypeFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [familyMemberFilter, setFamilyMemberFilter] = useState("");
   //Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -88,14 +89,14 @@ const TransactionTable = ({
     setSelectedIds((current) =>
       current.includes(id)
         ? current.filter((item) => item != id)
-        : [...current, id]
+        : [...current, id],
     );
   };
   const handleSelectAll = () => {
     setSelectedIds((current) =>
       current.length === filteredAndSortedTransactions.length
         ? []
-        : filteredAndSortedTransactions.map((transaction) => transaction.id)
+        : filteredAndSortedTransactions.map((transaction) => transaction.id),
     );
   };
   //Handle Bulk Delete
@@ -107,7 +108,7 @@ const TransactionTable = ({
       toast.success("Transactions deleted successfully.");
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Failed to delete transactions."
+        error?.response?.data?.message || "Failed to delete transactions.",
       );
     }
   };
@@ -118,7 +119,7 @@ const TransactionTable = ({
       toast.success("Transaction deleted successfully.");
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Failed to delete transaction."
+        error?.response?.data?.message || "Failed to delete transaction.",
       );
     }
   };
@@ -129,7 +130,7 @@ const TransactionTable = ({
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       result = result.filter((transaction) =>
-        transaction.description?.toLowerCase().includes(search)
+        transaction.description?.toLowerCase().includes(search),
       );
     }
     //Type Filter
@@ -149,7 +150,13 @@ const TransactionTable = ({
     //Category Filter
     if (categoryFilter) {
       result = result.filter(
-        (transaction) => transaction.category === categoryFilter
+        (transaction) => transaction.category === categoryFilter,
+      );
+    }
+    //Family Member Filter
+    if (familyMemberFilter) {
+      result = result.filter(
+        (transaction) => transaction.familyMemberId === familyMemberFilter,
       );
     }
     //Apply Sorting
@@ -177,6 +184,7 @@ const TransactionTable = ({
     typeFilter,
     recurringFilter,
     categoryFilter,
+    familyMemberFilter,
     sortConfig,
   ]);
   const handleSort = (key: string) => {
@@ -193,17 +201,18 @@ const TransactionTable = ({
     setTypeFilter("");
     setCategoryFilter("");
     setRecurringFilter("");
+    setFamilyMemberFilter("");
     setSelectedIds([]);
   };
   //Pagination Logic
   const totalPages = Math.ceil(
-    filteredAndSortedTransactions.length / itemsPerPage
+    filteredAndSortedTransactions.length / itemsPerPage,
   );
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedTransactions = filteredAndSortedTransactions.slice(
     startIndex,
-    endIndex
+    endIndex,
   );
   //Pagination Handlers
   const goToNextPage = () => {
@@ -235,6 +244,18 @@ const TransactionTable = ({
     BUSINESS: "bg-amber-600/10 text-amber-500",
     OTHER: "bg-slate-600/10 text-slate-400",
   };
+
+  // Get unique family members from transactions
+  const familyMembers = useMemo(() => {
+    const membersMap = new Map();
+    transactions.forEach((txn) => {
+      if (txn.familyMember) {
+        membersMap.set(txn.familyMember.id, txn.familyMember);
+      }
+    });
+    return Array.from(membersMap.values());
+  }, [transactions]);
+
   return (
     <div className="w-full flex flex-col justify-center items-center mb-4 gap-y-4">
       {/* Filters */}
@@ -302,6 +323,28 @@ const TransactionTable = ({
               ))}
             </SelectContent>
           </Select>
+          {/* Family Member Filter - Only for FAMILY account type */}
+          {type === "FAMILY" && familyMembers.length > 0 && (
+            <Select
+              value={familyMemberFilter}
+              onValueChange={setFamilyMemberFilter}
+            >
+              <SelectTrigger className="w-full sm:w-auto min-w-[150px]">
+                <SelectValue placeholder="All Members" />
+              </SelectTrigger>
+              <SelectContent className="bg-black/75 text-white">
+                {familyMembers.map((member) => (
+                  <SelectItem
+                    key={member.id}
+                    value={member.id}
+                    className="hover:cursor-pointer"
+                  >
+                    {member.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {/* Delete Button */}
           {selectedIds.length > 0 && (
             <Button
@@ -319,7 +362,11 @@ const TransactionTable = ({
             </Button>
           )}
           {/* Clear Filter */}
-          {(searchTerm || typeFilter || recurringFilter || categoryFilter) && (
+          {(searchTerm ||
+            typeFilter ||
+            recurringFilter ||
+            categoryFilter ||
+            familyMemberFilter) && (
             <Button
               size="icon"
               title="Clear Filters"
@@ -404,6 +451,12 @@ const TransactionTable = ({
                     ))}
                 </div>
               </TableHead>
+              {/* Family Member - Only for FAMILY account type */}
+              {type === "FAMILY" && (
+                <TableHead className="text-white min-w-[100px] sm:min-w-[120px] hidden lg:table-cell text-xs sm:text-sm">
+                  Member
+                </TableHead>
+              )}
               {/* Recurring */}
               <TableHead className="text-white hidden md:table-cell text-xs sm:text-sm">
                 Recurring
@@ -419,7 +472,10 @@ const TransactionTable = ({
                 key="no-transactions"
                 className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40"
               >
-                <TableCell colSpan={7} className="text-center">
+                <TableCell
+                  colSpan={type === "FAMILY" ? 8 : 7}
+                  className="text-center"
+                >
                   {" "}
                   No Transactions Found!{" "}
                 </TableCell>
@@ -474,6 +530,36 @@ const TransactionTable = ({
                       {transaction.amount}
                     </span>
                   </TableCell>
+                  {/* Family Member - Only for FAMILY account type */}
+                  {type === "FAMILY" && (
+                    <TableCell className="hidden lg:table-cell text-[10px] sm:text-xs md:text-sm">
+                      {transaction.familyMember ? (
+                        <div className="flex items-center gap-x-2">
+                          {transaction.familyMember.imageUrl ? (
+                            <img
+                              src={transaction.familyMember.imageUrl}
+                              alt={transaction.familyMember.name}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                              <span className="text-emerald-400 text-xs font-semibold">
+                                {transaction.familyMember.name
+                                  .split(" ")
+                                  .map((word: string) => word[0])
+                                  .join("")}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-white">
+                            {transaction.familyMember.name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500">-</span>
+                      )}
+                    </TableCell>
+                  )}
                   {/* Recurring */}
                   <TableCell>
                     {transaction.isRecurring ? (
@@ -494,7 +580,7 @@ const TransactionTable = ({
                               {transaction.nextRecurringDate
                                 ? format(
                                     new Date(transaction.nextRecurringDate),
-                                    "PP"
+                                    "PP",
                                   )
                                 : "N/A"}
                             </p>
@@ -527,7 +613,7 @@ const TransactionTable = ({
                           className="hover:cursor-pointer text-blue-500/80 hover:text-black"
                           onClick={() =>
                             router.push(
-                              `/transaction/create?edit=${transaction.id}`
+                              `/transaction/create?edit=${transaction.id}`,
                             )
                           }
                         >
@@ -550,7 +636,10 @@ const TransactionTable = ({
           {totalPages > 1 && (
             <TableFooter className="bg-transparent rounded-bl-lg rounded-br-lg">
               <TableRow className="hover:bg-transparent border-t border-white/20">
-                <TableCell colSpan={7} className="py-3 sm:py-4 bg-transparent">
+                <TableCell
+                  colSpan={type === "FAMILY" ? 8 : 7}
+                  className="py-3 sm:py-4 bg-transparent"
+                >
                   <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
                     {/* Left side - Info */}
                     <div className="text-xs sm:text-sm text-gray-400 text-center sm:text-left">
@@ -573,7 +662,7 @@ const TransactionTable = ({
                       <div className="flex gap-1">
                         {Array.from(
                           { length: totalPages },
-                          (_, i) => i + 1
+                          (_, i) => i + 1,
                         ).map((num) => (
                           <Button
                             key={num}

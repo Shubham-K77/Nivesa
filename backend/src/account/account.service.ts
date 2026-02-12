@@ -42,7 +42,17 @@ export class AccountService {
         where: { userId: userId },
         orderBy: { createdAt: 'desc' },
         include: {
-          transactions: true,
+          transactions: {
+            include: {
+              familyMember: {
+                select: {
+                  id: true,
+                  name: true,
+                  imageUrl: true,
+                },
+              },
+            },
+          },
           familyMembers: {
             select: {
               id: true,
@@ -91,7 +101,17 @@ export class AccountService {
         where: { userId },
         orderBy: { createdAt: 'desc' },
         include: {
-          transactions: true,
+          transactions: {
+            include: {
+              familyMember: {
+                select: {
+                  id: true,
+                  name: true,
+                  imageUrl: true,
+                },
+              },
+            },
+          },
           familyMembers: {
             select: {
               id: true,
@@ -142,7 +162,17 @@ export class AccountService {
       const accountInfo = await this.prisma.account.findUnique({
         where: { userId, id: accountId },
         include: {
-          transactions: true,
+          transactions: {
+            include: {
+              familyMember: {
+                select: {
+                  id: true,
+                  name: true,
+                  imageUrl: true,
+                },
+              },
+            },
+          },
           familyMembers: {
             select: {
               id: true,
@@ -546,7 +576,17 @@ export class AccountService {
         include: {
           account: {
             include: {
-              transactions: true,
+              transactions: {
+                include: {
+                  familyMember: {
+                    select: {
+                      id: true,
+                      name: true,
+                      imageUrl: true,
+                    },
+                  },
+                },
+              },
               familyMembers: {
                 select: {
                   id: true,
@@ -579,7 +619,17 @@ export class AccountService {
         },
         orderBy: { createdAt: 'desc' },
         include: {
-          transactions: true,
+          transactions: {
+            include: {
+              familyMember: {
+                select: {
+                  id: true,
+                  name: true,
+                  imageUrl: true,
+                },
+              },
+            },
+          },
           familyMembers: {
             select: {
               id: true,

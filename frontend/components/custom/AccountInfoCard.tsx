@@ -105,118 +105,120 @@ const AccountInfoCard = ({
           </div>
         </div>
         {/* CTA Select For Edit, Delete And View */}
-        {userRole === "USER" && (
-          <DropdownMenu open={dropDownOpen} onOpenChange={setDropDownOpen}>
-            <DropdownMenuTrigger asChild>
+        <DropdownMenu open={dropDownOpen} onOpenChange={setDropDownOpen}>
+          <DropdownMenuTrigger asChild>
+            <div
+              className="w-[6vh] h-[6vh] rounded-md bg-white/10 hover:bg-white/15 flex justify-center items-center hover:cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ToolCase className="w-6 h-6 text-white" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-52 border border-white/10 text-white bg-[oklch(0.16_0_0)]">
+            {/* CTA To Navigate */}
+            <DropdownMenuItem className="group border-0">
               <div
-                className="w-[6vh] h-[6vh] rounded-md bg-white/10 hover:bg-white/15 flex justify-center items-center hover:cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
+                className="w-full flex justify-start items-center p-2 gap-x-4 hover:cursor-pointer"
+                onClick={() => router.push(`/account/${accountInfo.id}`)}
               >
-                <ToolCase className="w-6 h-6 text-white" />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-52 border border-white/10 text-white bg-[oklch(0.16_0_0)]">
-              {/* CTA To Navigate */}
-              <DropdownMenuItem className="group border-0">
-                <div
-                  className="w-full flex justify-start items-center p-2 gap-x-4 hover:cursor-pointer"
-                  onClick={() => router.push(`/account/${accountInfo.id}`)}
-                >
-                  <Eye className="w-6 h-6 text-orange-600" />
-                  <div className="text-white font-semibold text-md group-hover:text-black">
-                    View Details
-                  </div>
+                <Eye className="w-6 h-6 text-orange-600" />
+                <div className="text-white font-semibold text-md group-hover:text-black">
+                  View Details
                 </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-white/5" />
-              {/* CTA To Delete */}
-              <DropdownMenuItem
-                className="border-0 hover:bg-red-500/10"
-                onSelect={(e) => e.preventDefault()}
-              >
-                {/* Dialog For Deleting The Account */}
-                <Dialog open={open} onOpenChange={setOpen}>
-                  <DialogTrigger asChild>
-                    <div
-                      className="w-full flex justify-start items-center p-2 gap-x-4 hover:cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Trash className="w-6 h-6 text-destructive" />
-                      <div className="text-destructive font-semibold text-md">
-                        Delete Account
-                      </div>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent
-                    className="bg-gray-950 text-white"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <DialogHeader>
-                      <DialogTitle>
-                        Are you sure you want to delete: {accountInfo.name}?
-                      </DialogTitle>
-                      <DialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete your account and remove your data from our
-                        servers.
-                      </DialogDescription>
-                    </DialogHeader>
-                    {/* CTA Buttons */}
-                    <div className="w-full grid grid-cols-2 gap-x-4">
-                      {/* Delete Button */}
+              </div>
+            </DropdownMenuItem>
+            {/* CTA To Delete - Only for USER role */}
+            {userRole === "USER" && (
+              <>
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem
+                  className="border-0 hover:bg-red-500/10"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  {/* Dialog For Deleting The Account */}
+                  <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
                       <div
-                        className={`w-full h-[7.5vh] rounded-md bg-red-600/80 flex justify-center items-center gap-x-4 hover:cursor-pointer hover:bg-red-600/90 transition-colors ${deleteAccountMut.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (deleteAccountMut.isPending) return;
-                          deleteAccountMut.mutate(accountInfo.id, {
-                            onSuccess: (response) => {
-                              toast.success(
-                                response.data.message ||
-                                  "Account deleted successfully",
-                              );
-                              setOpen(false);
-                              setDropDownOpen(false);
-                            },
-                            onError: (error: any) => {
-                              console.error("Delete error:", error);
-                              toast.error(
-                                error?.response?.data?.message ||
-                                  "Failed to delete account",
-                              );
-                            },
-                          });
-                        }}
+                        className="w-full flex justify-start items-center p-2 gap-x-4 hover:cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {deleteAccountMut.isPending ? (
-                          <Loader2 className="w-6 h-6 text-white animate-spin" />
-                        ) : (
-                          <Delete className="w-6 h-6 text-white" />
-                        )}
-                        <div className="text-white">
-                          {deleteAccountMut.isPending
-                            ? "Deleting..."
-                            : "Delete Account"}
+                        <Trash className="w-6 h-6 text-destructive" />
+                        <div className="text-destructive font-semibold text-md">
+                          Delete Account
                         </div>
                       </div>
-                      {/* Cancel Button */}
-                      <div
-                        className="w-full h-[7.5vh] rounded-md bg-blue-600/80 flex justify-center items-center gap-x-4 hover:cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpen(false);
-                        }}
-                      >
-                        <X className="w-6 h-6 text-white" />
-                        <div className="text-white"> Cancel </div>
+                    </DialogTrigger>
+                    <DialogContent
+                      className="bg-gray-950 text-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DialogHeader>
+                        <DialogTitle>
+                          Are you sure you want to delete: {accountInfo.name}?
+                        </DialogTitle>
+                        <DialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete your account and remove your data from our
+                          servers.
+                        </DialogDescription>
+                      </DialogHeader>
+                      {/* CTA Buttons */}
+                      <div className="w-full grid grid-cols-2 gap-x-4">
+                        {/* Delete Button */}
+                        <div
+                          className={`w-full h-[7.5vh] rounded-md bg-red-600/80 flex justify-center items-center gap-x-4 hover:cursor-pointer hover:bg-red-600/90 transition-colors ${deleteAccountMut.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (deleteAccountMut.isPending) return;
+                            deleteAccountMut.mutate(accountInfo.id, {
+                              onSuccess: (response) => {
+                                toast.success(
+                                  response.data.message ||
+                                    "Account deleted successfully",
+                                );
+                                setOpen(false);
+                                setDropDownOpen(false);
+                              },
+                              onError: (error: any) => {
+                                console.error("Delete error:", error);
+                                toast.error(
+                                  error?.response?.data?.message ||
+                                    "Failed to delete account",
+                                );
+                              },
+                            });
+                          }}
+                        >
+                          {deleteAccountMut.isPending ? (
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                          ) : (
+                            <Delete className="w-6 h-6 text-white" />
+                          )}
+                          <div className="text-white">
+                            {deleteAccountMut.isPending
+                              ? "Deleting..."
+                              : "Delete Account"}
+                          </div>
+                        </div>
+                        {/* Cancel Button */}
+                        <div
+                          className="w-full h-[7.5vh] rounded-md bg-blue-600/80 flex justify-center items-center gap-x-4 hover:cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpen(false);
+                          }}
+                        >
+                          <X className="w-6 h-6 text-white" />
+                          <div className="text-white"> Cancel </div>
+                        </div>
                       </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+                    </DialogContent>
+                  </Dialog>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       {/* Switch */}
       {userRole === "USER" && (
