@@ -38,10 +38,13 @@ export class AccountController {
     return response;
   }
   @Get('/:id')
-  @UseGuards(UserLoginGuard, RestrictFamilyMemberGuard)
+  @UseGuards(UserLoginGuard)
   async getSpecificAccountInfo(@Req() req: Request, @Param('id') id: string) {
-    const userId: string = req.current_user!.id;
-    const response = await this.accountService.getAccount(userId, id);
+    const currentUser = req['current_user'];
+    const userId: string = currentUser!.id;
+    const role: string = currentUser?.role || 'USER';
+
+    const response = await this.accountService.getAccount(userId, id, role);
     return response;
   }
   //Post Request

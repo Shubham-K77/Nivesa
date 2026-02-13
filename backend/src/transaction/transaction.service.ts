@@ -26,16 +26,30 @@ export class TransactionService {
   async bulkDeleteTransaction(
     userId: string,
     TransactionsArray: TransactionsArray,
+    role?: string,
   ) {
     try {
-      //Finding the user
-      const userExists = await this.prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-      });
-      if (!userExists) {
-        throw new UnauthorizedException('The provided user is unauthorized!');
+      //Check if user or family member
+      const isFamilyMember = role === 'FAMILY_MEMBER';
+
+      if (isFamilyMember) {
+        // Family member - verify they exist
+        const familyMemberExists = await this.prisma.familyMember.findUnique({
+          where: { id: userId },
+        });
+        if (!familyMemberExists) {
+          throw new UnauthorizedException(
+            'The provided family member is unauthorized!',
+          );
+        }
+      } else {
+        // Regular user
+        const userExists = await this.prisma.user.findUnique({
+          where: { id: userId },
+        });
+        if (!userExists) {
+          throw new UnauthorizedException('The provided user is unauthorized!');
+        }
       }
       //The Array Will Be Sent From The Frontend
       if (
@@ -47,11 +61,18 @@ export class TransactionService {
         );
       }
       //Using The Transactions
+      const whereClause = isFamilyMember
+        ? {
+            id: { in: TransactionsArray.transactions },
+            familyMemberId: userId,
+          }
+        : {
+            id: { in: TransactionsArray.transactions },
+            userId: userId,
+          };
+
       const transactionInfo = await this.prisma.transaction.findMany({
-        where: {
-          id: { in: TransactionsArray.transactions },
-          userId: userExists.id,
-        },
+        where: whereClause,
       });
       //Check if transactions were found
       if (transactionInfo.length === 0) {
@@ -74,10 +95,7 @@ export class TransactionService {
       await this.prisma.$transaction(async (txn) => {
         //Delete transactions
         await txn.transaction.deleteMany({
-          where: {
-            id: { in: TransactionsArray.transactions },
-            userId: userExists.id,
-          },
+          where: whereClause,
         });
         //Update the transactions
         for (const [accountId, balanceChange] of Object.entries(
@@ -369,7 +387,11 @@ export class TransactionService {
     }
   }
   //Get Specific Transaction For UserId
-  async getSpecificTransaction(transactionId: string, userId: string) {
+  async getSpecificTransaction(
+    transactionId: string,
+    userId: string,
+    role?: string,
+  ) {
     try {
       if (!transactionId || !transactionId.trim()) {
         throw new BadRequestException('Must provide a valid transaction info!');
@@ -385,11 +407,20 @@ export class TransactionService {
           "Provided transaction doesn't exist in the system.",
         );
       }
-      // Verify transaction ownership
-      if (transactionExists.userId !== userId) {
-        throw new UnauthorizedException(
-          'You do not have permission to view this transaction!',
-        );
+      // Verify transaction ownership based on role
+      const isFamilyMember = role === 'FAMILY_MEMBER';
+      if (isFamilyMember) {
+        if (transactionExists.familyMemberId !== userId) {
+          throw new UnauthorizedException(
+            'You do not have permission to view this transaction!',
+          );
+        }
+      } else {
+        if (transactionExists.userId !== userId) {
+          throw new UnauthorizedException(
+            'You do not have permission to view this transaction!',
+          );
+        }
       }
       //Response
       return {
@@ -408,6 +439,7 @@ export class TransactionService {
     transactionId: string,
     transactionData: EditTransactionDto,
     userId: string,
+    role?: string,
   ) {
     try {
       if (!transactionId || !transactionId.trim()) {
@@ -434,11 +466,34 @@ export class TransactionService {
       if (!transactionExists) {
         throw new UnauthorizedException("Provided transaction wasn't found.");
       }
-      // Verify transaction ownership
-      if (transactionExists.userId !== userId) {
-        throw new UnauthorizedException(
-          'You do not have permission to update this transaction!',
-        );
+      // Verify transaction ownership based on role
+      const isFamilyMember = role === 'FAMILY_MEMBER';
+      if (isFamilyMember) {
+        if (transactionExists.familyMemberId !== userId) {
+          throw new UnauthorizedException(
+            'You do not have permission to update this transaction!',
+          );
+        }
+        // Verify family member can only update to accounts where they are included
+        if (transactionData.accountId !== transactionExists.accountId) {
+          const canAccessAccount = await this.prisma.familyMember.findFirst({
+            where: {
+              id: userId,
+              accountId: transactionData.accountId,
+            },
+          });
+          if (!canAccessAccount) {
+            throw new UnauthorizedException(
+              'You do not have access to the specified account!',
+            );
+          }
+        }
+      } else {
+        if (transactionExists.userId !== userId) {
+          throw new UnauthorizedException(
+            'You do not have permission to update this transaction!',
+          );
+        }
       }
       //Calculate the old transaction's impact on the old account
       const oldAccountChange =
@@ -518,15 +573,20 @@ export class TransactionService {
     }
   }
   //Getting The Dashboard Data
-  async getDashboardData(userId: string) {
+  async getDashboardData(userId: string, role?: string) {
     try {
       //Check The UserId
       if (!userId || !userId.trim()) {
         throw new UnauthorizedException('Must login to continue!');
       }
-      //Get All The Transactions
+      //Get All The Transactions based on role
+      const isFamilyMember = role === 'FAMILY_MEMBER';
+      const whereClause = isFamilyMember
+        ? { familyMemberId: userId }
+        : { userId };
+
       const transactionsInfo = await this.prisma.transaction.findMany({
-        where: { userId },
+        where: whereClause,
         orderBy: { date: 'desc' },
       });
       //Return Info

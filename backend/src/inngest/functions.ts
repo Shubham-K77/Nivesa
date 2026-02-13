@@ -36,7 +36,7 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
       try {
         logger.log('Starting budget check process');
         //Step-1: Fetch All Of The Budgets For All Of The Users Default Accounts
-        const accounts = await step.run('fetch-budget', async () => {
+        const accounts = await step.run('fetch-user-budgets', async () => {
           return await prismaService.account.findMany({
             where: {
               isDefault: true,
@@ -70,7 +70,7 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
             },
           });
         });
-        logger.log(`Found ${accounts.length} accounts with budgets`);
+        logger.log(`Found ${accounts.length} user accounts with budgets`);
         //Step-2: Loop Through Entire Budget And Check Which Are Exceeding.
         for (const account of accounts) {
           const budgetId = account?.budget?.id;
@@ -175,8 +175,158 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
             }
           });
         }
+
+        // Step-3: Check Family Member Budgets
+        const familyBudgets = await step.run(
+          'fetch-family-budgets',
+          async () => {
+            return await prismaService.familyBudget.findMany({
+              select: {
+                id: true,
+                amount: true,
+                lastAlertSent: true,
+                familyMember: {
+                  select: {
+                    id: true,
+                    name: true,
+                    phoneNumber: true,
+                    accountId: true,
+                    account: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                    loginCredentials: {
+                      select: {
+                        email: true,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          },
+        );
+        logger.log(`Found ${familyBudgets.length} family member budgets`);
+
+        // Step-4: Process Family Member Budgets
+        for (const familyBudget of familyBudgets) {
+          const budgetId = familyBudget.id;
+          await step.run(`check-family-budget-${budgetId}`, async () => {
+            const currentDate = new Date();
+            const startOfMonth = new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              1,
+            );
+            const endOfMonth = new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth() + 1,
+              0,
+            );
+
+            // Get family member's expenses
+            const expenses = await prismaService.transaction.aggregate({
+              where: {
+                familyMemberId: familyBudget.familyMember.id,
+                accountId: familyBudget.familyMember.accountId,
+                type: 'EXPENSE',
+                date: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                },
+              },
+              _sum: {
+                amount: true,
+              },
+            });
+
+            const totalExpenses = expenses._sum.amount?.toNumber() || 0;
+            const budgetAmount = familyBudget.amount;
+            const percentageUsed = (totalExpenses / Number(budgetAmount)) * 100;
+
+            logger.log(
+              `Family Member: ${familyBudget.familyMember.name}, Budget: ${budgetAmount}, Expenses: ${totalExpenses}, Usage: ${percentageUsed.toFixed(1)}%`,
+            );
+
+            // Send alert if budget exceeded 80% and haven't sent this month
+            if (
+              percentageUsed >= 80 &&
+              (!familyBudget.lastAlertSent ||
+                isNewMonth(new Date(familyBudget.lastAlertSent), new Date()))
+            ) {
+              logger.log(
+                `Sending alert for family member ${familyBudget.familyMember.name} - ${percentageUsed.toFixed(1)}% used`,
+              );
+
+              // Send Email
+              const familyMemberEmail =
+                familyBudget.familyMember.loginCredentials?.email;
+              if (familyMemberEmail) {
+                logger.log(`Sending email to ${familyMemberEmail}`);
+                await mailerService.sendBudgetAlertMail(
+                  familyMemberEmail,
+                  familyBudget.familyMember.name,
+                  percentageUsed,
+                  familyBudget.familyMember.account.name,
+                  Number(budgetAmount),
+                  totalExpenses,
+                );
+                logger.log(`Email sent successfully to ${familyMemberEmail}`);
+              } else {
+                logger.warn(
+                  `No email found for family member ${familyBudget.familyMember.name}`,
+                );
+              }
+
+              // Send WhatsApp Message
+              if (familyBudget.familyMember.phoneNumber) {
+                const loginStatus = whatsappService.getLoginStatus();
+                logger.log(`WhatsApp login status: ${loginStatus.isLoggedIn}`);
+                if (loginStatus.isLoggedIn) {
+                  logger.log(
+                    `Sending WhatsApp message to ${familyBudget.familyMember.phoneNumber}`,
+                  );
+                  await whatsappService.sendMessage(
+                    familyBudget.familyMember.phoneNumber,
+                    `📊 Budget Notification\n\nDear ${familyBudget.familyMember.name},\n\nThis is to inform you that you have utilized ${percentageUsed.toFixed(1)}% of your allocated budget for account "${familyBudget.familyMember.account.name}".\n\nBudget Allocation: NPR ${budgetAmount}\nCurrent Expenditure: NPR ${totalExpenses}\nRemaining Balance: NPR ${(Number(budgetAmount) - totalExpenses).toFixed(2)}\n\nWe recommend reviewing your transactions to ensure optimal budget management.\n\nBest regards,\nNivesa Team`,
+                  );
+                  logger.log(
+                    `WhatsApp message sent to ${familyBudget.familyMember.phoneNumber}`,
+                  );
+                } else {
+                  logger.warn(
+                    `WhatsApp not logged in. Skipping message to ${familyBudget.familyMember.phoneNumber}`,
+                  );
+                }
+              } else {
+                logger.warn(
+                  `No phone number for family member ${familyBudget.familyMember.name}`,
+                );
+              }
+
+              // Update Last Alert Sent
+              await prismaService.familyBudget.update({
+                where: {
+                  id: familyBudget.id,
+                },
+                data: { lastAlertSent: new Date() },
+              });
+              logger.log(`Updated lastAlertSent for family budget ${budgetId}`);
+            } else {
+              logger.log(
+                `No alert needed for family member ${familyBudget.familyMember.name}. Usage: ${percentageUsed.toFixed(1)}%, Last alert: ${familyBudget.lastAlertSent || 'Never'}`,
+              );
+            }
+          });
+        }
+
         logger.log('Budget check process completed successfully');
-        return { success: true, processedAccounts: accounts.length };
+        return {
+          success: true,
+          processedUserAccounts: accounts.length,
+          processedFamilyBudgets: familyBudgets.length,
+        };
       } catch (error) {
         logger.error('Error in budget check process:', error);
         throw error;
@@ -214,6 +364,7 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
             data: {
               transactionId: transaction.id,
               userId: transaction.userId,
+              familyMemberId: transaction.familyMemberId,
             },
           }));
           //3. Send All Events To Be Processed By Inngest
@@ -234,25 +385,33 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
       throttle: {
         limit: 10, // Only process 10 transactions
         period: '1m', // per minute
-        key: 'event.data.userId', //Per User
+        key: 'event.data.userId || event.data.familyMemberId', //Per User or Family Member
       },
     },
     { event: 'transaction.recurring.process' },
     async ({ event, step }) => {
       try {
         //Validate The Event Data
-        if (!event?.data?.transactionId || !event?.data?.userId) {
+        if (
+          !event?.data?.transactionId ||
+          (!event?.data?.userId && !event?.data?.familyMemberId)
+        ) {
           logger.error('Invalid Event Data!', event);
           return {
             error: 'Missing required event data',
           };
         }
         await step.run('process-transaction', async () => {
+          // Build where clause based on userId or familyMemberId
+          const whereClause: any = { id: event?.data?.transactionId };
+          if (event?.data?.userId) {
+            whereClause.userId = event?.data?.userId;
+          } else if (event?.data?.familyMemberId) {
+            whereClause.familyMemberId = event?.data?.familyMemberId;
+          }
+
           const transaction = await prismaService.transaction.findUnique({
-            where: {
-              id: event?.data?.transactionId,
-              userId: event?.data?.userId,
-            },
+            where: whereClause,
             include: {
               account: true,
             },
@@ -268,6 +427,7 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
                 date: new Date(),
                 category: transaction.category,
                 userId: transaction.userId,
+                familyMemberId: transaction.familyMemberId,
                 accountId: transaction.accountId,
                 isRecurring: false,
               },
@@ -495,8 +655,221 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
           }
         });
       }
-      //Step-3: Return
-      return { processed: users.length };
+
+      // Step-3: Process Family Members
+      const familyMembers = await step.run('fetch-family-members', async () => {
+        return await prismaService.familyMember.findMany({
+          where: {
+            isActive: true,
+          },
+          include: {
+            account: {
+              select: {
+                name: true,
+              },
+            },
+            loginCredentials: {
+              select: {
+                email: true,
+              },
+            },
+          },
+        });
+      });
+
+      // Step-4: Generate Reports For Family Members
+      for (const familyMember of familyMembers) {
+        await step.run(
+          `generate-family-report-${familyMember.id}`,
+          async () => {
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+            // Get Stats for family member
+            const stats = await getFamilyMemberMonthlyStats(
+              familyMember.id,
+              lastMonth,
+            );
+            const monthName = lastMonth.toLocaleString('default', {
+              month: 'long',
+            });
+
+            // Get AI Insights
+            logger.log(
+              `Generating insights for family member ${familyMember.id} - ${familyMember.name}`,
+            );
+            console.log(
+              `Generating insights for family member ${familyMember.id} - ${familyMember.name}`,
+            );
+            const insights = await generateFinancialInsights(stats, monthName);
+            logger.log(`Insights generated:`, insights);
+            console.log(`Insights generated:`, JSON.stringify(insights));
+
+            // Generate PDF
+            const pdfBuffer = await generateInsightsPDF(
+              insights,
+              stats,
+              monthName,
+            );
+            logger.log(`PDF generated, buffer size: ${pdfBuffer.length}`);
+            console.log(`PDF generated, buffer size: ${pdfBuffer.length}`);
+
+            // Send Email and WhatsApp
+            try {
+              const formattedCategories = Object.entries(stats.byCategory)
+                .map(
+                  ([category, amount]) =>
+                    `- ${category}: NPR ${(amount as number).toFixed(2)}`,
+                )
+                .join('\n');
+              const formattedCategoriesHTML = Object.entries(stats.byCategory)
+                .map(
+                  ([category, amount]) =>
+                    `<li>${category}: NPR ${(amount as number).toFixed(2)}</li>`,
+                )
+                .join('');
+
+              const whatsAppMessage = `
+            *Monthly Financial Report* - ${monthName}
+            
+            Dear ${familyMember.name},
+            
+            Here is your financial summary for ${monthName}:
+
+            • Total Income: NPR ${stats.totalIncome.toFixed(2)}
+            • Total Expenses: NPR ${stats.totalExpenses.toFixed(2)}
+            • Number of Transactions: ${stats.transactionCount}  
+            
+            Expenses by Category:
+            ${formattedCategories || '- No expenses recorded'}  
+
+            For detailed insights, please check the attached report.
+            
+            Best regards,
+            *Nivesa Team*`.trim();
+
+              const htmlMessage = `
+            <>
+              <div style="font-family: Arial, sans-serif; color: #333; background-color: #f8f9fa; padding: 20px;">
+                <div style="max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                  
+                  <h2 style="color: #1b4d3e; margin-bottom: 20px; font-size: 22px;">📊 Monthly Financial Report - ${monthName}</h2>
+
+                  <p>Dear ${familyMember.name},</p>
+
+                  <p>We're pleased to share your <strong>monthly financial insights</strong> for your transactions in the ${familyMember.account.name} account.</p>
+
+                  <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
+                    <p>This report provides a summarized overview of your spending patterns and key observations from the past month.</p>
+                    <p>The detailed breakdown is included in the attached PDF for your reference.</p>
+                  </div>
+
+                  <p>
+                    <strong>Total Income:</strong> NPR ${stats.totalIncome.toFixed(2)}<br />
+                    <strong>Total Expenses:</strong> NPR ${stats.totalExpenses.toFixed(2)}<br />
+                    <strong>Number of Transactions:</strong> ${stats.transactionCount}
+                  </p>
+
+                  <p><strong>Expenses by Category:</strong></p>
+                  
+                  <ul>
+                    ${formattedCategoriesHTML}
+                  </ul>
+
+                  <p style="margin-top: 25px;">
+                    Reviewing these insights regularly can help you make more informed financial decisions and stay aligned with your goals.
+                  </p>
+
+                  <p>If you have any questions or notice discrepancies, feel free to reach out to our support team.</p>
+
+                  <p style="margin-top: 25px;">
+                    Warm regards,<br />
+                    <strong>Nivēśa Team</strong>
+                  </p>
+
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5; font-size: 13px; color: #6c757d; text-align: center;">
+                    <p>This is an automated email. Please do not reply to this message.</p>
+                    <p>© ${new Date().getFullYear()} Nivēśa. All rights reserved.</p>
+                  </div>
+                </div>
+              </div>
+            </>`;
+
+              // Send Email
+              if (familyMember.loginCredentials?.email) {
+                logger.log(
+                  `Sending email to ${familyMember.loginCredentials.email}`,
+                );
+                console.log(
+                  `Sending email to ${familyMember.loginCredentials.email}`,
+                );
+                await mailerService.sendInsights(
+                  familyMember.loginCredentials.email,
+                  pdfBuffer,
+                  monthName,
+                  htmlMessage,
+                );
+                logger.log(`Email sent successfully`);
+                console.log(`Email sent successfully`);
+              }
+
+              // Send WhatsApp
+              if (familyMember.phoneNumber) {
+                logger.log(
+                  `Family member has phone number: ${familyMember.phoneNumber}`,
+                );
+                console.log(
+                  `Family member has phone number: ${familyMember.phoneNumber}`,
+                );
+                const whatsappStatus = whatsappService.getLoginStatus();
+                logger.log(
+                  `WhatsApp login status: ${whatsappStatus.isLoggedIn}`,
+                );
+                console.log(
+                  `WhatsApp login status: ${whatsappStatus.isLoggedIn}`,
+                );
+
+                if (whatsappStatus.isLoggedIn) {
+                  logger.log(
+                    `Sending WhatsApp message to ${familyMember.phoneNumber}`,
+                  );
+                  console.log(
+                    `Sending WhatsApp message to ${familyMember.phoneNumber}`,
+                  );
+                  const result = await whatsappService.sendInsights(
+                    familyMember.phoneNumber,
+                    whatsAppMessage,
+                    pdfBuffer,
+                  );
+                  logger.log(`WhatsApp result:`, result);
+                  console.log(`WhatsApp result:`, JSON.stringify(result));
+                } else {
+                  logger.warn(`WhatsApp not logged in, skipping message`);
+                  console.log(`WhatsApp not logged in, skipping message`);
+                }
+              } else {
+                logger.warn(
+                  `Family member ${familyMember.name} has no phone number`,
+                );
+                console.log(
+                  `Family member ${familyMember.name} has no phone number`,
+                );
+              }
+            } catch (error: any) {
+              logger.error(error.message, error);
+              throw new Error(
+                'Unable to send the insights to the family member!',
+              );
+            }
+          },
+        );
+      }
+
+      //Step-5: Return
+      return {
+        processedUsers: users.length,
+        processedFamilyMembers: familyMembers.length,
+      };
     },
   );
   //Helper Function To Get The Monthly Stats
@@ -534,6 +907,48 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
       },
     );
   };
+
+  //Helper Function To Get The Monthly Stats For Family Members
+  const getFamilyMemberMonthlyStats = async (
+    familyMemberId: string,
+    month: Date,
+  ) => {
+    const startDate = new Date(month.getFullYear(), month.getMonth(), 1);
+    const endDate = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+
+    //Get The Transactions For The Mentioned Period for family member
+    const transactions = await prismaService.transaction.findMany({
+      where: {
+        familyMemberId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    //Reduce The Transactions Into Insights
+    return transactions.reduce(
+      (stats, t) => {
+        const amount = t.amount.toNumber();
+        if (t.type === 'EXPENSE') {
+          stats.totalExpenses += amount;
+          stats.byCategory[t.category] =
+            (stats.byCategory[t.category] || 0) + amount;
+        } else {
+          stats.totalIncome += amount;
+        }
+        return stats;
+      },
+      {
+        totalExpenses: 0,
+        totalIncome: 0,
+        byCategory: {},
+        transactionCount: transactions.length,
+      },
+    );
+  };
+
   //Helper Function To Generate The Insights From Groq AI 'Cloud'
   const generateFinancialInsights = async (
     stats: {

@@ -2,6 +2,7 @@
 //Tanstack Query
 import { useQuery } from "@tanstack/react-query";
 import getAllAccounts from "@/queries/account/getAllAccounts.queryOption";
+import getFamilyMemberAccountsQuery from "@/queries/account/getFamilyMemberAccounts.queryOption";
 //Hooks
 import { useContext, use } from "react";
 import { UserContext } from "../../layout";
@@ -19,8 +20,23 @@ const page = ({ searchParams }: PageProps) => {
   const params = use(searchParams);
   //Getting LoggedIn User
   const currentUser = useContext(UserContext);
-  const { data } = useQuery(getAllAccounts(currentUser?.id || ""));
-  const accountsInfo: Account[] = data?.data?.accountInfo;
+  const userRole = currentUser?.role || "USER";
+  const isFamilyMember = userRole === "FAMILY_MEMBER";
+
+  // Conditionally fetch accounts based on role
+  const { data: userAccountsData } = useQuery({
+    ...getAllAccounts(currentUser?.id || ""),
+    enabled: !isFamilyMember && !!currentUser?.id,
+  });
+
+  const { data: familyAccountsData } = useQuery({
+    ...getFamilyMemberAccountsQuery(currentUser?.id || ""),
+    enabled: isFamilyMember && !!currentUser?.id,
+  });
+
+  const accountsInfo: Account[] = isFamilyMember
+    ? familyAccountsData?.data?.accounts
+    : userAccountsData?.data?.accountInfo;
   const editId = params?.edit;
   // Fetch transaction data if editing (enabled only when editId exists)
   const { data: transactionData } = useQuery({

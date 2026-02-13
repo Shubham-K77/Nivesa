@@ -26,6 +26,7 @@ import { Account } from "@/types/account.type";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import getAllAccounts from "@/queries/account/getAllAccounts.queryOption";
+import getFamilyMemberAccountsQuery from "@/queries/account/getFamilyMemberAccounts.queryOption";
 import { UserContext } from "../../layout";
 const FinancePage = () => {
   //useState
@@ -36,17 +37,33 @@ const FinancePage = () => {
   const [typeFilter, setTypeFilter] = useState("");
   //useQueryHook
   const currentUser = useContext(UserContext);
-  const { data, isLoading, refetch } = useQuery(
-    getAllAccounts(currentUser?.id || "")
-  );
-  const accountInfo: Account[] = data?.data?.accountInfo;
+
+  // Fetch accounts for USER role
+  const { data, isLoading, refetch } = useQuery({
+    ...getAllAccounts(currentUser?.id || ""),
+    enabled: currentUser?.role === "USER" && !!currentUser?.id,
+  });
+  const userAccountInfo: Account[] = data?.data?.accountInfo;
+
+  // Fetch accounts for FAMILY_MEMBER role
+  const { data: familyData, isLoading: familyLoading } = useQuery({
+    ...getFamilyMemberAccountsQuery(),
+    enabled: currentUser?.role === "FAMILY_MEMBER" && !!currentUser?.id,
+  });
+  const familyAccountInfo: Account[] = familyData?.data?.accountInfo;
+
+  // Determine which account info to use based on role
+  const accountInfo =
+    currentUser?.role === "FAMILY_MEMBER" ? familyAccountInfo : userAccountInfo;
+  const loading =
+    currentUser?.role === "FAMILY_MEMBER" ? familyLoading : isLoading;
   //Filtering Logic
   const sortedAndFilteredData = useMemo(() => {
     let data = [...(accountInfo ?? [])];
     //For Search
     if (searchTerm) {
       data = data?.filter((account) =>
-        account.name.toLowerCase().includes(searchTerm.toLowerCase())
+        account.name.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
     //Type Filtering
@@ -95,18 +112,20 @@ const FinancePage = () => {
             filter, and sort your accounts to keep your finances structured and
             under control.
           </div>
-          {/* CTA Button */}
-          <div className="w-full md:w-full lg:w-[85%] grid grid-cols-1">
-            {/* To Create Transaction */}
-            <DrawerComponent onSuccess={refetch}>
-              <div className="w-full h-[12vh] md:h-[8.5vh] lg:h-[12vh] rounded-md bg-linear-to-br from-orange-600 via-amber-500 to-yellow-300 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80 gap-x-4">
-                <IoMdAdd className="text-white" size={22} />
-                <div className="text-white font-semibold text-2xl md:text-xl lg:text-lg">
-                  Add Account
+          {/* CTA Button - Only show for USER role */}
+          {currentUser?.role === "USER" && (
+            <div className="w-full md:w-full lg:w-[85%] grid grid-cols-1">
+              {/* To Create Transaction */}
+              <DrawerComponent onSuccess={refetch}>
+                <div className="w-full h-[12vh] md:h-[8.5vh] lg:h-[12vh] rounded-md bg-linear-to-br from-orange-600 via-amber-500 to-yellow-300 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80 gap-x-4">
+                  <IoMdAdd className="text-white" size={22} />
+                  <div className="text-white font-semibold text-2xl md:text-xl lg:text-lg">
+                    Add Account
+                  </div>
                 </div>
-              </div>
-            </DrawerComponent>
-          </div>
+              </DrawerComponent>
+            </div>
+          )}
         </div>
         {/* Motif */}
         <div
@@ -165,7 +184,7 @@ const FinancePage = () => {
           value={dateSort ?? ""}
           onValueChange={(value) =>
             setDateSort(
-              value === "" ? null : (value as "Ascending" | "Descending")
+              value === "" ? null : (value as "Ascending" | "Descending"),
             )
           }
         >
@@ -195,7 +214,7 @@ const FinancePage = () => {
           value={amountSort ?? ""}
           onValueChange={(value) =>
             setAmountSort(
-              value === "" ? null : (value as "Ascending" | "Descending")
+              value === "" ? null : (value as "Ascending" | "Descending"),
             )
           }
         >
@@ -234,15 +253,19 @@ const FinancePage = () => {
       </div>
       {/* Cards Display */}
       <div className="w-full grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
-        {isLoading !== true ? (
+        {loading !== true ? (
           sortedAndFilteredData?.map((account) => (
-            <AccountInfoCard key={account.id} accountInfo={account} />
+            <AccountInfoCard
+              key={account.id}
+              accountInfo={account}
+              userRole={currentUser?.role || "USER"}
+            />
           ))
         ) : (
           <>
             <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
             <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
-            <Skeleton className="w-full h-[35vh] rounded-lg bg-white/2" />
+            <Skeleton className="w-full h-[35vh]  rounded-lg bg-white/2" />
           </>
         )}
       </div>

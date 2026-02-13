@@ -113,6 +113,65 @@ export class BudgetService {
           userId,
         );
       }
+
+      // For FAMILY_MEMBER role, return their family budget instead of account budget
+      if (role === 'FAMILY_MEMBER') {
+        const familyBudgetInfo = await this.prisma.familyBudget.findUnique({
+          where: {
+            familyMemberId: userId,
+          },
+        });
+
+        // Monthly Constraints
+        const currentDate = new Date();
+        const startOfMonth = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1,
+        );
+        const endOfMonth = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
+
+        // Family member's own expenses only
+        const expenses = await this.prisma.transaction.aggregate({
+          where: {
+            familyMemberId: userId,
+            accountId: userAndAccountInfo.accountExists.id,
+            type: 'EXPENSE',
+            date: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+          },
+          _sum: {
+            amount: true,
+          },
+        });
+
+        return {
+          message: 'Successfully Retrieved!',
+          statusCode: 200,
+          budget: familyBudgetInfo
+            ? {
+                ...familyBudgetInfo,
+                amount: familyBudgetInfo.amount.toNumber(),
+              }
+            : null,
+          currentExpenses: expenses._sum.amount
+            ? expenses._sum.amount.toNumber()
+            : 0,
+          // DO NOT include account balance for family members
+        };
+      }
+
+      // For USER role, return account budget
       //Budget Info
       const budgetInfo = await this.prisma.budget.findUnique({
         where: {
@@ -335,11 +394,54 @@ export class BudgetService {
           id: familyMemberId,
           userId: userId,
         },
+        include: {
+          account: true,
+        },
       });
 
       if (!familyMember) {
         throw new UnauthorizedException(
           'Family member not found or you do not have access.',
+        );
+      }
+
+      // Verify this is a FAMILY account
+      if (familyMember.account.type !== 'FAMILY') {
+        throw new BadRequestException(
+          'Family budgets can only be set for family accounts.',
+        );
+      }
+
+      // Verify the budget doesn't exceed the actual account balance
+      const accountBalance = familyMember.account.balance.toNumber();
+      if (amount > accountBalance) {
+        throw new BadRequestException(
+          `Budget amount (${amount}) cannot exceed the family account balance (${accountBalance}).`,
+        );
+      }
+
+      // Get all family budgets for this account to ensure total doesn't exceed balance
+      const allFamilyBudgets = await this.prisma.familyBudget.findMany({
+        where: {
+          familyMember: {
+            accountId: familyMember.accountId,
+          },
+          familyMemberId: {
+            not: familyMemberId, // Exclude current family member
+          },
+        },
+      });
+
+      const totalOtherBudgets = allFamilyBudgets.reduce(
+        (sum, budget) => sum + budget.amount.toNumber(),
+        0,
+      );
+
+      const totalBudgetsAfterUpdate = totalOtherBudgets + amount;
+
+      if (totalBudgetsAfterUpdate > accountBalance) {
+        throw new BadRequestException(
+          `Total family budgets (${totalBudgetsAfterUpdate}) cannot exceed the family account balance (${accountBalance}). Other family members have budgets totaling ${totalOtherBudgets}.`,
         );
       }
 

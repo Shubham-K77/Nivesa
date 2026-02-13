@@ -142,7 +142,7 @@ export class AccountService {
       throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
-  async getAccount(userId: string, accountId: string) {
+  async getAccount(userId: string, accountId: string, role?: string) {
     try {
       //Check The Parameters:
       if (!userId || !userId.trim()) {
@@ -151,51 +151,118 @@ export class AccountService {
       if (!accountId || !accountId.trim()) {
         throw new BadRequestException("Must provide the account's info.");
       }
-      //Check For User
-      const userExists = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
-      if (!userExists) {
-        throw new UnauthorizedException("The provided user doesn't exist.");
-      }
-      //Get The Account
-      const accountInfo = await this.prisma.account.findUnique({
-        where: { userId, id: accountId },
-        include: {
-          transactions: {
-            include: {
-              familyMember: {
-                select: {
-                  id: true,
-                  name: true,
-                  imageUrl: true,
+
+      const isFamilyMember = role === 'FAMILY_MEMBER';
+
+      if (isFamilyMember) {
+        // For family members, verify they have access to this account
+        const familyMemberExists = await this.prisma.familyMember.findFirst({
+          where: {
+            id: userId,
+            accountId: accountId,
+          },
+        });
+
+        if (!familyMemberExists) {
+          throw new UnauthorizedException(
+            'You do not have access to this account.',
+          );
+        }
+
+        // Get account with only family member's own transactions
+        const accountInfo = await this.prisma.account.findUnique({
+          where: { id: accountId },
+          include: {
+            transactions: {
+              where: {
+                familyMemberId: userId,
+              },
+              include: {
+                familyMember: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
+                  },
                 },
               },
             },
-          },
-          familyMembers: {
-            select: {
-              id: true,
-              name: true,
-              phoneNumber: true,
-              accountId: true,
-              userId: true,
-              isActive: true,
+            familyMembers: {
+              where: {
+                id: userId, // Only show the family member themselves
+              },
+              select: {
+                id: true,
+                name: true,
+                phoneNumber: true,
+                accountId: true,
+                userId: true,
+                isActive: true,
+              },
             },
           },
-        },
-      });
-      if (!accountInfo) {
-        throw new ServiceUnavailableException(
-          'Unable to retrieve at the moment. Please, try again!',
-        );
+        });
+
+        if (!accountInfo) {
+          throw new ServiceUnavailableException(
+            'Unable to retrieve at the moment. Please, try again!',
+          );
+        }
+
+        return {
+          statusCode: 200,
+          message: "Successfully retrieved the account's info.",
+          accountInfo,
+        };
+      } else {
+        // For regular users
+        const userExists = await this.prisma.user.findUnique({
+          where: { id: userId },
+        });
+        if (!userExists) {
+          throw new UnauthorizedException("The provided user doesn't exist.");
+        }
+
+        //Get The Account
+        const accountInfo = await this.prisma.account.findUnique({
+          where: { userId, id: accountId },
+          include: {
+            transactions: {
+              include: {
+                familyMember: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
+                  },
+                },
+              },
+            },
+            familyMembers: {
+              select: {
+                id: true,
+                name: true,
+                phoneNumber: true,
+                accountId: true,
+                userId: true,
+                isActive: true,
+              },
+            },
+          },
+        });
+        if (!accountInfo) {
+          throw new ServiceUnavailableException(
+            'Unable to retrieve at the moment. Please, try again!',
+          );
+        }
+
+        //Response
+        return {
+          statusCode: 200,
+          message: "Successfully retrieved the account's info.",
+          accountInfo,
+        };
       }
-      //Response
-      return {
-        statusCode: 200,
-        message: "Successfully retrieved the account's info.",
-        accountInfo,
-      };
     } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;

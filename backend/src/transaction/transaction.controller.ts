@@ -39,7 +39,11 @@ export class TransactionController {
   async getDashboardData(@Req() req: Request) {
     const currentUser = req['current_user'];
     const userId = currentUser?.id || '';
-    const response = await this.transactionService.getDashboardData(userId);
+    const role = currentUser?.role;
+    const response = await this.transactionService.getDashboardData(
+      userId,
+      role,
+    );
     return response;
   }
   @Get('/:id')
@@ -47,9 +51,11 @@ export class TransactionController {
   async getSpecificTransaction(@Param('id') id: string, @Req() req: Request) {
     const currentUser = req['current_user'];
     const userId = currentUser?.id || '';
+    const role = currentUser?.role;
     const response = await this.transactionService.getSpecificTransaction(
       id,
       userId,
+      role,
     );
     return response;
   }
@@ -60,9 +66,11 @@ export class TransactionController {
     @Req() req: Request,
   ) {
     const currentUser = req['current_user'];
+    const role = currentUser?.role;
     const response = await this.transactionService.bulkDeleteTransaction(
       currentUser?.id || '',
       transactionsArray,
+      role,
     );
     return response;
   }
@@ -142,10 +150,12 @@ export class TransactionController {
     @Req() req: Request,
   ) {
     const currentUser = req['current_user'];
+    const role = currentUser?.role;
     const response = await this.transactionService.updateExistingTransaction(
       id,
       transactionData,
       currentUser?.id || '',
+      role,
     );
     return response;
   }
