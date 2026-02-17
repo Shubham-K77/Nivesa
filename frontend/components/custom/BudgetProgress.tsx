@@ -161,31 +161,60 @@ const BudgetProgress = ({
     setIsEditing(false);
   };
 
+  // Determine progress bar color based on usage
+  const getProgressColor = () => {
+    if (percentageUsed < 50)
+      return "[&>div]:bg-linear-to-r [&>div]:from-green-500 [&>div]:to-emerald-400";
+    if (percentageUsed < 75)
+      return "[&>div]:bg-linear-to-r [&>div]:from-yellow-500 [&>div]:to-amber-400";
+    if (percentageUsed < 90)
+      return "[&>div]:bg-linear-to-r [&>div]:from-orange-500 [&>div]:to-amber-500";
+    return "[&>div]:bg-linear-to-r [&>div]:from-red-500 [&>div]:to-rose-400";
+  };
+
+  const getStatusColor = () => {
+    if (percentageUsed < 50) return "text-green-400";
+    if (percentageUsed < 75) return "text-yellow-400";
+    if (percentageUsed < 90) return "text-orange-400";
+    return "text-red-400";
+  };
+
   return (
-    <div className="w-full border border-white/10 bg-white/2 rounded-xl p-4 flex flex-col justify-start items-start gap-y-4">
-      {/* Title */}
-      <div className="text-md text-white font-semibold">
-        {isFamilyAccount
-          ? "Family Member Budget"
-          : "Monthly Budget (Default Account)"}
+    <div className="w-full border border-white/20 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-sm rounded-2xl p-6 flex flex-col justify-start items-start gap-y-5 shadow-lg hover:border-amber-400/30 transition-all duration-300">
+      {/* Header Section */}
+      <div className="w-full flex items-center justify-between">
+        <div className="flex flex-col gap-y-1">
+          <h3 className="text-lg font-bold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500">
+            {isFamilyAccount ? "Family Budget Tracker" : "Monthly Budget"}
+          </h3>
+          <p className="text-xs text-gray-400">
+            {isFamilyAccount
+              ? "Track spending for each family member"
+              : "Default Account Overview"}
+          </p>
+        </div>
       </div>
 
       {/* Family Member Dropdown */}
       {isFamilyAccount && familyMembers && familyMembers.length > 0 && (
         <div className="w-full flex flex-col gap-y-2">
-          <label className="text-sm text-muted-foreground">
+          <label className="text-sm font-medium text-gray-300">
             Select Family Member
           </label>
           <Select
             value={selectedFamilyMember}
             onValueChange={setSelectedFamilyMember}
           >
-            <SelectTrigger className="w-full bg-white/5 text-white border-white/10">
+            <SelectTrigger className="w-full bg-white/10 text-white border-white/20 hover:border-amber-400/50 transition-all duration-200 rounded-lg h-11">
               <SelectValue placeholder="Choose a family member" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-900 border-white/20">
               {familyMembers.map((member) => (
-                <SelectItem key={member.id} value={member.id}>
+                <SelectItem
+                  key={member.id}
+                  value={member.id}
+                  className="text-white hover:bg-white/10 focus:bg-white/10"
+                >
                   {member.name}
                   {member.isActive ? " ✓" : " (Pending)"}
                 </SelectItem>
@@ -198,78 +227,135 @@ const BudgetProgress = ({
       {/* For Displaying The Progress And Editing */}
       {(!isFamilyAccount || (isFamilyAccount && selectedFamilyMember)) && (
         <>
-          <div className="flex-1 w-full">
+          {/* Budget Amount Section */}
+          <div className="w-full bg-white/5 rounded-xl p-4 border border-white/10">
             {isEditing ? (
-              <div className="w-full flex justify-start items-start gap-x-2">
-                {/* Input To Update Data */}
-                <Input
-                  type="number"
-                  value={newBudget}
-                  onChange={(e) => setNewBudget(e.target.value)}
-                  className="w-32 text-white/85"
-                  placeholder="Enter amount"
-                  title="Update Budget"
-                  autoFocus
-                  disabled={mutation.isPending || familyMutation.isPending}
-                />
-                {/* CTA's */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleUpdateBudget}
-                  className="hover:cursor-pointer hover:bg-white/5"
-                >
-                  <Check className="h-4 w-4 text-green-500" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCancel}
-                  className="hover:cursor-pointer hover:bg-white/5"
-                >
-                  <X className="h-4 w-4 text-red-500" />
-                </Button>
+              <div className="w-full flex flex-col gap-y-3">
+                <label className="text-sm font-medium text-gray-300">
+                  Set Budget Amount
+                </label>
+                <div className="flex items-center gap-x-2">
+                  {/* Input To Update Data */}
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                      NPR
+                    </span>
+                    <Input
+                      type="number"
+                      value={newBudget}
+                      onChange={(e) => setNewBudget(e.target.value)}
+                      className="w-full pl-14 bg-white/10 border-white/20 text-white text-lg font-semibold h-11 rounded-lg focus:border-amber-400/50 transition-all"
+                      placeholder="Enter amount"
+                      title="Update Budget"
+                      autoFocus
+                      disabled={mutation.isPending || familyMutation.isPending}
+                    />
+                  </div>
+                  {/* CTA's */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleUpdateBudget}
+                    className="h-11 w-11 hover:bg-green-500/20 hover:border hover:border-green-500/50 rounded-lg transition-all"
+                    disabled={mutation.isPending || familyMutation.isPending}
+                  >
+                    <Check className="h-5 w-5 text-green-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCancel}
+                    className="h-11 w-11 hover:bg-red-500/20 hover:border hover:border-red-500/50 rounded-lg transition-all"
+                    disabled={mutation.isPending || familyMutation.isPending}
+                  >
+                    <X className="h-5 w-5 text-red-500" />
+                  </Button>
+                </div>
               </div>
             ) : (
-              <div className="w-full flex justify-start items-start gap-x-4">
-                {/* Info */}
-                <div className="text-md text-muted-foreground text-left p-2">
-                  {!familyBudgetLoading
-                    ? currentBudgetAmount > 0
-                      ? `NPR ${currentExpensesAmount.toFixed(
-                          2,
-                        )} of NPR ${currentBudgetAmount.toFixed(2)} spent`
-                      : "No Budget Set"
-                    : "Loading..."}
-                </div>
-                {/* CTA */}
+              <div className="w-full flex items-center justify-between">
+                {/* Budget Info */}
+                {!familyBudgetLoading ? (
+                  currentBudgetAmount > 0 ? (
+                    <div className="flex flex-col gap-y-1">
+                      <div className="flex items-baseline gap-x-2">
+                        <span className="text-xs text-gray-400 font-medium">
+                          Total Spending
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-x-3">
+                        <span className="text-2xl font-bold text-white">
+                          NPR {currentExpensesAmount.toFixed(2)}
+                        </span>
+                        <span className="text-sm text-gray-400">of</span>
+                        <span className="text-xl font-semibold text-green-400">
+                          NPR {currentBudgetAmount.toFixed(2)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        Remaining:{" "}
+                        <span className={getStatusColor()}>
+                          NPR{" "}
+                          {(
+                            currentBudgetAmount - currentExpensesAmount
+                          ).toFixed(2)}
+                        </span>
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-y-1">
+                      <span className="text-gray-400 text-sm">
+                        No Budget Set
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Click edit to set your budget
+                      </span>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex items-center gap-x-2">
+                    <div className="animate-pulse h-8 w-32 bg-white/10 rounded"></div>
+                  </div>
+                )}
+                {/* Edit Button */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsEditing(true)}
-                  className="w-8 h-8 hover:cursor-pointer hover:bg-white/5"
+                  className="h-10 w-10 hover:bg-amber-500/20 hover:border hover:border-amber-500/50 rounded-lg transition-all group"
                   title="Edit Budget"
                 >
-                  <Pencil className="h-3 w-3 text-white" />
+                  <Pencil className="h-4 w-4 text-gray-400 group-hover:text-amber-400 transition-colors" />
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Displaying The Progress Bar */}
-          <div className="w-full flex flex-col justify-start items-start gap-y-2">
-            {currentBudgetAmount > 0 && !familyBudgetLoading && (
-              <>
+          {/* Progress Bar Section */}
+          {currentBudgetAmount > 0 && !familyBudgetLoading && (
+            <div className="w-full flex flex-col gap-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-300">
+                  Budget Usage
+                </span>
+                <span className={`text-sm font-bold ${getStatusColor()}`}>
+                  {percentageUsed.toFixed(1)}% used
+                </span>
+              </div>
+              <div className="relative">
                 <Progress
                   value={percentageUsed}
-                  className="w-full bg-white/45 [&>div]:bg-green-500"
+                  className={`w-full h-3 bg-white/10 border border-white/20 ${getProgressColor()}`}
                 />
-                <p className="text-xs text-muted-foreground text-right w-full">
-                  {percentageUsed.toFixed(1)}% used
-                </p>
-              </>
-            )}
-          </div>
+                {percentageUsed >= 90 && (
+                  <div className="mt-2 flex items-center gap-x-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-2">
+                    <span className="font-semibold">⚠️ Warning:</span>
+                    <span>You're approaching your budget limit!</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -44,87 +44,176 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --color1: 18, 113, 255;
-  --color2: 221, 74, 255;
-  --color3: 100, 220, 255;
-  --color4: 200, 50, 50;
-  --color5: 180, 180, 50;
-  --blending: hard-light;
+  --radius: 0.5rem;
+  /* Warm cream background inspired by traditional Indian manuscripts */
+  --background: oklch(0.99 0.006 85);
+  /* Rich dark brown text - warm and readable */
+  --foreground: oklch(0.25 0.018 65);
+  /* Pure white cards with subtle warm undertone */
+  --card: oklch(1 0.004 85);
+  --card-foreground: oklch(0.25 0.018 65);
+  /* Elevated surfaces - slightly warmer white */
+  --popover: oklch(1 0.004 85);
+  --popover-foreground: oklch(0.25 0.018 65);
+  /* Deep golden primary - inspired by lotus gold */
+  --primary: oklch(0.58 0.16 75);
+  --primary-foreground: oklch(0.99 0.006 85);
+  /* Soft warm beige secondary */
+  --secondary: oklch(0.96 0.012 75);
+  --secondary-foreground: oklch(0.28 0.018 65);
+  /* Muted warm gray with beige undertone */
+  --muted: oklch(0.95 0.01 75);
+  --muted-foreground: oklch(0.5 0.015 65);
+  /* Bright amber accent - energetic and warm */
+  --accent: oklch(0.76 0.16 70);
+  --accent-foreground: oklch(0.25 0.018 65);
+  /* Soft terracotta for destructive actions */
+  --destructive: oklch(0.6 0.2 35);
+  /* Warm beige borders - subtle but visible */
+  --border: oklch(0.9 0.012 75);
+  --input: oklch(0.92 0.012 75);
+  /* Golden ring focus state */
+  --ring: oklch(0.65 0.16 75);
+  /* Warm harmonious chart colors */
+  --chart-1: oklch(0.68 0.18 75); /* Golden amber */
+  --chart-2: oklch(0.65 0.15 35); /* Warm terracotta */
+  --chart-3: oklch(0.62 0.12 150); /* Sage green */
+  --chart-4: oklch(0.7 0.14 200); /* Warm teal */
+  --chart-5: oklch(0.72 0.16 50); /* Warm orange */
+  /* Sidebar with subtle warm tint */
+  --sidebar: oklch(0.985 0.006 85);
+  --sidebar-foreground: oklch(0.28 0.018 65);
+  --sidebar-primary: oklch(0.58 0.16 75);
+  --sidebar-primary-foreground: oklch(0.99 0.006 85);
+  --sidebar-accent: oklch(0.96 0.012 75);
+  --sidebar-accent-foreground: oklch(0.28 0.018 65);
+  --sidebar-border: oklch(0.9 0.012 75);
+  --sidebar-ring: oklch(0.65 0.16 75);
+  /* Warm golden gradient colors */
+  --color1: 218, 165, 32; /* Goldenrod */
+  --color2: 245, 158, 11; /* Amber */
+  --color3: 251, 191, 36; /* Light gold */
+  --color4: 194, 120, 83; /* Warm terracotta */
+  --color5: 180, 150, 50; /* Muted gold */
+  --blending: soft-light;
   --circle-size: 80%;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Notion-like deep dark background - almost black with subtle warmth */
+  --background: oklch(0.12 0.008 60);
+  /* Soft white text - high contrast like Notion */
+  --foreground: oklch(0.92 0.004 85);
+  /* Elevated surfaces - subtle lift from background */
+  --card: oklch(0.15 0.008 60);
+  --card-foreground: oklch(0.92 0.004 85);
+  --popover: oklch(0.16 0.008 60);
+  --popover-foreground: oklch(0.92 0.004 85);
+  /* Golden primary - vibrant and clear */
+  --primary: oklch(0.75 0.16 75);
+  --primary-foreground: oklch(0.12 0.008 60);
+  /* Subtle secondary surfaces */
+  --secondary: oklch(0.18 0.01 60);
+  --secondary-foreground: oklch(0.92 0.004 85);
+  /* Muted - very subtle */
+  --muted: oklch(0.17 0.008 60);
+  --muted-foreground: oklch(0.55 0.006 85);
+  /* Accent - bright golden when needed */
+  --accent: oklch(0.18 0.01 60);
+  --accent-foreground: oklch(0.75 0.16 75);
+  /* Destructive - clean red */
+  --destructive: oklch(0.65 0.25 27);
+  /* Minimal borders - Notion style */
+  --border: oklch(0.92 0.004 85 / 0.08);
+  --input: oklch(0.92 0.004 85 / 0.12);
+  /* Golden focus ring */
+  --ring: oklch(0.75 0.16 75);
+  /* Vibrant chart colors for clarity */
+  --chart-1: oklch(0.75 0.16 75); /* Golden */
+  --chart-2: oklch(0.65 0.25 27); /* Red */
+  --chart-3: oklch(0.65 0.2 155); /* Green */
+  --chart-4: oklch(0.7 0.18 250); /* Blue */
+  --chart-5: oklch(0.72 0.18 50); /* Orange */
+  /* Sidebar - slightly elevated */
+  --sidebar: oklch(0.14 0.008 60);
+  --sidebar-foreground: oklch(0.92 0.004 85);
+  --sidebar-primary: oklch(0.75 0.16 75);
+  --sidebar-primary-foreground: oklch(0.12 0.008 60);
+  --sidebar-accent: oklch(0.18 0.01 60);
+  --sidebar-accent-foreground: oklch(0.92 0.004 85);
+  --sidebar-border: oklch(0.92 0.004 85 / 0.08);
+  --sidebar-ring: oklch(0.75 0.16 75);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Notion-like subtle card elevation */
+  .card-shadow {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .card-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Clean hover effects - Notion style */
+  .hover-lift {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    background-color: oklch(from var(--card) calc(l + 0.02) c h);
+  }
+
+  .dark .hover-lift:hover {
+    background-color: oklch(from var(--card) calc(l + 0.03) c h);
+  }
+
+  /* Notion-like focus states */
+  *:focus-visible {
+    outline: 2px solid oklch(0.75 0.16 75 / 0.5);
+    outline-offset: 2px;
+  }
+
+  /* Smooth scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.55 0.006 85 / 0.3);
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: oklch(0.92 0.004 85 / 0.15);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.55 0.006 85 / 0.5);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.92 0.004 85 / 0.25);
   }
 }
 
@@ -213,10 +302,10 @@ html.lenis {
 .hero-gradient {
   background: radial-gradient(
     circle at 20% 80%,
-    rgba(17, 24, 39, 0.6) 0%,
-    rgba(31, 41, 55, 0.5) 25%,
-    rgba(17, 24, 39, 0.6) 50%,
-    rgba(15, 23, 42, 0.7) 100%
+    rgba(15, 15, 16, 0.95) 0%,
+    rgba(18, 18, 20, 0.9) 25%,
+    rgba(12, 12, 14, 0.95) 50%,
+    rgba(10, 10, 12, 1) 100%
   );
   position: relative;
   overflow: hidden;
@@ -233,22 +322,23 @@ html.lenis {
   left: -50%;
   right: -50%;
   bottom: -50%;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       ellipse 800px 600px at 30% 20%,
-      rgba(34, 197, 94, 0.08) 0%,
-      rgba(16, 185, 129, 0.05) 25%,
+      rgba(218, 165, 32, 0.12) 0%,
+      rgba(245, 158, 11, 0.08) 25%,
       transparent 50%
     ),
     radial-gradient(
       ellipse 600px 400px at 70% 80%,
-      rgba(59, 130, 246, 0.06) 0%,
-      rgba(99, 102, 241, 0.04) 30%,
+      rgba(251, 191, 36, 0.1) 0%,
+      rgba(245, 158, 11, 0.06) 30%,
       transparent 50%
     ),
     radial-gradient(
       ellipse 400px 800px at 10% 60%,
-      rgba(34, 197, 94, 0.04) 0%,
-      rgba(16, 185, 129, 0.02) 40%,
+      rgba(194, 120, 83, 0.08) 0%,
+      rgba(180, 150, 50, 0.05) 40%,
       transparent 60%
     );
   animation: morphing-lights 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -262,22 +352,23 @@ html.lenis {
   left: -30%;
   right: -30%;
   bottom: -30%;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle 500px at 80% 30%,
-      rgba(34, 197, 94, 0.06) 0%,
-      rgba(21, 128, 61, 0.03) 35%,
+      rgba(245, 158, 11, 0.1) 0%,
+      rgba(218, 165, 32, 0.06) 35%,
       transparent 50%
     ),
     radial-gradient(
       ellipse 300px 700px at 20% 90%,
-      rgba(14, 165, 233, 0.05) 0%,
-      rgba(59, 130, 246, 0.025) 40%,
+      rgba(251, 191, 36, 0.08) 0%,
+      rgba(245, 158, 11, 0.04) 40%,
       transparent 60%
     ),
     radial-gradient(
       circle 400px at 90% 70%,
-      rgba(34, 197, 94, 0.03) 0%,
-      rgba(16, 185, 129, 0.015) 45%,
+      rgba(194, 120, 83, 0.06) 0%,
+      rgba(180, 150, 50, 0.03) 45%,
       transparent 65%
     );
   animation: secondary-lights 10s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite
@@ -298,22 +389,23 @@ html.lenis {
   left: -20%;
   right: -20%;
   bottom: -20%;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle 200px at 60% 40%,
-      rgba(34, 197, 94, 0.04) 0%,
-      rgba(16, 185, 129, 0.02) 50%,
+      rgba(251, 191, 36, 0.08) 0%,
+      rgba(245, 158, 11, 0.04) 50%,
       transparent 70%
     ),
     radial-gradient(
       ellipse 150px 300px at 15% 75%,
-      rgba(168, 85, 247, 0.025) 0%,
-      rgba(147, 51, 234, 0.015) 60%,
+      rgba(245, 158, 11, 0.06) 0%,
+      rgba(218, 165, 32, 0.03) 60%,
       transparent 80%
     ),
     radial-gradient(
       circle 180px at 85% 15%,
-      rgba(34, 197, 94, 0.025) 0%,
-      rgba(21, 128, 61, 0.01) 55%,
+      rgba(194, 120, 83, 0.05) 0%,
+      rgba(180, 150, 50, 0.025) 55%,
       transparent 75%
     );
   animation: tertiary-lights 10s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;

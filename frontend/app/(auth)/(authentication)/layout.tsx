@@ -26,7 +26,7 @@ export default function AuthLayout({
         <div className="w-[90%] lg:w-[95%] mt-2 flex justify-start items-center gap-x-4">
           {/* Logo   */}
           <div
-            className="w-[20%] md:w-[16.5vh] lg:w-[18.25vh] h-[22.5vh] md:h-[16.5vh] lg:h-[18.25vh] bg-transparent md:mt-2 lg:mt-0 hover:cursor-pointer"
+            className="w-[20%] md:w-[16.5vh] lg:w-[18.25vh] h-[22.5vh] md:h-[16.5vh] lg:h-[18.25vh] bg-transparent md:mt-2 lg:mt-0 hover:cursor-pointer hover:scale-105 transition-transform duration-200"
             onClick={() => router.push("/")}
             style={{
               backgroundImage: `url(/images/logo.png)`,
@@ -36,12 +36,12 @@ export default function AuthLayout({
             }}
           ></div>
           {/* Title */}
-          <div
-            className="font-bold text-4xl md:text-6xl lg:text-4xl text-yellow-400/80 hover:cursor-pointer"
+          <h1
+            className="font-bold text-4xl md:text-6xl lg:text-4xl text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500 hover:cursor-pointer hover:scale-105 transition-transform duration-200"
             onClick={() => router.push("/")}
           >
             Nivēśa
-          </div>
+          </h1>
         </div>
         {/* Main */}
         {children}

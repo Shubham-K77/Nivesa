@@ -17,66 +17,78 @@ const SubscriptionCard = ({
   subprice: string;
   points: string[];
 }) => {
+  const isPopular = type === "Student";
   return (
-    <div className="group relative">
+    <div className="group relative h-full">
       <div
-        className={`relative p-8 rounded-xl bg-linear-to-br from-gray-800/80 to-gray-900/90 backdrop-blur-md transition-all duration-500 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-green-500/10 h-full flex flex-col ${
-          type === "Free"
-            ? "border border-gray-700/40"
-            : type === "Student"
-            ? "border-2 border-green-400"
-            : "border border-gray-700/40"
+        className={`relative h-full p-6 md:p-8 rounded-2xl bg-linear-to-br from-gray-800/50 to-gray-900/70 backdrop-blur-sm transition-all duration-300 hover:transform hover:scale-105 shadow-lg flex flex-col ${
+          isPopular
+            ? "border-2 border-amber-500/50 hover:border-amber-500 hover:shadow-amber-500/30 hover:shadow-2xl"
+            : "border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-700/20 hover:shadow-xl"
         }`}
       >
-        <div className="text-center mb-8">
-          <div className="flex justify-center items-center mb-4">
+        {/* Header And Desc */}
+        <div className="text-center mb-6">
+          <div className="flex justify-center items-center mb-4 gap-3">
             {type === "Free" ? (
               <>
-                <TbFreeRights className="text-2xl mr-2 w-8 h-8 text-gray-300" />
-                <h3 className="text-xl font-semibold text-white mb-2">Free</h3>
+                <TbFreeRights className="text-3xl text-gray-300" />
+                <h3 className="text-2xl font-bold text-white">Free</h3>
               </>
             ) : type === "Student" ? (
               <>
-                <PiStudentBold className="text-2xl text-green-500 mr-2 w-8 h-8" />
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  Student
-                </h3>
+                <PiStudentBold className="text-3xl text-amber-400" />
+                <h3 className="text-2xl font-bold text-white">Student</h3>
               </>
             ) : (
               <>
-                <AiOutlineCrown className="text-blue-400 text-xl w-8 h-8" />
-                <h3 className="text-xl font-semibold text-white">Pro</h3>
+                <AiOutlineCrown className="text-3xl text-blue-400" />
+                <h3 className="text-2xl font-bold text-white">Pro</h3>
               </>
             )}
           </div>
-          <p className="text-gray-400 mb-4">{desc}</p>
+          <p className="text-gray-400/90 text-sm md:text-base mb-6">{desc}</p>
           <div className="mb-6">
-            <>
-              <span className="text-4xl font-bold text-green-400">{price}</span>
-              <span className="text-gray-400 ml-2">{subprice}</span>
-            </>
+            <div
+              className={`text-4xl md:text-5xl font-bold ${
+                type === "Student"
+                  ? "text-amber-400"
+                  : type === "Pro"
+                    ? "text-blue-400"
+                    : "text-gray-300"
+              }`}
+            >
+              {price}
+            </div>
+            <div className="text-gray-400 text-sm mt-2">{subprice}</div>
           </div>
         </div>
-
-        <div className="space-y-4 mb-8 grow">
-          {points.map((data) => (
-            <div className="flex items-center gap-3" key={data}>
-              <AiOutlineCheck className="text-green-400 text-lg shrink-0" />
-              <span className="text-gray-300 text-sm">{data}.</span>
+        {/* Points */}
+        <div className="space-y-3 mb-8 grow">
+          {points.map((data, index) => (
+            <div className="flex items-start gap-3" key={index}>
+              <AiOutlineCheck
+                className={`text-xl shrink-0 mt-0.5 ${
+                  isPopular ? "text-amber-400" : "text-gray-400"
+                }`}
+              />
+              <span className="text-gray-300 text-sm leading-relaxed">
+                {data}
+              </span>
             </div>
           ))}
         </div>
-
+        {/* CTA BUTTONS   */}
         {type === "Free" ? (
-          <button className="w-full border-2 border-white/40 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 hover:cursor-pointer mt-auto">
+          <button className="w-full border-2 border-gray-600/50 hover:border-gray-500 hover:bg-gray-700/30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 mt-auto">
             Start for Free
           </button>
         ) : type === "Student" ? (
-          <button className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 hover:cursor-pointer shadow-lg mt-auto">
+          <button className="w-full bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-amber-400/50">
             Get Student Plan
           </button>
         ) : (
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 hover:cursor-pointer shadow-lg mt-auto">
+          <button className="w-full bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-blue-400/50">
             Upgrade to Pro
           </button>
         )}

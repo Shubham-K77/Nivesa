@@ -8,25 +8,23 @@ const HowItWorksCard = ({
   desc: string;
 }) => {
   return (
-    <div className="bg-linear-to-br from-gray-800/80 to-gray-900/90 border border-gray-700/40 backdrop-blur-md transition-all duration-500 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-yellow-500/25 hover:shadow-2xl h-[45vh] md:h-[35vh] lg:h-[45vh] rounded-2xl flex flex-col justify-center items-center gap-y-8 hover:cursor-pointer">
-      {/* Border Glow */}
-      <div className="absolute inset-0 rounded-xl border border-green-500/0 group-hover:border-yellow-500/20 transition-all duration-500"></div>
-      {/* Motif Display */}
-      <div className="w-[24.5%] md:w-[12.5vh] lg:w-[18.75%] h-[10.75vh] md:h-[12.5vh] lg:h-[10.75vh] bg-linear-to-r from-yellow-400/80 to-amber-600/80 rounded-full flex justify-center items-center">
-        <div className="w-[85%] h-[8.5vh] md:h-[10.5vh] lg:h-[8.5vh] bg-linear-to-r from-yellow-400/40 to-amber-600/40 rounded-full flex justify-center items-center">
-          <div className="text-4xl lg:text-3xl font-bold text-white">
+    <div className="group relative bg-linear-to-br from-gray-800/50 to-gray-900/70 border border-gray-700/30 backdrop-blur-sm transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-amber-500/20 hover:shadow-xl rounded-2xl p-6 md:p-8 flex flex-col justify-center items-center gap-y-6 hover:border-amber-500/30">
+      {/* Number Badge */}
+      <div className="w-20 h-20 md:w-24 md:h-24 bg-linear-to-br from-yellow-400/80 to-amber-500/80 rounded-full flex justify-center items-center shadow-lg group-hover:shadow-amber-400/50 transition-shadow duration-300">
+        <div className="w-16 h-16 md:w-20 md:h-20 bg-linear-to-br from-yellow-400/20 to-amber-500/20 rounded-full flex justify-center items-center">
+          <span className="text-3xl md:text-4xl font-bold text-white">
             {value}
-          </div>
+          </span>
         </div>
       </div>
       {/* Title */}
-      <div className="text-xl md:text-2xl lg:text-xl font-semibold text-white">
+      <h3 className="text-xl md:text-2xl font-semibold text-white text-center group-hover:text-amber-400 transition-colors duration-300">
         {title}
-      </div>
+      </h3>
       {/* Description */}
-      <div className="w-[95%] lg:w-[85%] p-2 text-md md:text-lg lg:text-sm text-gray-400/80">
+      <p className="text-sm md:text-base text-gray-400/90 text-center leading-relaxed">
         {desc}
-      </div>
+      </p>
     </div>
   );
 };

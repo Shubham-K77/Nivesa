@@ -23,18 +23,18 @@ type DashboardOverviewProps = {
   accounts: Account[];
   transactions: Transaction[];
 };
-// Define colors for pie chart
+// Define warm, harmonious colors for pie chart - inspired by golden lotus
 const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884D8",
-  "#82CA9D",
-  "#FFC658",
-  "#FF6B9D",
-  "#C77DFF",
-  "#00D9FF",
+  "#D4AF37", // Golden
+  "#F59E0B", // Amber
+  "#C2785B", // Terracotta
+  "#9CA67F", // Sage
+  "#E8B944", // Light gold
+  "#B88746", // Bronze
+  "#D99058", // Warm coral
+  "#A89968", // Muted gold
+  "#C77B5C", // Rust
+  "#B5A06F", // Wheat
 ];
 const DashboardOverview = ({
   accounts,

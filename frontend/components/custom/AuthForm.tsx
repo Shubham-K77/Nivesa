@@ -40,6 +40,7 @@ import {
 } from "@/actions/users.api";
 //Icons
 import { ImSpinner8 } from "react-icons/im";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { setFamilyMemberPassword } from "@/actions/familyMembers.api";
 //Schema For Signup
 const signupSchema = z.object({
@@ -48,14 +49,14 @@ const signupSchema = z.object({
     .string()
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      "Password must have 8+ characters, including uppercase, lowercase, number, and special char."
+      "Password must have 8+ characters, including uppercase, lowercase, number, and special char.",
     ),
   name: z.string().min(2),
   phoneNumber: z
     .string()
     .regex(
       /^\+977\d{10}$/,
-      "Invalid phone number format. Please enter the number in the format: +977 followed by exactly 10 digits. Example: +9779801234567"
+      "Invalid phone number format. Please enter the number in the format: +977 followed by exactly 10 digits. Example: +9779801234567",
     )
     .optional()
     .or(z.literal("")),
@@ -67,7 +68,7 @@ const loginSchema = z.object({
     .string()
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      "Password must have 8+ characters, including uppercase, lowercase, number, and special char."
+      "Password must have 8+ characters, including uppercase, lowercase, number, and special char.",
     ),
 });
 //Schema For Otp Validation
@@ -85,7 +86,7 @@ const resetPasswordSchema = z
       .string()
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must have 8+ characters, including uppercase, lowercase, number, and special char."
+        "Password must have 8+ characters, including uppercase, lowercase, number, and special char.",
       ),
     confirmPassword: z.string(),
   })
@@ -109,6 +110,11 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
   //Routing
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   //Determine the schema and default values
   let selectedSchema:
     | typeof signupSchema
@@ -262,34 +268,34 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
   return (
     <div className="w-[95%] md:w-full lg:w-full bg-transparent">
       {/* Title and Description */}
-      <div className="w-full flex flex-col justify-center items-center gap-y-2 mb-6">
-        <div className="text-4xl font-bold text-white">
+      <div className="w-full flex flex-col justify-center items-center gap-y-3 mb-8">
+        <h2 className="text-4xl md:text-5xl lg:text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500">
           {type === "signup"
             ? "Create Your Account"
             : type === "login"
-            ? "Welcome Back"
-            : type === "resetEmail"
-            ? "Verify Your Email"
-            : type === "otp" || type === "resetOtp"
-            ? "Confirm Your Identity"
-            : "Update Your Password"}
-        </div>
-        <div className="text-md md:text-lg lg:text-md text-gray-400/80 text-center">
+              ? "Welcome Back"
+              : type === "resetEmail"
+                ? "Verify Your Email"
+                : type === "otp" || type === "resetOtp"
+                  ? "Confirm Your Identity"
+                  : "Update Your Password"}
+        </h2>
+        <p className="text-base md:text-lg lg:text-base text-gray-300/90 text-center max-w-md px-4">
           {type === "signup"
             ? "Start your financial management journey today"
             : type === "login"
-            ? "Sign in to keep your financial goals on track"
-            : type === "otp" || type === "resetOtp"
-            ? "We've sent a verification code to your email"
-            : type === "resetEmail"
-            ? "Give us your email to reset your password"
-            : "Enter a new password to secure your account."}
-        </div>
+              ? "Sign in to keep your financial goals on track"
+              : type === "otp" || type === "resetOtp"
+                ? "We've sent a verification code to your email"
+                : type === "resetEmail"
+                  ? "Give us your email to reset your password"
+                  : "Enter a new password to secure your account."}
+        </p>
       </div>
       {/* Form UI   */}
       {type === "otp" || type === "resetOtp" ? (
         <>
-          <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-2 flex flex-col justify-start items-center shadow-2xl">
+          <div className="w-full bg-white/10 backdrop-blur-xl border border-white/30 rounded-3xl p-8 sm:p-10 gap-y-3 flex flex-col justify-start items-center shadow-2xl hover:border-amber-400/30 transition-all duration-300">
             {/* Title */}
             <div className="text-3xl md:text-3xl lg:text-2xl text-white font-bold text-center">
               OTP Verification
@@ -408,7 +414,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         </>
       ) : type === "resetEmail" ? (
         <>
-          <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
+          <div className="w-full bg-white/10 backdrop-blur-xl border border-white/30 rounded-3xl p-8 sm:p-10 gap-y-4 mb-4 shadow-2xl hover:border-amber-400/30 transition-all duration-300">
             {/* Title */}
             <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-6">
               Recover Your Account
@@ -469,7 +475,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         </>
       ) : type === "resetPassword" || type === "setPasswordFamilyMember" ? (
         <>
-          <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
+          <div className="w-full bg-white/10 backdrop-blur-xl border border-white/30 rounded-3xl p-8 sm:p-10 gap-y-4 mb-4 shadow-2xl hover:border-amber-400/30 transition-all duration-300">
             {/* Title */}
             <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-6">
               Choose a New Password
@@ -490,12 +496,25 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                         New Password
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="............"
-                          {...field}
-                          type="password"
-                          className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
-                        />
+                        <div className="relative w-full">
+                          <Input
+                            placeholder="............"
+                            {...field}
+                            type={showNewPassword ? "text" : "password"}
+                            className="bg-gray-700/40 backdrop-blur-md p-2 pr-12 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+                          >
+                            {showNewPassword ? (
+                              <FaEyeSlash className="text-xl" />
+                            ) : (
+                              <FaEye className="text-xl" />
+                            )}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                     </FormItem>
@@ -511,12 +530,27 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                         Retype New Password
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="............"
-                          {...field}
-                          type="password"
-                          className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
-                        />
+                        <div className="relative w-full">
+                          <Input
+                            placeholder="............"
+                            {...field}
+                            type={showConfirmPassword ? "text" : "password"}
+                            className="bg-gray-700/40 backdrop-blur-md p-2 pr-12 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+                          >
+                            {showConfirmPassword ? (
+                              <FaEyeSlash className="text-xl" />
+                            ) : (
+                              <FaEye className="text-xl" />
+                            )}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                     </FormItem>
@@ -539,11 +573,7 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         </>
       ) : (
         // Forms For Signup And Login
-        <div className="w-full bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sm:p-8 gap-y-4 mb-4 shadow-2xl">
-          {/* Title */}
-          <div className="text-2xl md:text-3xl lg:text-2xl text-white font-bold text-center mb-4">
-            {type === "signup" ? "" : "Sign In"}
-          </div>
+        <div className="w-full bg-white/10 backdrop-blur-xl border border-white/30 rounded-3xl p-8 sm:p-10 gap-y-4 mb-4 shadow-2xl hover:border-amber-400/30 transition-all duration-300">
           {/* Form Component */}
           <Form {...form}>
             <form
@@ -626,12 +656,25 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                           Password
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=".........."
-                            {...field}
-                            type="password"
-                            className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center"
-                          />
+                          <div className="relative w-full">
+                            <Input
+                              placeholder=".........."
+                              {...field}
+                              type={showPassword ? "text" : "password"}
+                              className="bg-gray-700/40 backdrop-blur-md p-2 pr-12 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+                            >
+                              {showPassword ? (
+                                <FaEyeSlash className="text-xl" />
+                              ) : (
+                                <FaEye className="text-xl" />
+                              )}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>
@@ -671,12 +714,25 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
                           Password
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=".........."
-                            {...field}
-                            type="password"
-                            className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center"
-                          />
+                          <div className="relative w-full">
+                            <Input
+                              placeholder=".........."
+                              {...field}
+                              type={showPassword ? "text" : "password"}
+                              className="bg-gray-700/40 backdrop-blur-md p-2 pr-12 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+                            >
+                              {showPassword ? (
+                                <FaEyeSlash className="text-xl" />
+                              ) : (
+                                <FaEye className="text-xl" />
+                              )}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
                       </FormItem>

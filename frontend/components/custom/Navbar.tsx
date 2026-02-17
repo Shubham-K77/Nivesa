@@ -11,17 +11,30 @@ import {
 import { useRouter } from "next/navigation";
 //Icons:
 import { GiHamburgerMenu } from "react-icons/gi";
+//Lenis:
+import { useLenis } from "./LenisProvider";
 
 const Navbar = () => {
   //Constant:
   const router = useRouter();
+  const lenis = useLenis();
+
+  const scrollToSection = (id: string) => {
+    const element = document.querySelector(id) as HTMLElement;
+    if (element && lenis) {
+      lenis.scrollTo(element, {
+        offset: -80, // Offset for the fixed navbar
+        duration: 1.5,
+      });
+    }
+  };
   return (
-    <div className="w-[95%] h-[11.5vh] md:w-[95%] md:h-[10.5vh] lg:w-[75%] lg:h-[11.5vh] rounded-2xl bg-black/40 lg:backdrop-blur-lg fixed top-4 left-1/2 -translate-x-1/2 flex justify-around items-center border-2 border-gray-800/80 z-50">
+    <nav className="w-[88%] max-w-5xl px-4 py-2 md:px-6 md:py-2.5 rounded-2xl bg-black/60 backdrop-blur-xl fixed top-4 left-1/2 -translate-x-1/2 flex justify-between items-center border border-gray-700/50 shadow-lg z-50">
       {/* Logo and title */}
-      <div className="w-[35%] flex justify-start md:justify-center lg:justify-start items-center gap-x-2 md:gap-x-3 lg:gap-x-4">
+      <div className="flex justify-start items-center gap-x-2 md:gap-x-3">
         {/* Logo */}
         <div
-          className="max-sm:hidden md:w-[36%] lg:w-[16.25%] h-[22.5vh] md:h-[16vh] lg:h-[8.25vh] bg-transparent md:mt-2 lg:mt-0"
+          className="hidden md:block w-10 h-10 md:w-11 md:h-11 bg-transparent hover:cursor-pointer hover:scale-105 transition-transform duration-200"
           style={{
             backgroundImage: `url(/images/logo.png)`,
             backgroundPosition: "center",
@@ -30,30 +43,39 @@ const Navbar = () => {
           }}
         ></div>
         {/* Title */}
-        <div className="font-bold text-4xl md:text-3xl lg:text-3xl text-yellow-400/80">
+        <h1 className="font-bold text-xl md:text-2xl text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500 hover:cursor-pointer hover:scale-105 transition-transform duration-200">
           Nivēśa
-        </div>
+        </h1>
       </div>
-      {/* Buttons Around, Visibile To Large Viewports */}
-      <div className="hidden lg:flex lg:w-[60%] justify-evenly items-center gap-x-2">
-        <div className="text-md text-white hover:cursor-pointer hover:text-yellow-400/80">
+      {/* Buttons Around, Visible To Large Viewports */}
+      <div className="hidden lg:flex items-center gap-x-4">
+        <button
+          onClick={() => scrollToSection("#features")}
+          className="text-sm text-gray-200 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+        >
           Features
-        </div>
-        <div className="text-md text-white hover:cursor-pointer hover:text-yellow-400/80">
+        </button>
+        <button
+          onClick={() => scrollToSection("#how-it-works")}
+          className="text-sm text-gray-200 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+        >
           How it Works
-        </div>
-        <div className="text-md text-white hover:cursor-pointer hover:text-yellow-400/80">
+        </button>
+        <button
+          onClick={() => scrollToSection("#pricing")}
+          className="text-sm text-gray-200 hover:text-amber-400 transition-colors duration-200 hover:cursor-pointer"
+        >
           Pricing
-        </div>
+        </button>
         {/* CTA Buttons */}
         <Button
-          className="bg-transparent border border-yellow-300/80 text-center text-yellow-400/80 w-[18%] h-[6.5vh] text-md hover:cursor-pointer hover:bg-yellow-400/40 hover:text-white"
+          className="bg-transparent border border-amber-400/50 text-amber-400 hover:bg-amber-400/20 hover:border-amber-400 px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:cursor-pointer"
           onClick={() => router.push("/login")}
         >
           Sign In
         </Button>
         <Button
-          className="bg-yellow-500/80 text-center text-white w-[20%] h-[6.5vh] text-md hover:cursor-pointer hover:bg-yellow-600/80"
+          className="bg-linear-to-r from-yellow-400 to-amber-500 text-white hover:from-yellow-500 hover:to-amber-600 px-4 py-1.5 text-sm rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:cursor-pointer"
           onClick={() => router.push("/signup")}
         >
           Get Started
@@ -62,40 +84,49 @@ const Navbar = () => {
       {/* Hamburger Menu For Sm and Md Viewports */}
       <Dialog>
         {/* Hamburger Icon For Triggering Selection */}
-        <DialogTrigger>
-          <div className="w-[10.5vh] h-[8.5vh] md:w-[11vh] md:h-[7.5vh] bg-linear-to-br from-yellow-400 to-amber-500 flex justify-center items-center lg:hidden rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-yellow-300/50">
-            <GiHamburgerMenu className="text-3xl md:text-4xl text-gray-900 font-bold drop-shadow-sm" />
-          </div>
+        <DialogTrigger asChild>
+          <button className="lg:hidden p-2 bg-linear-to-br from-yellow-400 to-amber-500 rounded-lg shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 hover:cursor-pointer">
+            <GiHamburgerMenu className="text-xl md:text-2xl text-gray-900" />
+          </button>
         </DialogTrigger>
-        <DialogContent className="w-[90%] md:w-[85%] bg-linear-to-br from-gray-900 via-slate-900 to-black backdrop-blur-xl border-2 border-yellow-400/70 shadow-[0_0_60px_rgba(251,191,36,0.5)] text-white rounded-2xl">
+        <DialogContent className="w-[90%] md:w-[85%] max-w-md bg-linear-to-br from-gray-900 via-gray-800 to-black backdrop-blur-xl border border-amber-400/30 shadow-2xl text-white rounded-2xl">
           <DialogHeader>
-            <div className="w-full bg-transparent flex flex-col justify-start items-center gap-y-3 md:gap-y-4 py-3 md:py-4">
-              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
+            <div className="w-full flex flex-col justify-start items-center gap-y-3 py-4">
+              <button
+                onClick={() => scrollToSection("#features")}
+                className="w-full py-3 text-lg font-semibold text-gray-200 bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all duration-200 rounded-xl border border-gray-700/50 hover:border-transparent"
+              >
                 Features
-              </div>
-              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
+              </button>
+              <button
+                onClick={() => scrollToSection("#how-it-works")}
+                className="w-full py-3 text-lg font-semibold text-gray-200 bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all duration-200 rounded-xl border border-gray-700/50 hover:border-transparent"
+              >
                 How it Works
-              </div>
-              <div className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-semibold text-gray-100 hover:cursor-pointer bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl border border-gray-700/50 hover:border-yellow-400">
+              </button>
+              <button
+                onClick={() => scrollToSection("#pricing")}
+                className="w-full py-3 text-lg font-semibold text-gray-200 bg-gray-800/30 hover:bg-linear-to-r hover:from-yellow-400 hover:to-amber-500 hover:text-gray-900 flex justify-center items-center transition-all duration-200 rounded-xl border border-gray-700/50 hover:border-transparent"
+              >
                 Pricing
-              </div>
-              <div
-                className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-bold text-white hover:cursor-pointer bg-linear-to-r from-yellow-400 to-amber-500 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl hover:from-yellow-500 hover:to-amber-600 hover:scale-[1.02] mt-3 md:mt-4 shadow-lg hover:shadow-xl border border-yellow-300/50"
+              </button>
+              <button
+                className="w-full py-3 text-lg font-bold text-white bg-linear-to-r from-yellow-400 to-amber-500 flex justify-center items-center transition-all duration-200 rounded-xl hover:from-yellow-500 hover:to-amber-600 hover:scale-[1.02] mt-4 shadow-lg border border-yellow-300/30"
                 onClick={() => router.push("/login")}
               >
                 Sign In
-              </div>
-              <div
-                className="w-full h-[7vh] md:h-[8vh] text-lg md:text-2xl font-bold text-yellow-400 hover:cursor-pointer bg-gray-800/50 border-2 border-yellow-400 flex justify-center items-center transition-all ease-in-out duration-200 rounded-xl hover:bg-yellow-400/30 hover:border-yellow-300 hover:scale-[1.02] shadow-md hover:shadow-lg"
+              </button>
+              <button
+                className="w-full py-3 text-lg font-bold text-amber-400 bg-gray-800/50 border-2 border-amber-400/50 flex justify-center items-center transition-all duration-200 rounded-xl hover:bg-amber-400/20 hover:border-amber-400 hover:scale-[1.02] shadow-md"
                 onClick={() => router.push("/signup")}
               >
                 Get Started
-              </div>
+              </button>
             </div>
           </DialogHeader>
         </DialogContent>
       </Dialog>
-    </div>
+    </nav>
   );
 };
 

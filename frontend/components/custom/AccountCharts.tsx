@@ -86,7 +86,7 @@ const AccountCharts = ({
 
     //Return Grouped Object To Array sorted by actual date
     return Object.values(grouped).sort(
-      (a, b) => a.sortDate.getTime() - b.sortDate.getTime()
+      (a, b) => a.sortDate.getTime() - b.sortDate.getTime(),
     );
   }, [transactions, dateRange]);
   //Calculating Totals For Given Periods
@@ -99,7 +99,7 @@ const AccountCharts = ({
         income: acc.income + (Number(day.income) || 0),
         expense: acc.expense + (Number(day.expense) || 0),
       }),
-      { income: 0, expense: 0 }
+      { income: 0, expense: 0 },
     );
   }, [filteredTransactions]);
   return (
@@ -222,7 +222,7 @@ const AccountCharts = ({
             <Bar
               dataKey="income"
               name="Income"
-              fill="#22c55e"
+              fill="#10b981"
               radius={[4, 4, 0, 0]}
             />
             <Bar

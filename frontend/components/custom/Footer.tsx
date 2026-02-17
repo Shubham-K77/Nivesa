@@ -5,18 +5,17 @@ import { FaLinkedinIn } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <div className="w-full md:h-[70vh] lg:h-[75vh] bg-gray-800/80 flex flex-col justify-center items-center border-t border-gray-700">
-      {/* Main div   */}
-      <div className="w-[95%] md:w-[90%] lg:w-[85%] md:h-[63vh] lg:h-[68vh] bg-transparent flex flex-col justify-center items-center p-2">
-        {/* Content div */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-5 md:h-[70%] lg:h-[75%] bg-transparent gap-x-2 gap-y-6 md:gap-y-4 mb-2">
+    <footer className="w-full bg-linear-to-b from-gray-900/90 to-black">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-10 mb-10">
           {/* Logo, description, socials */}
-          <div className="md:col-span-1 lg:col-span-2 h-full bg-transparent flex flex-col justify-center items-center gap-y-4 md:gap-y-3">
+          <div className="lg:col-span-2 flex flex-col gap-y-6">
             {/* Logo & Title display */}
-            <div className="w-full flex justify-start md:justify-center lg:justify-start items-center gap-x-2 md:gap-x-3 lg:gap-x-4">
+            <div className="flex items-center gap-x-3">
               {/* Logo */}
               <div
-                className="w-[34%] md:w-[20%] lg:w-[34%] h-[22.5vh] md:h-[16vh] lg:h-[22.5vh] bg-transparent"
+                className="w-14 h-14 md:w-16 md:h-16 bg-transparent"
                 style={{
                   backgroundImage: `url(/images/logo.png)`,
                   backgroundPosition: "center",
@@ -25,98 +24,102 @@ const Footer = () => {
                 }}
               ></div>
               {/* Title */}
-              <div className="font-bold text-4xl md:text-3xl lg:text-4xl text-yellow-400/80">
+              <h2 className="font-bold text-3xl md:text-4xl text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500">
                 Nivēśa
-              </div>
+              </h2>
             </div>
             {/* Description */}
-            <div className="text-sm md:text-sm lg:text-sm px-4 md:px-6 lg:px-4 text-gray-400/80 md:text-center lg:text-left">
-              Manage your finances smarter with Nivēśa an AI-powered expense
+            <p className="text-sm md:text-base text-gray-400/90 leading-relaxed max-w-md">
+              Manage your finances smarter with Nivēśa, an AI-powered expense
               tracker that delivers personalized financial insights and helps
               you navigate your daily spending with ease and confidence.
-            </div>
+            </p>
             {/* Social Section */}
-            <div className="w-full gap-x-2 flex justify-start md:justify-center lg:justify-start items-center p-2">
+            <div className="flex gap-3">
               {/* Facebook */}
-              <div className="w-[7.5vh] h-[7.5vh] md:w-[6vh] md:h-[6vh] lg:w-[7.5vh] lg:h-[7.5vh] rounded-full bg-gray-400/30 border border-gray-800 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80">
-                <FaFacebookF className="font-bold text-2xl md:text-lg lg:text-2xl text-white" />
-              </div>
+              <button className="w-12 h-12 rounded-full bg-gray-700/30 border border-gray-600/50 flex justify-center items-center hover:bg-linear-to-br hover:from-yellow-400 hover:to-amber-500 hover:border-transparent transition-all duration-200 hover:scale-110 group">
+                <FaFacebookF className="text-xl text-gray-200 group-hover:text-gray-900" />
+              </button>
               {/* X */}
-              <div className="w-[7.5vh] h-[7.5vh] md:w-[6vh] md:h-[6vh] lg:w-[7.5vh] lg:h-[7.5vh] rounded-full bg-gray-400/30 border border-gray-800 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80">
-                <FaXTwitter className="font-bold text-2xl md:text-lg lg:text-2xl text-white" />
-              </div>
+              <button className="w-12 h-12 rounded-full bg-gray-700/30 border border-gray-600/50 flex justify-center items-center hover:bg-linear-to-br hover:from-yellow-400 hover:to-amber-500 hover:border-transparent transition-all duration-200 hover:scale-110 group">
+                <FaXTwitter className="text-xl text-gray-200 group-hover:text-gray-900" />
+              </button>
               {/* LinkedIn */}
-              <div className="w-[7.5vh] h-[7.5vh] md:w-[6vh] md:h-[6vh] lg:w-[7.5vh] lg:h-[7.5vh] rounded-full bg-gray-400/30 border border-gray-800 flex justify-center items-center hover:cursor-pointer hover:bg-yellow-400/80">
-                <FaLinkedinIn className="font-bold text-2xl md:text-lg lg:text-2xl text-white" />
-              </div>
+              <button className="w-12 h-12 rounded-full bg-gray-700/30 border border-gray-600/50 flex justify-center items-center hover:bg-linear-to-br hover:from-yellow-400 hover:to-amber-500 hover:border-transparent transition-all duration-200 hover:scale-110 group">
+                <FaLinkedinIn className="text-xl text-gray-200 group-hover:text-gray-900" />
+              </button>
             </div>
           </div>
-          {/* Product, Company, Legal - Full width row on md */}
-          <div className="md:col-span-1 lg:col-span-3 w-full bg-transparent flex flex-col md:flex-row justify-center items-start md:items-start gap-y-6 md:gap-y-0 md:gap-x-12 lg:gap-x-2">
+
+          {/* Product, Company, Legal */}
+          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-8">
             {/* Product */}
-            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center lg:items-start items-start md:items-center p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
-              <div className="text-xl md:text-lg lg:text-xl font-bold text-white mb-2 md:mb-1 lg:mb-2">
+            <div className="flex flex-col gap-y-4">
+              <h3 className="text-lg md:text-xl font-bold text-white mb-2">
                 Product
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </h3>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Features
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </button>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 How it Works
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </button>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Pricing
-              </div>
+              </button>
             </div>
+
             {/* Company */}
-            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center lg:items-start p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
-              <div className="text-xl md:text-lg lg:text-xl font-bold text-white mb-2 md:mb-1 lg:mb-2">
+            <div className="flex flex-col gap-y-4">
+              <h3 className="text-lg md:text-xl font-bold text-white mb-2">
                 Company
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </h3>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 About Us
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </button>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Blog
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </button>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Contact
-              </div>
+              </button>
             </div>
+
             {/* Legal */}
-            <div className="flex-1 bg-transparent flex flex-col justify-start md:justify-center items-start md:items-center lg:items-start p-4 md:p-2 gap-y-4 md:gap-y-3 lg:gap-y-4">
-              <div className="text-xl md:text-lg lg:text-xl font-bold text-white mb-2 md:mb-1 lg:mb-2">
+            <div className="flex flex-col gap-y-4">
+              <h3 className="text-lg md:text-xl font-bold text-white mb-2">
                 Legal
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </h3>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Privacy Policy
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </button>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Cookie Policy
-              </div>
-              <div className="text-md md:text-sm lg:text-md text-gray-400/80 hover:cursor-pointer hover:text-yellow-400/80">
+              </button>
+              <button className="text-sm md:text-base text-gray-400/90 hover:text-amber-400 transition-colors duration-200 text-left">
                 Terms of Service
-              </div>
+              </button>
             </div>
           </div>
         </div>
-        {/* Copyright and Logos Div */}
-        <div className="w-full mt-2 md:h-[30%] lg:h-[25%] bg-transparent p-2 md:p-3 flex flex-col justify-start items-center md:flex-row md:justify-between md:items-center lg:flex-row lg:justify-around lg:items-center border-0 md:border-0 lg:border-t-2 lg:border-gray-700">
-          <div className="text-sm md:text-xs lg:text-sm text-gray-400/80 text-center md:text-left mb-2 md:mb-0">
+
+        {/* Copyright and Logo */}
+        <div className="pt-8 border-t border-gray-800/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-400/90 text-center sm:text-left">
             © 2025 Shubham Kadariya. All rights reserved.
-          </div>
+          </p>
           <div
-            className="w-[25%] md:w-[15%] lg:w-[9.25%] h-[10.5vh] md:h-[7vh] lg:h-[10.5vh] bg-transparent"
+            className="w-16 h-16 md:w-20 md:h-20 bg-transparent opacity-60 hover:opacity-100 transition-opacity duration-200"
             style={{
               backgroundImage: `url('/images/initials.png')`,
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
+              backgroundSize: "contain",
             }}
           ></div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
 
