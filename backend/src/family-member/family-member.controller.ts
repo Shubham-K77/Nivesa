@@ -9,13 +9,10 @@ export class FamilyMemberController {
 
   //Post Request:
   @Post('/')
-  async validateMember(
-    @Body() body: { token: string; newPassword: string; email: string },
-  ) {
+  async validateMember(@Body() body: { token: string; newPassword: string }) {
     const response = await this.familyMemberService.validate({
       token: body.token,
       newPassword: body.newPassword,
-      email: body.email,
     });
     return response;
   }

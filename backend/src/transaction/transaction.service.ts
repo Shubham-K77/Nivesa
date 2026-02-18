@@ -602,4 +602,72 @@ export class TransactionService {
       throw new ServiceUnavailableException('Internal Server Error!');
     }
   }
+
+  async getForecastData(userId: string, role?: string) {
+    try {
+      //Check The UserId
+      if (!userId || !userId.trim()) {
+        throw new UnauthorizedException('Must login to continue!');
+      }
+      //Get All The Transactions based on role
+      const isFamilyMember = role === 'FAMILY_MEMBER';
+      const whereClause = isFamilyMember
+        ? { familyMemberId: userId }
+        : { userId };
+
+      const transactions = await this.prisma.transaction.findMany({
+        where: whereClause,
+        orderBy: { date: 'desc' },
+        include: {
+          account: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+        },
+      });
+
+      // Group transactions by account
+      const accountsMap = new Map<string, any>();
+
+      transactions.forEach((transaction) => {
+        const accountId = transaction.accountId;
+
+        if (!accountsMap.has(accountId)) {
+          accountsMap.set(accountId, {
+            accountId: accountId,
+            accountName: transaction.account.name,
+            accountType: transaction.account.type,
+            transactions: [],
+          });
+        }
+
+        accountsMap.get(accountId).transactions.push({
+          id: transaction.id,
+          amount: transaction.amount,
+          category: transaction.category,
+          type: transaction.type,
+          date: transaction.date.toISOString(),
+          status: transaction.status,
+        });
+      });
+
+      // Convert map to array
+      const accounts = Array.from(accountsMap.values());
+
+      //Return Info
+      return {
+        message: 'Successfully Retrieved Forecast Data!',
+        statusCode: 200,
+        accounts,
+      };
+    } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException('Internal Server Error!');
+    }
+  }
 }

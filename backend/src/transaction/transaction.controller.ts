@@ -24,6 +24,9 @@ import type { Request } from 'express';
 import { CreateTransactionDto } from './dto/createTransaction.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EditTransactionDto } from './dto/editTransaction.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { AxiosResponse } from 'axios';
 type TransactionsArray = {
   transactions: Array<string>;
 };
@@ -33,6 +36,7 @@ export class TransactionController {
   constructor(
     private readonly transactionService: TransactionService,
     private readonly arcjetService: ArcjetService,
+    private readonly httpService: HttpService,
   ) {}
   @Get('/dashboard')
   @UseGuards(UserLoginGuard)
@@ -46,6 +50,29 @@ export class TransactionController {
     );
     return response;
   }
+
+  @Post('/predict')
+  @UseGuards(UserLoginGuard)
+  async predictSpending(@Body() body: any) {
+    try {
+      // Forward request to Python FastAPI service
+      const response: AxiosResponse = await firstValueFrom(
+        this.httpService.post('http://localhost:8000/predict', body, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+      return response.data;
+    } catch (error: any) {
+      this.logger.error('Prediction API error:', error.response?.data || error);
+      throw new HttpException(
+        error.response?.data?.detail || 'Failed to generate forecast',
+        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Get('/:id')
   @UseGuards(UserLoginGuard)
   async getSpecificTransaction(@Param('id') id: string, @Req() req: Request) {
@@ -112,6 +139,16 @@ export class TransactionController {
             HttpStatus.TOO_MANY_REQUESTS,
           );
         }
+        if (decision.reason.isShield()) {
+          this.logger.warn(
+            `Shield blocked suspicious request from user ${userId}`,
+          );
+          throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+        if (decision.reason.isBot()) {
+          this.logger.warn(`Bot detected and blocked for user ${userId}`);
+          throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
         this.logger.warn(
           `Request blocked for user ${userId}:`,
           decision.reason,
@@ -155,6 +192,19 @@ export class TransactionController {
       id,
       transactionData,
       currentUser?.id || '',
+      role,
+    );
+    return response;
+  }
+
+  @Get('/forecast-data/all')
+  @UseGuards(UserLoginGuard)
+  async getForecastData(@Req() req: Request) {
+    const currentUser = req['current_user'];
+    const userId = currentUser?.id || '';
+    const role = currentUser?.role;
+    const response = await this.transactionService.getForecastData(
+      userId,
       role,
     );
     return response;

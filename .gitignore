@@ -1,3 +1,71 @@
-.wwebjs_auth
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.example
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.log
+
+# Python
+virtual/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Python ML artifacts
+*.pkl
+*.pth
+*.h5
+*.joblib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# WhatsApp session
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Docker
 .dockerignore
+
+# Misc
+*.tsbuildinfo
+.turbo/
+coverage/
+.coverage

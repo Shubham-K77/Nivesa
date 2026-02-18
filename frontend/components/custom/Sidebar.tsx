@@ -9,6 +9,7 @@ import { ImSpinner8 } from "react-icons/im";
 import { FaHome } from "react-icons/fa";
 import { MdAccountBalanceWallet } from "react-icons/md";
 import { FaRegUserCircle } from "react-icons/fa";
+import { TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { logout } from "@/actions/users.api";
 import { userInfo } from "@/types/user.type";
@@ -179,6 +180,26 @@ const Sidebar = () => {
               {/* Text */}
               <div className="text-md">New Transaction</div>
             </div>
+            {/* Predictions */}
+            <div
+              className={`w-[90%] h-1/10 rounded-lg hover:cursor-pointer flex justify-start items-center gap-x-4 p-3 hover:ml-4 ${
+                pathName === "/predictions"
+                  ? "bg-white/10 text-orange-500 font-semibold"
+                  : "bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
+              }`}
+              onClick={() => router.push("/predictions")}
+            >
+              {/* Indicator of active */}
+              {pathName === "/predictions" ? (
+                <div className="w-[1.8vh] h-[1.8vh] rounded-full bg-orange-500"></div>
+              ) : (
+                ""
+              )}
+              {/* Icon */}
+              <TrendingUp size={22} />
+              {/* Text */}
+              <div className="text-md">Predictions</div>
+            </div>
           </div>
           {/* Bottom Section With Logout */}
           <div className="w-full h-1/10 bg-transparent flex justify-center items-center mb-4">
@@ -204,7 +225,7 @@ const Sidebar = () => {
                         }}
                       ></div>
                     ) : (
-                      <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-400/80 via-cyan-400/80 to-emerald-400/80 text-center text-white">
+                      <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-400/80 via-cyan-400/80 to-emerald-400/80 flex justify-center items-center text-white font-semibold text-base shrink-0">
                         {userInfo?.name ? (
                           <>
                             {userInfo.name.split(" ")[0].charAt(0)}

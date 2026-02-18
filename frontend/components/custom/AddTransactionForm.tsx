@@ -6,6 +6,7 @@ interface AddTransactionFormProps {
   accounts: Account[];
   editMode: boolean;
   initialData: Transaction | null;
+  familyBudgetAmount?: number | null;
 }
 //React Hook Form
 import { useForm } from "react-hook-form";
@@ -132,6 +133,7 @@ const AddTransactionForm = ({
   accounts,
   editMode,
   initialData,
+  familyBudgetAmount,
 }: AddTransactionFormProps) => {
   //Router
   const router = useRouter();
@@ -364,7 +366,10 @@ const AddTransactionForm = ({
                   <SelectContent>
                     {accounts?.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
-                        {account.name} (NPR {Number(account.balance).toFixed(2)}
+                        {account.name} (NPR
+                        {familyBudgetAmount != null
+                          ? Number(familyBudgetAmount).toFixed(2)
+                          : Number(account.balance).toFixed(2)}
                         )
                       </SelectItem>
                     ))}

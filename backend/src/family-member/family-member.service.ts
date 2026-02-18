@@ -109,11 +109,9 @@ export class FamilyMemberService {
   async validate({
     token,
     newPassword,
-    email,
   }: {
     token: string;
     newPassword: string;
-    email: string;
   }) {
     try {
       //Check For The Token
@@ -124,17 +122,14 @@ export class FamilyMemberService {
       if (!newPassword || !newPassword.trim()) {
         throw new BadRequestException('Must provide a valid password');
       }
-      //Check For The Email
-      if (!email || !email.trim()) {
-        throw new BadRequestException('Must provide a valid email');
-      }
-      //Then, Check For The Token
+      //Then, Check For The Token and get family member with email
       const familyMemberExists = await this.prisma.familyMember.findFirst({
         where: { invitationToken: token },
       });
       if (!familyMemberExists) {
         throw new UnauthorizedException('No member found in the system');
       }
+
       if (!familyMemberExists.invitationExpiry) {
         throw new UnauthorizedException(
           'No invitation expiry set for this member.',
@@ -145,7 +140,7 @@ export class FamilyMemberService {
         }
       }
 
-      // Check if LoginCredentials already exist
+      // Check if LoginCredentials already exist (should exist from invitation creation)
       let loginCredentialsExists = await this.prisma.loginCredentials.findFirst(
         {
           where: {
@@ -155,57 +150,36 @@ export class FamilyMemberService {
         },
       );
 
-      // If not exists, create LoginCredentials
       if (!loginCredentialsExists) {
-        // Check if email is already used by another family member
-        const emailExists = await this.prisma.loginCredentials.findFirst({
-          where: {
-            email: email,
-            role: 'FAMILY_MEMBER',
-          },
-        });
-
-        if (emailExists) {
-          throw new BadRequestException(
-            'This email is already registered to another family member.',
-          );
-        }
-
-        // The token is valid, hash the password
-        const hashedPassword = await this.bcrypt.encrypt(newPassword);
-        if (!hashedPassword) {
-          throw new ServiceUnavailableException(
-            'The password encryption failed!',
-          );
-        }
-
-        // Create LoginCredentials
-        loginCredentialsExists = await this.prisma.loginCredentials.create({
-          data: {
-            email: email,
-            password: hashedPassword,
-            role: 'FAMILY_MEMBER',
-            familyMemberId: familyMemberExists.id,
-          },
-        });
-      } else {
-        // LoginCredentials exist, just update password
-        const hashedPassword = await this.bcrypt.encrypt(newPassword);
-        if (!hashedPassword) {
-          throw new ServiceUnavailableException(
-            'The password encryption failed!',
-          );
-        }
-
-        loginCredentialsExists = await this.prisma.loginCredentials.update({
-          where: {
-            id: loginCredentialsExists.id,
-          },
-          data: {
-            password: hashedPassword,
-          },
-        });
+        throw new BadRequestException(
+          'No login credentials found. Please contact support or request a new invitation link.',
+        );
       }
+
+      // Get email from existing LoginCredentials
+      const email = loginCredentialsExists.email;
+
+      if (!email || !email.trim()) {
+        throw new BadRequestException('Must provide a valid email');
+      }
+
+      // Hash the new password
+      const hashedPassword = await this.bcrypt.encrypt(newPassword);
+      if (!hashedPassword) {
+        throw new ServiceUnavailableException(
+          'The password encryption failed!',
+        );
+      }
+
+      // Update existing LoginCredentials with the new password
+      loginCredentialsExists = await this.prisma.loginCredentials.update({
+        where: {
+          id: loginCredentialsExists.id,
+        },
+        data: {
+          password: hashedPassword,
+        },
+      });
 
       if (!loginCredentialsExists) {
         throw new ServiceUnavailableException('Internal Server Error!');

@@ -35,12 +35,14 @@ interface AccountInfoCardProps {
   accountInfo: Account;
   userRole: "USER" | "FAMILY_MEMBER";
   familyBudget?: FamilyBudget | null;
+  remainingBudget?: number | null;
 }
 
 const AccountInfoCard = ({
   accountInfo,
   userRole,
   familyBudget,
+  remainingBudget,
 }: AccountInfoCardProps) => {
   const router = useRouter();
   const updateAccountDefaultMutation = makeAccountDefault();
@@ -237,13 +239,17 @@ const AccountInfoCard = ({
       <div className="w-full flex flex-col justify-start items-center gap-y-2">
         <div className="text-md md:text-lg lg:text-sm text-gray-400/80">
           {userRole === "FAMILY_MEMBER"
-            ? "Allocated Budget"
+            ? remainingBudget != null
+              ? "Remaining Budget"
+              : "Allocated Budget"
             : "Available Balance"}
         </div>
         <div className="text-2xl text-white font-semibold">
           NPR{" "}
           {userRole === "FAMILY_MEMBER"
-            ? familyBudget?.amount?.toFixed(2) || "0.00"
+            ? remainingBudget != null
+              ? remainingBudget.toFixed(2)
+              : familyBudget?.amount?.toFixed(2) || "0.00"
             : Number(accountInfo.balance).toFixed(2)}
         </div>
       </div>

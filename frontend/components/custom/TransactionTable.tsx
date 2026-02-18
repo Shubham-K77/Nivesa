@@ -60,10 +60,12 @@ const TransactionTable = ({
   transactions = [],
   type,
   accountId,
+  isFamilyMember = false,
 }: {
   transactions?: Transaction[];
   type?: string;
   accountId?: string;
+  isFamilyMember?: boolean;
 }) => {
   //Constants
   const router = useRouter();
@@ -323,8 +325,8 @@ const TransactionTable = ({
               ))}
             </SelectContent>
           </Select>
-          {/* Family Member Filter - Only for FAMILY account type */}
-          {type === "FAMILY" && familyMembers.length > 0 && (
+          {/* Family Member Filter - Only for FAMILY account type, hidden for family member role */}
+          {type === "FAMILY" && familyMembers.length > 0 && !isFamilyMember && (
             <Select
               value={familyMemberFilter}
               onValueChange={setFamilyMemberFilter}
@@ -451,8 +453,8 @@ const TransactionTable = ({
                     ))}
                 </div>
               </TableHead>
-              {/* Family Member - Only for FAMILY account type */}
-              {type === "FAMILY" && (
+              {/* Family Member - Only for FAMILY account type, hidden for family member role */}
+              {type === "FAMILY" && !isFamilyMember && (
                 <TableHead className="text-white min-w-[100px] sm:min-w-[120px] hidden lg:table-cell text-xs sm:text-sm">
                   Member
                 </TableHead>
@@ -473,7 +475,7 @@ const TransactionTable = ({
                 className="bg-transparent rounded-md hover:cursor-pointer hover:bg-gray-950/40"
               >
                 <TableCell
-                  colSpan={type === "FAMILY" ? 8 : 7}
+                  colSpan={type === "FAMILY" && !isFamilyMember ? 8 : 7}
                   className="text-center"
                 >
                   {" "}
@@ -530,8 +532,8 @@ const TransactionTable = ({
                       {transaction.amount}
                     </span>
                   </TableCell>
-                  {/* Family Member - Only for FAMILY account type */}
-                  {type === "FAMILY" && (
+                  {/* Family Member - Only for FAMILY account type, hidden for family member role */}
+                  {type === "FAMILY" && !isFamilyMember && (
                     <TableCell className="hidden lg:table-cell text-[10px] sm:text-xs md:text-sm">
                       {transaction.familyMember ? (
                         <div className="flex items-center gap-x-2">
@@ -637,7 +639,7 @@ const TransactionTable = ({
             <TableFooter className="bg-transparent rounded-bl-lg rounded-br-lg">
               <TableRow className="hover:bg-transparent border-t border-white/20">
                 <TableCell
-                  colSpan={type === "FAMILY" ? 8 : 7}
+                  colSpan={type === "FAMILY" && !isFamilyMember ? 8 : 7}
                   className="py-3 sm:py-4 bg-transparent"
                 >
                   <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">

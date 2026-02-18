@@ -492,6 +492,19 @@ export class AccountService {
               accountId: newAccount.id,
             },
           });
+
+          // Create LoginCredentials immediately if email is provided
+          if (memberData.email?.trim() && invitationToken) {
+            await txn.loginCredentials.create({
+              data: {
+                email: memberData.email,
+                password: 'PENDING_ACTIVATION', // Placeholder - will be replaced during activation
+                role: 'FAMILY_MEMBER',
+                familyMemberId: newMember.id,
+              },
+            });
+          }
+
           createdMembers.push(newMember);
         }
         return {

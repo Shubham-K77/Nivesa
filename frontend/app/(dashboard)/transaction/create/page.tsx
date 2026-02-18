@@ -35,8 +35,11 @@ const page = ({ searchParams }: PageProps) => {
   });
 
   const accountsInfo: Account[] = isFamilyMember
-    ? familyAccountsData?.data?.accounts
+    ? familyAccountsData?.data?.accountInfo
     : userAccountsData?.data?.accountInfo;
+  const familyBudgetAmount = isFamilyMember
+    ? (familyAccountsData?.data?.familyBudget?.amount ?? null)
+    : null;
   const editId = params?.edit;
   // Fetch transaction data if editing (enabled only when editId exists)
   const { data: transactionData } = useQuery({
@@ -81,6 +84,7 @@ const page = ({ searchParams }: PageProps) => {
           accounts={accountsInfo}
           editMode={!!editId}
           initialData={initialData}
+          familyBudgetAmount={familyBudgetAmount}
         />
       </div>
     </div>

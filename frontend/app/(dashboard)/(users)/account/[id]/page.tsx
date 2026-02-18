@@ -1,5 +1,5 @@
 "use client";
-import { use } from "react";
+import { use, useContext } from "react";
 import { useRouter } from "next/navigation";
 //Icons
 import { FaRegUser } from "react-icons/fa";
@@ -14,15 +14,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TransactionTable from "@/components/custom/TransactionTable";
 import { useQuery } from "@tanstack/react-query";
 import getSpecificAccount from "@/queries/account/getSpecificAccountInfo.queryOption";
+import getFamilyMemberAccountsQuery from "@/queries/account/getFamilyMemberAccounts.queryOption";
+import { UserContext } from "../../../layout";
 //Type
 import { Account } from "@/types/account.type";
 import AccountCharts from "@/components/custom/AccountCharts";
 const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const router = useRouter();
+  const currentUser = useContext(UserContext);
+  const isFamilyMember = currentUser?.role === "FAMILY_MEMBER";
   //useQuery
   const { data, isLoading } = useQuery(getSpecificAccount(id));
   const accountInfo: Account = data?.data?.accountInfo;
+  // Fetch family budget for family member role
+  const { data: familyData } = useQuery({
+    ...getFamilyMemberAccountsQuery(),
+    enabled: isFamilyMember,
+  });
+  const familyBudget = familyData?.data?.familyBudget;
+  // For family members, only show their own transactions
+  const visibleTransactions = isFamilyMember
+    ? accountInfo?.transactions?.filter(
+        (t: any) => t.familyMemberId === currentUser?.id,
+      )
+    : accountInfo?.transactions;
+  // Compute remaining budget (allocated - all completed expenses) for family member
+  const totalSpentByMember =
+    isFamilyMember && visibleTransactions
+      ? visibleTransactions
+          .filter((t: any) => t.type === "EXPENSE" && t.status === "COMPLETED")
+          .reduce((sum: number, t: any) => sum + Number(t.amount), 0)
+      : 0;
+  const remainingBudget = isFamilyMember
+    ? Math.max(0, Number(familyBudget?.amount ?? 0) - totalSpentByMember)
+    : null;
   return (
     <div className="w-full min-h-screen flex flex-col justify-start items-center gap-y-8 bg-transparent">
       {/* Top Banner */}
@@ -135,11 +161,14 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
             >
               {/* Title */}
               <div className="text-md text-lg lg:text-md text-white/80">
-                Available Balance
+                {isFamilyMember ? "Remaining Budget" : "Available Balance"}
               </div>
               {/* Availabel Amount */}
               <div className="text-white text-3xl md:text-4xl lg:text-3xl font-bold">
-                NPR {Number(accountInfo?.balance ?? 0).toFixed(3)}
+                NPR{" "}
+                {isFamilyMember
+                  ? (remainingBudget?.toFixed(3) ?? "0.000")
+                  : Number(accountInfo?.balance ?? 0).toFixed(3)}
               </div>
               {/* Legend For Income And Expense */}
               <div className="w-full flex justify-start items-center gap-x-6">
@@ -174,16 +203,17 @@ const AccountsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       )}
       {/* Transaction Chart */}
       {!isLoading ? (
-        <AccountCharts transactions={accountInfo?.transactions} />
+        <AccountCharts transactions={visibleTransactions} />
       ) : (
         <Skeleton className="w-full h-[55vh] bg-white/2 rounded-none" />
       )}
       {/* Transaction Table */}
       {!isLoading ? (
         <TransactionTable
-          transactions={accountInfo?.transactions}
+          transactions={visibleTransactions}
           type={accountInfo?.type}
           accountId={id}
+          isFamilyMember={isFamilyMember}
         />
       ) : (
         <Skeleton className="w-full h-[55vh] bg-white/2 rounded-none" />

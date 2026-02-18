@@ -22,6 +22,7 @@ import getDefaultAccountBudget from "@/queries/budget/getCurrentBudget.query";
 import BudgetProgress from "@/components/custom/BudgetProgress";
 import DashboardOverview from "@/components/custom/DashboardOverview";
 import getDashboardInfo from "@/queries/transaction/getDashboardData.query";
+import QuickStatsCards from "@/components/custom/QuickStatsCards";
 const Page = () => {
   const currentUser = useContext(UserContext);
   const router = useRouter();
@@ -60,6 +61,20 @@ const Page = () => {
   const transactionInfo = transactions?.data?.transactionsInfo as
     | Transaction[]
     | undefined;
+  // Compute remaining budget for family members (allocated - all completed expenses)
+  const familyTotalSpent =
+    currentUser?.role === "FAMILY_MEMBER" && transactionInfo
+      ? transactionInfo
+          .filter(
+            (t: Transaction) =>
+              t.type === "EXPENSE" && t.status === "COMPLETED",
+          )
+          .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
+      : 0;
+  const remainingBudget =
+    currentUser?.role === "FAMILY_MEMBER" && familyBudget != null
+      ? Math.max(0, Number(familyBudget.amount) - familyTotalSpent)
+      : null;
 
   return (
     <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
@@ -122,7 +137,30 @@ const Page = () => {
             backgroundRepeat: "no-repeat",
           }}
         ></div>
-      </div>
+      </div>{" "}
+      {/* Quick Stats Cards Section */}
+      {transactionsLoading === true ? (
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Skeleton className="w-full h-[20vh] rounded-2xl bg-white/5" />
+          <Skeleton className="w-full h-[20vh] rounded-2xl bg-white/5" />
+          <Skeleton className="w-full h-[20vh] rounded-2xl bg-white/5" />
+          <Skeleton className="w-full h-[20vh] rounded-2xl bg-white/5" />
+        </div>
+      ) : (
+        <QuickStatsCards
+          transactions={transactionInfo ?? []}
+          accounts={
+            currentUser?.role === "FAMILY_MEMBER"
+              ? (familyAccountInfo ?? [])
+              : (accountInfo ?? [])
+          }
+          familyBudget={
+            currentUser?.role === "FAMILY_MEMBER" && remainingBudget != null
+              ? remainingBudget
+              : undefined
+          }
+        />
+      )}{" "}
       {/* For Displaying Budget Overview*/}
       {currentUser?.role === "USER" ? (
         !isLoading ? (
@@ -187,6 +225,7 @@ const Page = () => {
                 accountInfo={{ ...account, userId: currentUser?.id || "" }}
                 userRole="FAMILY_MEMBER"
                 familyBudget={familyBudget}
+                remainingBudget={remainingBudget}
               />
             ))
           ) : (

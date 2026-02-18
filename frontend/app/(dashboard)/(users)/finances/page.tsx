@@ -51,6 +51,7 @@ const FinancePage = () => {
     enabled: currentUser?.role === "FAMILY_MEMBER" && !!currentUser?.id,
   });
   const familyAccountInfo: Account[] = familyData?.data?.accountInfo;
+  const familyBudget = familyData?.data?.familyBudget;
 
   // Determine which account info to use based on role
   const accountInfo =
@@ -259,6 +260,9 @@ const FinancePage = () => {
               key={account.id}
               accountInfo={account}
               userRole={currentUser?.role || "USER"}
+              familyBudget={
+                currentUser?.role === "FAMILY_MEMBER" ? familyBudget : undefined
+              }
             />
           ))
         ) : (

@@ -962,6 +962,14 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
     try {
       logger.log(`Calling Groq API for insights...`);
       console.log(`Stats:`, JSON.stringify(stats));
+      // No transactions — skip Groq entirely and return default insights
+      if (!stats.transactionCount || stats.transactionCount === 0) {
+        return [
+          'Your highest expense category this month might need attention.',
+          'Consider setting up a budget for better financial management.',
+          'Track your recurring expenses to identify potential savings.',
+        ];
+      }
       const groq = groqService.getGroq();
       const prompt = `
       Analyze this financial data and provide 3 concise, actionable insights.
@@ -987,10 +995,13 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
           },
         ],
         temperature: 0.2,
-        max_tokens: 100,
+        max_tokens: 300,
       });
       const text = result.choices[0]?.message?.content || '[]';
-      const cleaned = text.replace(/```(?:json)?\n?/g, '').trim();
+      // Strip markdown code fences, then try to extract a JSON array from anywhere in the text
+      const stripped = text.replace(/```(?:json)?\n?/g, '').trim();
+      const arrayMatch = stripped.match(/\[[\s\S]*\]/);
+      const cleaned = arrayMatch ? arrayMatch[0] : stripped;
       if (!cleaned || cleaned === '{}' || cleaned === '[]') {
         return [
           'Your highest expense category this month might need attention.',

@@ -51,6 +51,17 @@ const retrieveDashboardInfo = async () => {
     withCredentials: true,
   });
 };
+
+const predictSpending = async (transactions: any[]) => {
+  return await axios.post(
+    "http://localhost:3001/api/v1/transactions/predict",
+    { transactions },
+    {
+      withCredentials: true,
+    },
+  );
+};
+
 export {
   deleteBulkTransactions,
   createTransaction,
@@ -58,4 +69,5 @@ export {
   getSpecificTransactionInfo,
   updateSpecificTransaction,
   retrieveDashboardInfo,
+  predictSpending,
 };

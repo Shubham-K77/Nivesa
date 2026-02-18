@@ -6,8 +6,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { ArcjetModule } from 'src/arcjet/arcjet.module';
 import { ConfigModule } from '@nestjs/config';
 import { GroqModule } from 'src/groq/groq.module';
+import { HttpModule } from '@nestjs/axios';
 @Module({
-  imports: [PrismaModule, JwtModule, ArcjetModule, ConfigModule, GroqModule],
+  imports: [
+    PrismaModule,
+    JwtModule,
+    ArcjetModule,
+    ConfigModule,
+    GroqModule,
+    HttpModule,
+  ],
   controllers: [TransactionController],
   providers: [TransactionService],
 })

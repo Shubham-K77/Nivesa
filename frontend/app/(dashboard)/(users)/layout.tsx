@@ -12,7 +12,10 @@ export default function UserDashboardLayout({
   const currentUser = useContext(UserContext);
   useEffect(() => {
     const isUserLoggedIn = () => {
-      if (currentUser?.role !== "USER") {
+      if (
+        currentUser?.role !== "USER" &&
+        currentUser?.role !== "FAMILY_MEMBER"
+      ) {
         toast.error("You are not permitted to enter this page.");
         return router.push("/home");
       }
