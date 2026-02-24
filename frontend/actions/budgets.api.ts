@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 const getBudgetInfo = async (id: string) => {
-  return axios.get(`http://localhost:3001/api/v1/budget/${id}`, {
+  return axios.get(`${API_URL}/api/v1/budget/${id}`, {
     withCredentials: true,
   });
 };
@@ -13,7 +15,7 @@ const createBudget = async ({
   amount: number;
 }) => {
   return axios.patch(
-    `http://localhost:3001/api/v1/budget/${accountId}`,
+    `${API_URL}/api/v1/budget/${accountId}`,
     { amount },
     { withCredentials: true },
   );
@@ -21,21 +23,15 @@ const createBudget = async ({
 
 // Family Budget APIs
 const getFamilyMembersByAccount = async (accountId: string) => {
-  return axios.get(
-    `http://localhost:3001/api/v1/budget/family/members/${accountId}`,
-    {
-      withCredentials: true,
-    },
-  );
+  return axios.get(`${API_URL}/api/v1/budget/family/members/${accountId}`, {
+    withCredentials: true,
+  });
 };
 
 const getFamilyBudgetInfo = async (familyMemberId: string) => {
-  return axios.get(
-    `http://localhost:3001/api/v1/budget/family/${familyMemberId}`,
-    {
-      withCredentials: true,
-    },
-  );
+  return axios.get(`${API_URL}/api/v1/budget/family/${familyMemberId}`, {
+    withCredentials: true,
+  });
 };
 
 const createUpdateFamilyBudget = async ({
@@ -46,7 +42,7 @@ const createUpdateFamilyBudget = async ({
   amount: number;
 }) => {
   return axios.patch(
-    `http://localhost:3001/api/v1/budget/family/${familyMemberId}`,
+    `${API_URL}/api/v1/budget/family/${familyMemberId}`,
     { amount },
     { withCredentials: true },
   );

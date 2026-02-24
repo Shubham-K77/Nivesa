@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 type createAccountData = {
   name: string;
   type: "CURRENT" | "SAVINGS" | "FAMILY";
@@ -32,55 +34,48 @@ type isDefaultUpdateData = {
 };
 
 const createNewAccount = async (data: createAccountData) => {
-  const result = await axios.post(
-    "http://localhost:3001/api/v1/accounts",
-    data,
-    {
-      withCredentials: true,
-    },
-  );
+  const result = await axios.post(`${API_URL}/api/v1/accounts`, data, {
+    withCredentials: true,
+  });
   return result;
 };
 const getAccountsInfo = async () => {
-  return axios.get(`http://localhost:3001/api/v1/accounts`, {
+  return axios.get(`${API_URL}/api/v1/accounts`, {
     withCredentials: true,
   });
 };
 const getEveryAccountInfo = async () => {
-  return axios.get(`http://localhost:3001/api/v1/accounts/all`, {
+  return axios.get(`${API_URL}/api/v1/accounts/all`, {
     withCredentials: true,
   });
 };
 const getSpecificAccountInfo = async (accountId: string) => {
-  return axios.get(`http://localhost:3001/api/v1/accounts/${accountId}`, {
+  return axios.get(`${API_URL}/api/v1/accounts/${accountId}`, {
     withCredentials: true,
   });
 };
 const createNewFamilyAccount = async (data: createFamilyAccountData) => {
-  return axios.post("http://localhost:3001/api/v1/accounts/family", data, {
+  return axios.post(`${API_URL}/api/v1/accounts/family`, data, {
     withCredentials: true,
   });
 };
 const updateDefaultFlag = async (data: isDefaultUpdateData) => {
   return axios.patch(
-    `http://localhost:3001/api/v1/accounts/${data.accountId}`,
+    `${API_URL}/api/v1/accounts/${data.accountId}`,
     {},
     { withCredentials: true },
   );
 };
 const deleteAccount = async (accountId: string) => {
-  return axios.delete(`http://localhost:3001/api/v1/accounts/${accountId}`, {
+  return axios.delete(`${API_URL}/api/v1/accounts/${accountId}`, {
     withCredentials: true,
   });
 };
 
 const getFamilyMemberAccounts = async () => {
-  return axios.get(
-    `http://localhost:3001/api/v1/accounts/family-member/accounts`,
-    {
-      withCredentials: true,
-    },
-  );
+  return axios.get(`${API_URL}/api/v1/accounts/family-member/accounts`, {
+    withCredentials: true,
+  });
 };
 
 export {

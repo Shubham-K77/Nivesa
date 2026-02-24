@@ -1,4 +1,6 @@
 import axios from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 //Interface:
 interface signupCredentials {
   email: string;
@@ -28,7 +30,7 @@ const signup = async ({
   phoneNumber,
   password,
 }: signupCredentials) => {
-  return await axios.post("http://localhost:3001/api/v1/users", {
+  return await axios.post(`${API_URL}/api/v1/users`, {
     email,
     name,
     phoneNumber,
@@ -38,42 +40,35 @@ const signup = async ({
 //Login Into System
 const login = async ({ email, password }: loginCredentials) => {
   return await axios.post(
-    "http://localhost:3001/api/v1/users/login",
+    `${API_URL}/api/v1/users/login`,
     {
       email,
       password,
     },
-    { withCredentials: true }
+    { withCredentials: true },
   );
 };
 //Check The Email Validity
 const verify = async ({ otp, token }: otpCredential) => {
-  return await axios.post(
-    `http://localhost:3001/api/v1/users/verify/${token}`,
-    { otp }
-  );
+  return await axios.post(`${API_URL}/api/v1/users/verify/${token}`, { otp });
 };
 //Resend The Otp For Email Verify
 const resendOtp = async ({ token }: { token: string }) => {
-  return await axios.post(
-    `http://localhost:3001/api/v1/users/resend/${token}`,
-    {}
-  );
+  return await axios.post(`${API_URL}/api/v1/users/resend/${token}`, {});
 };
 //Reset Request Email Verify
 const resetEmail = async ({ email }: { email: string }) => {
-  return axios.post("http://localhost:3001/api/v1/users/reset", { email });
+  return axios.post(`${API_URL}/api/v1/users/reset`, { email });
 };
 //Reset Request Resend Otp
 const resetResendOtp = async ({ token }: { token: string }) => {
-  return axios.post(`http://localhost:3001/api/v1/users/reset/resend/${token}`);
+  return axios.post(`${API_URL}/api/v1/users/reset/resend/${token}`);
 };
 //Reset Request Verify Otp
 const resetVerifyOtp = async ({ otp, token }: otpCredential) => {
-  return await axios.post(
-    `http://localhost:3001/api/v1/users/reset/verify/${token}`,
-    { otp }
-  );
+  return await axios.post(`${API_URL}/api/v1/users/reset/verify/${token}`, {
+    otp,
+  });
 };
 //Final Resetting Password
 const resetPassword = async ({
@@ -83,22 +78,21 @@ const resetPassword = async ({
   token: string;
   newPassword: string;
 }) => {
-  return await axios.post(
-    `http://localhost:3001/api/v1/users/reset/password/${token}`,
-    { newPassword }
-  );
+  return await axios.post(`${API_URL}/api/v1/users/reset/password/${token}`, {
+    newPassword,
+  });
 };
 //Logout From System
 const logout = async () => {
   return axios.post(
-    "http://localhost:3001/api/v1/users/logout",
+    `${API_URL}/api/v1/users/logout`,
     {},
-    { withCredentials: true }
+    { withCredentials: true },
   );
 };
 //Get Request To Acess The Current Logged In User:
 const getCurrentUser = async () => {
-  return axios.get("http://localhost:3001/api/v1/users/active", {
+  return axios.get(`${API_URL}/api/v1/users/active`, {
     withCredentials: true,
   });
 };
@@ -124,7 +118,7 @@ const updateProfile = async (userData: updateProfile) => {
     requestBody.password = userData.password;
     requestBody.newPassword = userData.newPassword;
   }
-  return await axios.put("http://localhost:3001/api/v1/users", requestBody, {
+  return await axios.put(`${API_URL}/api/v1/users`, requestBody, {
     withCredentials: true,
   });
 };

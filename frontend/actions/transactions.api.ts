@@ -1,60 +1,55 @@
 import { Transaction, UpdateTransaction } from "@/types/transaction.type";
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 type TransactionsArray = {
   transactions: Array<string>;
 };
 const deleteBulkTransactions = async (data: TransactionsArray) => {
-  return await axios.post(
-    "http://localhost:3001/api/v1/transactions/delete",
-    data,
-    { withCredentials: true },
-  );
+  return await axios.post(`${API_URL}/api/v1/transactions/delete`, data, {
+    withCredentials: true,
+  });
 };
 const createTransaction = async (data: Transaction) => {
-  return axios.post("http://localhost:3001/api/v1/transactions", data, {
+  return axios.post(`${API_URL}/api/v1/transactions`, data, {
     withCredentials: true,
   });
 };
 const scanRecepitImage = async (file: File) => {
   const formData = new FormData();
   formData.append("receipt", file);
-  return axios.post(
-    "http://localhost:3001/api/v1/transactions/scan",
-    formData,
-    {
-      withCredentials: true,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+  return axios.post(`${API_URL}/api/v1/transactions/scan`, formData, {
+    withCredentials: true,
+    headers: {
+      "Content-Type": "multipart/form-data",
     },
-  );
+  });
 };
 const getSpecificTransactionInfo = async (transactionId: string) => {
-  return axios.get(
-    `http://localhost:3001/api/v1/transactions/${transactionId}`,
-    { withCredentials: true },
-  );
+  return axios.get(`${API_URL}/api/v1/transactions/${transactionId}`, {
+    withCredentials: true,
+  });
 };
 const updateSpecificTransaction = async (
   transactionId: string,
   transactionData: UpdateTransaction,
 ) => {
   return axios.patch(
-    `http://localhost:3001/api/v1/transactions/${transactionId}`,
+    `${API_URL}/api/v1/transactions/${transactionId}`,
     transactionData,
     { withCredentials: true },
   );
 };
 const retrieveDashboardInfo = async () => {
-  return axios.get("http://localhost:3001/api/v1/transactions/dashboard", {
+  return axios.get(`${API_URL}/api/v1/transactions/dashboard`, {
     withCredentials: true,
   });
 };
 
 const predictSpending = async (transactions: any[]) => {
   return await axios.post(
-    "http://localhost:3001/api/v1/transactions/predict",
+    `${API_URL}/api/v1/transactions/predict`,
     { transactions },
     {
       withCredentials: true,
