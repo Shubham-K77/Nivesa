@@ -66,10 +66,11 @@ export class UserLoginGuard implements CanActivate {
         expiresIn: '15m',
       });
       // Set new access token cookie
+      const isProduction = process.env.NODE_ENV === 'production';
       await response.cookie('access_token', newAccessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000, //15 mins
       });
       // Use refresh token payload since we just generated access token from it

@@ -129,18 +129,19 @@ export class UserController {
       email: credentials.email,
       password: credentials.password,
     });
+    const isProduction = process.env.NODE_ENV === 'production';
     //Access_Token
     res.cookie('access_token', result.access_token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, //15 Mins
     });
     //Refresh_Token
     res.cookie('refresh_token', result.refresh_token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 3 * 24 * 60 * 60 * 1000, //3 Days
     });
     //Return The Response:
@@ -154,13 +155,14 @@ export class UserController {
   logout(@Res({ passthrough: true }) res: Response) {
     try {
       //Remove Both Of The Cookies
+      const isProduction = process.env.NODE_ENV === 'production';
       res.cookie(
         'access_token',
         {},
         {
           httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
           maxAge: 0,
         },
       );
@@ -169,8 +171,8 @@ export class UserController {
         {},
         {
           httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
           maxAge: 0,
         },
       );
