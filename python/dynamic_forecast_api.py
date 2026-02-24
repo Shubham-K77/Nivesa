@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
+import os
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -10,9 +11,13 @@ from statsforecast.models import AutoARIMA
 import uvicorn
 app = FastAPI(title="Nivēśa Dynamic Forecast API", version="2.0.0")
 # CORS configuration
+# ALLOWED_ORIGINS env var: comma-separated list of allowed origins
+# e.g. "https://your-app.vercel.app,https://your-backend.onrender.com"
+_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
+allowed_origins = [o.strip() for o in _raw.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
