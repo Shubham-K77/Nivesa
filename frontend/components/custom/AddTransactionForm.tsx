@@ -2,6 +2,7 @@
 //Type
 import { Account } from "@/types/account.type";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { formatNumber } from "@/lib/currency";
 interface AddTransactionFormProps {
   accounts: Account[];
   editMode: boolean;
@@ -311,7 +312,7 @@ const AddTransactionForm = ({
                 onValueChange={(value) => setValue("type", value as any)}
                 value={type}
               >
-                <SelectTrigger className="w-[95%] text-white">
+                <SelectTrigger className="w-full h-[6vh] min-h-12 text-white">
                   <SelectValue
                     placeholder="Select Type"
                     className="text-white"
@@ -328,7 +329,7 @@ const AddTransactionForm = ({
               )}
             </div>
             {/* Transaction Amount & Transaction Account */}
-            <div className="w-full grid grid-cols-2 gap-x-6">
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Transaction Amount Component */}
               <div className="w-full flex flex-col justify-start items-start gap-y-2">
                 <label className="text-white text-sm font-medium">
@@ -338,7 +339,7 @@ const AddTransactionForm = ({
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  className="text-white"
+                  className="text-white w-full h-[6vh] min-h-12"
                   {...register("amount", { valueAsNumber: true })}
                 />
                 {/* Error Message */}
@@ -357,7 +358,7 @@ const AddTransactionForm = ({
                   onValueChange={(value) => setValue("accountId", value)}
                   defaultValue={getValues("accountId")}
                 >
-                  <SelectTrigger className="w-[95%] text-white">
+                  <SelectTrigger className="w-full h-[6vh] min-h-12 text-white">
                     <SelectValue
                       placeholder="Select Account"
                       className="text-white"
@@ -366,10 +367,10 @@ const AddTransactionForm = ({
                   <SelectContent>
                     {accounts?.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
-                        {account.name} (NPR
+                        {account.name} (NPR{" "}
                         {familyBudgetAmount != null
-                          ? Number(familyBudgetAmount).toFixed(2)
-                          : Number(account.balance).toFixed(2)}
+                          ? formatNumber(familyBudgetAmount)
+                          : formatNumber(account.balance)}
                         )
                       </SelectItem>
                     ))}
@@ -411,7 +412,7 @@ const AddTransactionForm = ({
                 onValueChange={(value) => setValue("category", value as any)}
                 value={category || ""}
               >
-                <SelectTrigger className="w-[95%] text-white">
+                <SelectTrigger className="w-full h-[6vh] min-h-12 text-white">
                   <SelectValue
                     placeholder="Select Category"
                     className="text-white"
@@ -444,7 +445,7 @@ const AddTransactionForm = ({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full pl-3 text-left font-normal"
+                    className="w-full h-[6vh] min-h-12 pl-3 text-left font-normal"
                   >
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                     <CalendarIcon className="w-4 h-4 ml-auto opacity-50" />
@@ -477,7 +478,7 @@ const AddTransactionForm = ({
               <Input
                 type="text"
                 placeholder="Enter description"
-                className="text-white"
+                className="text-white w-full h-[6vh] min-h-12"
                 {...register("description")}
               />
               {/* Error Message */}
@@ -527,7 +528,7 @@ const AddTransactionForm = ({
                   }
                   defaultValue={getValues("recurringInterval")}
                 >
-                  <SelectTrigger className="w-[95%] text-white">
+                  <SelectTrigger className="w-full h-[6vh] min-h-12 text-white">
                     <SelectValue
                       placeholder="Select Type"
                       className="text-white"

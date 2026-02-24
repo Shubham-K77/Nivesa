@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useMemo } from "react";
+import { formatCurrency } from "@/lib/currency";
 import { endOfDay, format, startOfDay, subDays } from "date-fns";
 import { BsGraphUpArrow, BsGraphDownArrow } from "react-icons/bs";
 
@@ -144,7 +145,7 @@ const AccountCharts = ({
             <BsGraphUpArrow className="w-3 h-3 sm:w-4 sm:h-4" /> Total Income
           </p>
           <p className="text-base sm:text-lg font-bold text-emerald-400 mt-1">
-            NPR {totals.income.toFixed(2)}
+            {formatCurrency(totals.income)}
           </p>
         </div>
         {/* Expense Info */}
@@ -153,7 +154,7 @@ const AccountCharts = ({
             <BsGraphDownArrow className="w-3 h-3 sm:w-4 sm:h-4" /> Total Expense
           </p>
           <p className="text-base sm:text-lg font-bold text-rose-400 mt-1">
-            NPR {totals.expense.toFixed(2)}
+            {formatCurrency(totals.expense)}
           </p>
         </div>
         {/* Profit Info */}
@@ -185,7 +186,7 @@ const AccountCharts = ({
                 : "text-rose-400"
             }`}
           >
-            NPR {(totals.income - totals.expense).toFixed(2)}
+            {formatCurrency(totals.income - totals.expense)}
           </p>
         </div>
       </div>
@@ -215,7 +216,7 @@ const AccountCharts = ({
               formatter={(value: any, name: string | undefined) => {
                 const numValue = Number(value);
                 if (numValue === 0) return null;
-                return [`NPR ${numValue.toFixed(2)}`, name || ""];
+                return [formatCurrency(numValue), name || ""];
               }}
             />
             <Legend />

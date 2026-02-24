@@ -19,6 +19,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { formatCurrency } from "@/lib/currency";
 type DashboardOverviewProps = {
   accounts: Account[];
   transactions: Transaction[];
@@ -138,7 +139,7 @@ const DashboardOverview = ({
                       <ArrowUpRight className="mr-0.5 sm:mr-1 h-3 w-3 sm:h-4 sm:w-4" />
                     )}
                     <span className="text-xs sm:text-sm">
-                      NPR. {Number(txn.amount).toFixed(2)}
+                      {formatCurrency(Number(txn.amount))}
                     </span>
                   </div>
                 </div>
@@ -210,7 +211,7 @@ const DashboardOverview = ({
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => `NPR ${Number(value).toFixed(2)}`}
+                  formatter={(value) => formatCurrency(Number(value))}
                   contentStyle={{
                     borderRadius: "10px",
                     border: "1px solid rgba(255, 255, 255, 0.1)",

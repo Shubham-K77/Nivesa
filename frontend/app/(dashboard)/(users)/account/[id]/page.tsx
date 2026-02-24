@@ -11,6 +11,7 @@ import { IoIosTrendingDown } from "react-icons/io";
 import { FaArrowLeft } from "react-icons/fa6";
 import { GrTransaction } from "react-icons/gr";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AccountCardSkeleton } from "@/components/custom/skeletons";
 import TransactionTable from "@/components/custom/TransactionTable";
 import { useQuery } from "@tanstack/react-query";
 import getSpecificAccount from "@/queries/account/getSpecificAccountInfo.queryOption";

@@ -3,6 +3,7 @@
 import { useContext, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { UserContext } from "../layout";
+import { PredictionChartSkeleton } from "@/components/custom/skeletons";
 import { toast } from "sonner";
 import {
   Select,
@@ -167,8 +168,8 @@ const PredictionsPage = () => {
   };
   if (isLoading) {
     return (
-      <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-start items-center gap-y-8 mt-12 lg:mt-4">
-        <Skeleton className="w-full h-[600px] bg-white/5" />
+      <div className="w-[95%] lg:w-[75%] min-h-screen bg-transparent flex flex-col justify-center items-center gap-y-8">
+        <PredictionChartSkeleton />
       </div>
     );
   }
@@ -258,12 +259,6 @@ const PredictionsPage = () => {
                   Need at least 14 days of expense data for forecasting
                 </span>
               )}
-              {getExpenseDays(selectedAccount) >= 14 &&
-                getExpenseDays(selectedAccount) < 21 && (
-                  <span className="text-blue-400 block mt-1">
-                    21+ days needed for accuracy (MAE) calculation
-                  </span>
-                )}
             </div>
             <Button
               onClick={handlePredict}

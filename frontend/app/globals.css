@@ -72,8 +72,8 @@
   /* Warm beige borders - subtle but visible */
   --border: oklch(0.9 0.012 75);
   --input: oklch(0.92 0.012 75);
-  /* Golden ring focus state */
-  --ring: oklch(0.65 0.16 75);
+  /* Neutral white ring focus state */
+  --ring: oklch(0.95 0.002 75);
   /* Warm harmonious chart colors */
   --chart-1: oklch(0.68 0.18 75); /* Golden amber */
   --chart-2: oklch(0.65 0.15 35); /* Warm terracotta */
@@ -88,7 +88,7 @@
   --sidebar-accent: oklch(0.96 0.012 75);
   --sidebar-accent-foreground: oklch(0.28 0.018 65);
   --sidebar-border: oklch(0.9 0.012 75);
-  --sidebar-ring: oklch(0.65 0.16 75);
+  --sidebar-ring: oklch(0.95 0.002 75);
   /* Warm golden gradient colors */
   --color1: 218, 165, 32; /* Goldenrod */
   --color2: 245, 158, 11; /* Amber */
@@ -126,8 +126,8 @@
   /* Minimal borders - Notion style */
   --border: oklch(0.92 0.004 85 / 0.08);
   --input: oklch(0.92 0.004 85 / 0.12);
-  /* Golden focus ring */
-  --ring: oklch(0.75 0.16 75);
+  /* Subtle white focus ring */
+  --ring: oklch(0.92 0.004 85 / 0.2);
   /* Vibrant chart colors for clarity */
   --chart-1: oklch(0.75 0.16 75); /* Golden */
   --chart-2: oklch(0.65 0.25 27); /* Red */
@@ -142,7 +142,7 @@
   --sidebar-accent: oklch(0.18 0.01 60);
   --sidebar-accent-foreground: oklch(0.92 0.004 85);
   --sidebar-border: oklch(0.92 0.004 85 / 0.08);
-  --sidebar-ring: oklch(0.75 0.16 75);
+  --sidebar-ring: oklch(0.92 0.004 85 / 0.2);
 }
 
 @layer base {
@@ -183,10 +183,9 @@
     background-color: oklch(from var(--card) calc(l + 0.03) c h);
   }
 
-  /* Notion-like focus states */
+  /* Notion-like focus states - minimal */
   *:focus-visible {
-    outline: 2px solid oklch(0.75 0.16 75 / 0.5);
-    outline-offset: 2px;
+    outline: none;
   }
 
   /* Smooth scrollbars */

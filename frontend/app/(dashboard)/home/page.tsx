@@ -11,8 +11,13 @@ import { toast } from "sonner";
 //My Components:
 import AccountInfoCard from "@/components/custom/AccountInfoCard";
 import { UserContext } from "../layout";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AccountCardSkeleton,
+  BudgetProgressSkeleton,
+  DashboardOverviewSkeleton,
+} from "@/components/custom/skeletons";
 //Type Definition:
 import { Account } from "@/types/account.type";
 import { Transaction } from "@/types/transaction.type";
@@ -137,7 +142,7 @@ const Page = () => {
             backgroundRepeat: "no-repeat",
           }}
         ></div>
-      </div>{" "}
+      </div>
       {/* Quick Stats Cards Section */}
       {transactionsLoading === true ? (
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -173,18 +178,14 @@ const Page = () => {
             onBudgetUpdate={() => refetchBudget()}
           />
         ) : (
-          <>
-            <Skeleton className="w-full h-[25vh] bg-white/2" />
-          </>
+          <BudgetProgressSkeleton />
         )
       ) : (
         <></>
       )}
       {/* For Displaying The Pie-Chart And Overview */}
       {transactionsLoading === true ? (
-        <>
-          <Skeleton className="w-full h-[50vh] rounded-xl bg-white/5" />
-        </>
+        <DashboardOverviewSkeleton />
       ) : (
         <>
           <DashboardOverview

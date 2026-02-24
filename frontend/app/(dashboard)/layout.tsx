@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
 import { toast } from "sonner";
-import { ImSpinner8 } from "react-icons/im";
 import Sidebar from "@/components/custom/Sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const UserContext = createContext<{
   id: string;
@@ -28,7 +28,7 @@ export default function DashboardLayout({
     if (isError) {
       console.error(error);
       toast.error(
-        (error as any)?.response?.data?.message || "Authentication failed"
+        (error as any)?.response?.data?.message || "Authentication failed",
       );
       router.push("/");
     }
@@ -36,10 +36,18 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="w-full min-h-screen flex flex-col justify-center items-center gap-y-4">
-        <ImSpinner8 className="text-white font-bold animate-spin" size={70} />
-        <div className="text-white font-semibold text-xl">
-          Signing you in, just a moment…
+      <div className="w-full min-h-screen flex justify-center items-start bg-black pt-20">
+        <div className="w-[95%] lg:w-[75%] flex flex-col gap-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center gap-x-4">
+            <Skeleton className="h-12 w-12 rounded-lg bg-white/10" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-6 w-48 bg-white/10" />
+              <Skeleton className="h-4 w-32 bg-white/10" />
+            </div>
+          </div>
+          {/* Content Skeleton */}
+          <Skeleton className="h-[60vh] w-full rounded-xl bg-white/5" />
         </div>
       </div>
     );

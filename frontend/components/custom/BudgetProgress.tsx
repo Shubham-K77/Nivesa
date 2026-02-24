@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, Pencil, X } from "lucide-react";
@@ -10,7 +11,7 @@ import getFamilyMembersByAccountQuery from "@/queries/budget/getFamilyMembers.qu
 import getFamilyBudgetQuery from "@/queries/budget/getFamilyBudget.query";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { useQuery } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/currency";
 import {
   Select,
   SelectContent,
@@ -213,7 +214,7 @@ const BudgetProgress = ({
                 <SelectItem
                   key={member.id}
                   value={member.id}
-                  className="text-white hover:bg-white/10 focus:bg-white/10"
+                  className="text-white hover:bg-emerald-500/20 hover:text-white focus:bg-emerald-500/20 focus:text-white"
                 >
                   {member.name}
                   {member.isActive ? " ✓" : " (Pending)"}
@@ -285,20 +286,19 @@ const BudgetProgress = ({
                       </div>
                       <div className="flex items-baseline gap-x-3">
                         <span className="text-2xl font-bold text-white">
-                          NPR {currentExpensesAmount.toFixed(2)}
+                          {formatCurrency(currentExpensesAmount)}
                         </span>
                         <span className="text-sm text-gray-400">of</span>
                         <span className="text-xl font-semibold text-green-400">
-                          NPR {currentBudgetAmount.toFixed(2)}
+                          {formatCurrency(currentBudgetAmount)}
                         </span>
                       </div>
                       <span className="text-xs text-gray-500">
                         Remaining:{" "}
                         <span className={getStatusColor()}>
-                          NPR{" "}
-                          {(
-                            currentBudgetAmount - currentExpensesAmount
-                          ).toFixed(2)}
+                          {formatCurrency(
+                            currentBudgetAmount - currentExpensesAmount,
+                          )}
                         </span>
                       </span>
                     </div>

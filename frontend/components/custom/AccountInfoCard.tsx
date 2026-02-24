@@ -2,6 +2,7 @@
 //Type:
 import { Account } from "@/types/account.type";
 import { FamilyBudget } from "@/types/budget.type";
+import { formatNumber } from "@/lib/currency";
 //Hooks:
 import { useRouter } from "next/navigation";
 //Icons:
@@ -248,9 +249,9 @@ const AccountInfoCard = ({
           NPR{" "}
           {userRole === "FAMILY_MEMBER"
             ? remainingBudget != null
-              ? remainingBudget.toFixed(2)
-              : familyBudget?.amount?.toFixed(2) || "0.00"
-            : Number(accountInfo.balance).toFixed(2)}
+              ? formatNumber(remainingBudget)
+              : formatNumber(familyBudget?.amount || 0)
+            : formatNumber(accountInfo.balance)}
         </div>
       </div>
       {/* Created At & Members Display */}

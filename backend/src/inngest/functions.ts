@@ -977,14 +977,15 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
       Keep it friendly and conversational.
 
       Financial Data for ${monthName}:
-        - Total Income: NPR${stats.totalIncome}
-        - Total Expenses: NPR${stats.totalExpenses}
-        - Net Income: NPR${stats.totalIncome - stats.totalExpenses}
+        - Total Income: NPR ${stats.totalIncome}
+        - Total Expenses: NPR ${stats.totalExpenses}
+        - Net Income: NPR ${stats.totalIncome - stats.totalExpenses}
         - Expense Categories: ${Object.entries(stats.byCategory)
-          .map(([category, amount]) => `${category}: $${amount as number}`)
+          .map(([category, amount]) => `${category}: NPR ${amount as number}`)
           .join(', ')}
 
       Format the response as a JSON array of strings, like this: ["insight 1", "insight 2", "insight 3"]
+      Use NPR (Nepalese Rupees) as the currency symbol, not $ or USD.
       `;
       const result = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
@@ -1012,13 +1013,17 @@ export const getInngestFunctions = (deps: InngestDependencies) => {
       //Converting The String Response To JSON
       try {
         const data = JSON.parse(cleaned);
-        return Array.isArray(data)
-          ? data
-          : [
-              'Your highest expense category this month might need attention.',
-              'Consider setting up a budget for better financial management.',
-              'Track your recurring expenses to identify potential savings.',
-            ];
+        if (Array.isArray(data)) {
+          // Replace any $ symbols with NPR in the insights
+          return data.map((insight: string) =>
+            insight.replace(/\$([0-9,]+\.?[0-9]*)/g, 'NPR $1'),
+          );
+        }
+        return [
+          'Your highest expense category this month might need attention.',
+          'Consider setting up a budget for better financial management.',
+          'Track your recurring expenses to identify potential savings.',
+        ];
       } catch (parseError) {
         logger.error('Error parsing JSON response:', parseError);
         console.error('Error parsing JSON response:', parseError);

@@ -100,12 +100,14 @@ const DrawerComponent = ({ children }: any) => {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent className="bg-gray-950 max-h-[90vh] pointer-events-auto">
-        <DrawerHeader>
-          <DrawerTitle className="text-white">Create New Account</DrawerTitle>
+      <DrawerContent className="bg-black border-t border-white/5 max-h-[90vh] pointer-events-auto">
+        <DrawerHeader className="border-b border-white/5 pb-4">
+          <DrawerTitle className="text-white font-semibold text-lg">
+            Create New Account
+          </DrawerTitle>
         </DrawerHeader>
         <div
-          className="overflow-y-auto max-h-[70vh] px-2 pointer-events-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-gray-600"
+          className="overflow-y-auto max-h-[70vh] px-2 pointer-events-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/20"
           onWheel={(e) => e.stopPropagation()}
         >
           <Form {...form}>
@@ -118,8 +120,8 @@ const DrawerComponent = ({ children }: any) => {
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
-                    <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                  <FormItem className="w-full flex flex-col space-y-2 justify-start items-start mt-2">
+                    <FormLabel className="font-medium text-sm text-white/70">
                       Name of Account
                     </FormLabel>
                     <FormControl>
@@ -127,7 +129,7 @@ const DrawerComponent = ({ children }: any) => {
                         placeholder="e.g., Salary Account"
                         {...field}
                         type="text"
-                        className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                        className="bg-[#0a0a0a] p-2 rounded-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-0 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-normal text-white placeholder:text-white/50"
                       />
                     </FormControl>
                     <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
@@ -140,7 +142,7 @@ const DrawerComponent = ({ children }: any) => {
                 name="type"
                 render={({ field }) => (
                   <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
-                    <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                    <FormLabel className="font-medium text-sm text-white/70">
                       Account Type
                     </FormLabel>
                     <FormControl>
@@ -148,13 +150,28 @@ const DrawerComponent = ({ children }: any) => {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="bg-gray-700/40 p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] min-h-[7vh] flex justify-start items-center font-semibold text-white">
+                        <SelectTrigger className="bg-[#0a0a0a] p-2 rounded-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-0 w-full h-[7vh] min-h-[7vh] flex justify-between items-center font-normal text-white">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="CURRENT">Current</SelectItem>
-                          <SelectItem value="SAVINGS">Savings</SelectItem>
-                          <SelectItem value="FAMILY">Family</SelectItem>
+                        <SelectContent className="bg-[#0a0a0a] border-0">
+                          <SelectItem
+                            value="CURRENT"
+                            className="text-white hover:bg-emerald-500/20 hover:text-white focus:bg-emerald-500/20 focus:text-white"
+                          >
+                            Current
+                          </SelectItem>
+                          <SelectItem
+                            value="SAVINGS"
+                            className="text-white hover:bg-emerald-500/20 hover:text-white focus:bg-emerald-500/20 focus:text-white"
+                          >
+                            Savings
+                          </SelectItem>
+                          <SelectItem
+                            value="FAMILY"
+                            className="text-white hover:bg-emerald-500/20 hover:text-white focus:bg-emerald-500/20 focus:text-white"
+                          >
+                            Family
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -177,7 +194,7 @@ const DrawerComponent = ({ children }: any) => {
                 name="balance"
                 render={({ field }) => (
                   <FormItem className="w-full flex flex-col space-y-2 justify-start items-start">
-                    <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                    <FormLabel className="font-medium text-sm text-white/70">
                       Initial Balance
                     </FormLabel>
                     <FormControl>
@@ -187,7 +204,7 @@ const DrawerComponent = ({ children }: any) => {
                         type="number"
                         step={"0.01"}
                         onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                        className="bg-gray-700/40 backdrop-blur-md p-2 rounded-lg border border-gray-700/80 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-semibold text-white"
+                        className="bg-[#0a0a0a] p-2 rounded-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-0 w-full h-[7vh] md:h-[5.75vh] lg:h-[7vh] flex justify-center items-center font-normal text-white placeholder:text-white/50"
                       />
                     </FormControl>
                     <FormMessage className="mt-2 w-full text-left text-red-500 text-xs md:text-sm lg:text-xs line-clamp-2" />
@@ -199,32 +216,33 @@ const DrawerComponent = ({ children }: any) => {
                 control={form.control}
                 name="isDefault"
                 render={({ field }) => (
-                  <FormItem className="w-full flex justify-around items-center">
-                    <div className="w-full flex flex-col space-y-2 justify-start items-start p-2">
-                      <FormLabel className="font-normal text-sm md:text-lg lg:text-sm text-white">
+                  <FormItem className="w-full flex justify-between items-center bg-[#0a0a0a] rounded-lg p-4 border-0">
+                    <div className="flex flex-col space-y-1 justify-start items-start">
+                      <FormLabel className="font-medium text-sm text-white">
                         Set as Default
                       </FormLabel>
-                      <div className="font-normal text-sm md:text-lg lg:text-sm text-white">
-                        The Account will be selected by default for transactions
+                      <div className="font-normal text-xs text-white/50">
+                        This account will be selected by default for
+                        transactions
                       </div>
                     </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="data-[state=unchecked]:bg-gray-700 data-[state=checked]:bg-amber-400"
+                        className="data-[state=unchecked]:bg-white/10 data-[state=checked]:bg-emerald-500"
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
               {/* CTA Buttons For Submit And Cancel */}
-              <div className="w-full flex justify-start items-center space-x-4">
+              <div className="w-full flex justify-end items-center gap-3 pt-2">
                 {/* Cancel Button */}
                 <DrawerClose asChild>
                   <Button
                     type="button"
-                    className="w-[45%] lg:w-[12%] h-[6.5vh] bg-white flex justify-center items-center text-black font-semibold text-md md:text-lg lg:text-sm hover:cursor-pointer rounded-md hover:bg-gray-200"
+                    className="px-6 h-10 bg-[#0a0a0a] hover:bg-[#1a1a1a] border-0 flex justify-center items-center text-white/70 hover:text-white font-medium text-sm hover:cursor-pointer rounded-lg transition-colors"
                   >
                     Cancel
                   </Button>
@@ -232,12 +250,12 @@ const DrawerComponent = ({ children }: any) => {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-[45%] lg:w-[12%] h-[7.5vh] md:h-[6vh] lg:h-[7.5vh] bg-linear-to-br from-yellow-400/80 to-amber-800/80 border border-amber-300/40 flex justify-center items-center text-white font-semibold text-md md:text-lg lg:text-sm hover:cursor-pointer"
+                  className="px-6 h-10 bg-amber-500 hover:bg-amber-600 flex justify-center items-center text-white font-semibold text-sm hover:cursor-pointer rounded-lg transition-colors"
                 >
                   {createAccountMutation.isPending ? (
-                    <ImSpinner8 className="text-white animate-spin" size={25} />
+                    <ImSpinner8 className="text-white animate-spin" size={18} />
                   ) : (
-                    "Create"
+                    "Create Account"
                   )}
                 </Button>
               </div>

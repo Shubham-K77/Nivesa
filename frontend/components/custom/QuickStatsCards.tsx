@@ -3,6 +3,7 @@ import { Transaction } from "@/types/transaction.type";
 import { Account } from "@/types/account.type";
 import { TrendingUp, TrendingDown, Wallet, Calendar } from "lucide-react";
 import { startOfDay, startOfWeek, startOfMonth, isAfter } from "date-fns";
+import { formatCurrency } from "@/lib/currency";
 
 interface QuickStatsCardsProps {
   transactions: Transaction[];
@@ -145,7 +146,7 @@ const QuickStatsCards = ({
                 {stat.title}
               </p>
               <p className="text-2xl md:text-3xl font-bold text-white">
-                NPR {stat.value.toFixed(2)}
+                {formatCurrency(stat.value)}
               </p>
             </div>
             {/* Decorative gradient overlay */}

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileFormSkeleton } from "@/components/custom/skeletons";
 import { userInfo, UserData } from "@/types/user.type";
 import { useQuery } from "@tanstack/react-query";
 import getActiveUser from "@/queries/user/getCurrentUser.queryOption";
@@ -78,7 +79,7 @@ const ProfilePage = () => {
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
       if (!passwordRegex.test(newPassword)) {
         return toast.error(
-          "Please ensure your password meets all the requirements listed."
+          "Please ensure your password meets all the requirements listed.",
         );
       }
     }
@@ -93,7 +94,7 @@ const ProfilePage = () => {
     updateUserMutation.mutate(userData, {
       onSuccess: (response) => {
         toast.success(
-          response?.data?.message || "Profile updated successfully"
+          response?.data?.message || "Profile updated successfully",
         );
         setProfilePic(null);
         setPreviewUrl(null);
@@ -104,7 +105,7 @@ const ProfilePage = () => {
       onError: (error: any) => {
         console.error(error);
         toast.error(
-          error?.response?.data?.message || "Failed to update profile"
+          error?.response?.data?.message || "Failed to update profile",
         );
       },
     });
@@ -300,9 +301,7 @@ const ProfilePage = () => {
           </div>
         </div>
       ) : (
-        <>
-          <Skeleton className="w-full h-[40vh] rounded-lg bg-white/2 border border-white/10" />
-        </>
+        <ProfileFormSkeleton />
       )}
       {/* Password Change Edit */}
       {isLoading !== true ? (
@@ -404,19 +403,17 @@ const ProfilePage = () => {
           </div>
         </div>
       ) : (
-        <>
-          <Skeleton className="w-full h-[40vh] rounded-lg bg-white/2 border border-white/10" />
-        </>
+        <ProfileFormSkeleton />
       )}
       {/* For Save Changes CTA */}
       {Boolean(
         profilePic ||
-          previewUrl ||
-          (name && name !== userInfo?.name) ||
-          (phoneNumber && phoneNumber !== userInfo?.phoneNumber) ||
-          currentPassword ||
-          newPassword ||
-          confirmNewPassowrd
+        previewUrl ||
+        (name && name !== userInfo?.name) ||
+        (phoneNumber && phoneNumber !== userInfo?.phoneNumber) ||
+        currentPassword ||
+        newPassword ||
+        confirmNewPassowrd,
       ) && (
         <div className="w-full mb-4 flex justify-center lg:justify-start items-center gap-x-6">
           {/* Save Changes */}

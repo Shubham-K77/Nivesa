@@ -56,19 +56,23 @@ export class TransactionController {
   async predictSpending(@Body() body: any) {
     try {
       // Forward request to Python FastAPI service
-      const response: AxiosResponse = await firstValueFrom(
-        this.httpService.post('http://localhost:8000/predict', body, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
+      const pythonApiUrl =
+        process.env.PYTHON_API_URL || 'http://localhost:8000';
+      const response: AxiosResponse<Record<string, unknown>> =
+        await firstValueFrom(
+          this.httpService.post(`${pythonApiUrl}/predict`, body, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+        );
       return response.data;
     } catch (error: any) {
       this.logger.error('Prediction API error:', error.response?.data || error);
       throw new HttpException(
-        error.response?.data?.detail || 'Failed to generate forecast',
-        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        (error.response?.data?.detail as string) ||
+          'Failed to generate forecast',
+        (error.response?.status as number) || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -86,6 +90,7 @@ export class TransactionController {
     );
     return response;
   }
+
   @Post('/delete')
   @UseGuards(UserLoginGuard)
   async deleteTransactions(
@@ -101,6 +106,7 @@ export class TransactionController {
     );
     return response;
   }
+
   @Post('/')
   @UseGuards(UserLoginGuard)
   async createNewTransaction(
@@ -169,6 +175,7 @@ export class TransactionController {
       );
     }
   }
+
   @Post('/scan')
   @UseGuards(UserLoginGuard)
   @UseInterceptors(FileInterceptor('receipt'))
@@ -179,6 +186,7 @@ export class TransactionController {
     const response = await this.transactionService.scanReceipt(file);
     return response;
   }
+
   @Patch('/:id')
   @UseGuards(UserLoginGuard)
   async updateSpecificTransaction(
