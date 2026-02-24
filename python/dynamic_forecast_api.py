@@ -11,8 +11,6 @@ from statsforecast.models import AutoARIMA
 import uvicorn
 app = FastAPI(title="Nivēśa Dynamic Forecast API", version="2.0.0")
 # CORS configuration
-# ALLOWED_ORIGINS env var: comma-separated list of allowed origins
-# e.g. "https://your-app.vercel.app,https://your-backend.onrender.com"
 _raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
 allowed_origins = [o.strip() for o in _raw.split(",") if o.strip()]
 app.add_middleware(
@@ -22,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/")
+def health_check():
+    return {"status": "ok", "service": "Nivēśa Forecast API"}
 # Pydantic models
 class Transaction(BaseModel):
     id: str
@@ -30,17 +31,14 @@ class Transaction(BaseModel):
     type: str
     date: str
     status: str
-
 class PredictRequest(BaseModel):
     transactions: List[Transaction]
     accountId: Optional[str] = None
-
 class PredictionDay(BaseModel):
     date: str
     predicted_spending: float
     lower_bound: float
     upper_bound: float
-
 class PredictResponse(BaseModel):
     predictions: List[PredictionDay]
     total_predicted: float
@@ -60,30 +58,24 @@ def preprocess_user_transactions(transactions_df: pd.DataFrame) -> pd.DataFrame:
     """
     # Filter only EXPENSE transactions
     expenses = transactions_df[transactions_df['type'] == 'EXPENSE'].copy()
-    
     if len(expenses) == 0:
         raise ValueError("No expense transactions found")
-    
     # Convert date strings to datetime and extract date only
     expenses['date'] = pd.to_datetime(expenses['date'])
     expenses['date'] = expenses['date'].dt.date
-    
     # Target/Mean encoding for category
     category_means = expenses.groupby('category')['amount'].mean().to_dict()
     expenses['category_encoded'] = expenses['category'].map(category_means)
-    
     # Fill missing categories with overall mean
     if expenses['category_encoded'].isna().any():
         overall_mean = sum(category_means.values()) / len(category_means)
         expenses['category_encoded'].fillna(overall_mean, inplace=True)
-    
     # Aggregate by date
     daily_txns = expenses.groupby('date').agg({
         'amount': 'sum',                    # Total spending that day
         'category_encoded': 'mean',         # Weighted average category encoding
         'type': 'count'                     # Number of transactions
     }).reset_index()
-    
     # Rename columns for SARIMA
     daily_txns = daily_txns.rename(columns={
         'amount': 'y',
@@ -91,18 +83,14 @@ def preprocess_user_transactions(transactions_df: pd.DataFrame) -> pd.DataFrame:
         'date': 'ds',
         'category_encoded': 'category_expenditure_mean'
     })
-    
     # Winsorization: Clip outliers at 99th percentile
     upper_limit = daily_txns['y'].quantile(0.99)
     daily_txns['y'] = daily_txns['y'].clip(upper=upper_limit)
-    
     # Add required columns for StatsForecast
     daily_txns['unique_id'] = 'expenses'
     daily_txns['ds'] = pd.to_datetime(daily_txns['ds'])
-    
     # Sort by date
     daily_txns = daily_txns.sort_values('ds').reset_index(drop=True)
-    
     return daily_txns, category_means
 
 @app.post("/predict", response_model=PredictResponse)
@@ -112,14 +100,12 @@ async def predict_spending(request: PredictRequest):
     """
     # Convert transactions to DataFrame
     txns_data = [txn.dict() for txn in request.transactions]
-    
     if len(txns_data) == 0:
         raise HTTPException(
             status_code=400,
             detail="No transactions provided"
         )
     df = pd.DataFrame(txns_data)
-    
     try:
         # Preprocess transactions
         daily_data, category_means = preprocess_user_transactions(df)
@@ -133,43 +119,35 @@ async def predict_spending(request: PredictRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Preprocessing error: {str(e)}"
-        )
-    
+        ) 
     # Minimum data check (outside try-except so it raises 400, not 500)
     if len(daily_data) < 14:
         raise HTTPException(
             status_code=400,
             detail=f"Insufficient data. Found {len(daily_data)} days, need at least 14 days of expense transactions."
         )
-    
     try: 
-        
         # Calculate MAE using walk-forward validation on last 7 days
         mae = None
         print(f"Daily data points available: {len(daily_data)}")
-        
         if len(daily_data) >= 21:  # Need enough data for train/test split
             try:
                 # Use last 7 days as test set
                 train_size = len(daily_data) - 7
                 train_data_mae = daily_data.iloc[:train_size][['unique_id', 'ds', 'y', 'category_expenditure_mean', 'transactions_count']]
                 test_data_mae = daily_data.iloc[train_size:].copy()
-                
                 print(f"Training MAE model with {len(train_data_mae)} days, testing on {len(test_data_mae)} days")
-                
                 # Train model on training data
                 model_mae = StatsForecast(
                     models=[AutoARIMA(season_length=7, alias='SARIMA_User')],
                     freq='D'
                 )
                 model_mae.fit(train_data_mae)
-                
                 # Predict on test period
                 test_forecast = model_mae.predict(
                     h=7, 
                     X_df=test_data_mae[['unique_id', 'ds', 'category_expenditure_mean', 'transactions_count']]
                 )
-                
                 # Calculate MAE
                 actual = test_data_mae['y'].values
                 predicted = test_forecast['SARIMA_User'].values
@@ -180,14 +158,11 @@ async def predict_spending(request: PredictRequest):
                 mae = None
         else:
             print(f"Insufficient data for MAE calculation. Need 21+ days, have {len(daily_data)} days")
-        
         # Calculate exogenous feature averages for future predictions
         avg_category_mean = daily_data['category_expenditure_mean'].mean()
         avg_txn_count = daily_data['transactions_count'].mean()
-        
         # Prepare training data (all historical data)
         train_data = daily_data[['unique_id', 'ds', 'y', 'category_expenditure_mean', 'transactions_count']]
-        
         # Train SARIMA model on user's full data
         model = StatsForecast(
             models=[AutoARIMA(season_length=7, alias='SARIMA_User')],
@@ -232,7 +207,6 @@ async def predict_spending(request: PredictRequest):
                 lower_bound=round(lower, 2),
                 upper_bound=round(upper, 2)
             ))
-        
         return PredictResponse(
             predictions=predictions,
             total_predicted=round(total_predicted, 2),
