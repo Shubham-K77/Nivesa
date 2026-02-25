@@ -523,7 +523,7 @@ This project is **UNLICENSED** - Private/Proprietary software.
 
 ## 👥 Authors
 
-**Shubham Kumar**  
+**Shubham Kadariya**  
 GitLab: [@Shubham.K707](https://gitlab.com/Shubham.K707)
 
 ---
