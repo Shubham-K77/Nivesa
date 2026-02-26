@@ -207,7 +207,14 @@ const AuthForm = ({ type, token }: AuthFormProps) => {
         return router.push("/login");
       } catch (error: any) {
         setLoading(false);
-        return toast.error(error.response?.data?.message);
+        const errorMsg = error.response?.data?.message;
+        toast.error(errorMsg);
+        if (
+          errorMsg &&
+          errorMsg.includes("Maximum verification attempts exceeded")
+        ) {
+          router.push("/signup");
+        }
       }
     } else if (type === "resetEmail") {
       try {

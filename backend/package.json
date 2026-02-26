@@ -23,6 +23,7 @@
   "dependencies": {
     "@arcjet/nest": "^1.0.0",
     "@arcjet/node": "^1.0.0",
+    "@getbrevo/brevo": "^3.0.4",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",

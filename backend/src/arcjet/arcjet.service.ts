@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-implied-eval */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -13,26 +15,28 @@ export class ArcjetService implements OnModuleInit {
   constructor(private configService: ConfigService) {}
   async onModuleInit() {
     try {
-      const arcjetModule = await import('@arcjet/node');
-      this.arcjet = arcjetModule.default({
+      // Force ESM dynamic import to work in CommonJS
+      const {
+        default: arcjet,
+        shield,
+        detectBot,
+        tokenBucket,
+      } = await Function('return import("@arcjet/node")')();
+
+      this.arcjet = arcjet({
         key: this.configService.get<string>('ARCJET_KEY')!,
         characteristics: ['userId'],
         rules: [
-          // 1. Shield: blocks SQLi, XSS, path traversal, shell injection, etc.
-          arcjetModule.shield({
-            mode: 'DRY_RUN',
-          }),
-          // 2. Bot protection: block automated/headless clients, allow verified bots
-          arcjetModule.detectBot({
+          shield({ mode: 'DRY_RUN' }),
+          detectBot({
             mode: 'DRY_RUN',
             allow: [
-              'CATEGORY:SEARCH_ENGINE', // Google, Bing, etc.
-              'CATEGORY:MONITOR', // Uptime monitors
-              'CATEGORY:PREVIEW', // Link preview bots (Slack, etc.)
+              'CATEGORY:SEARCH_ENGINE',
+              'CATEGORY:MONITOR',
+              'CATEGORY:PREVIEW',
             ],
           }),
-          // 3. Token bucket rate limiter: 10 requests / hour per userId
-          arcjetModule.tokenBucket({
+          tokenBucket({
             mode: 'DRY_RUN',
             refillRate: 10,
             interval: '1h',
@@ -40,9 +44,7 @@ export class ArcjetService implements OnModuleInit {
           }),
         ],
       });
-      this.logger.log(
-        'Arcjet initialized in DRY_RUN mode (shield + bot detection + rate limit)',
-      );
+      this.logger.log('Arcjet initialized in DRY_RUN mode');
     } catch (error) {
       this.logger.error('Failed to initialize Arcjet', error);
       throw error;
