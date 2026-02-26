@@ -11,7 +11,7 @@ from statsforecast.models import AutoARIMA
 import uvicorn
 app = FastAPI(title="Nivēśa Dynamic Forecast API", version="2.0.0")
 # CORS configuration
-_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
+_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000, http://localhost:3001")
 allowed_origins = [o.strip() for o in _raw.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,

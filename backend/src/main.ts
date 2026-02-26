@@ -24,7 +24,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.use(
     cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: [
+        process.env.FRONTEND_URL || 'https://nivesa.vercel.app',
+        'http://localhost:3000',
+      ],
       credentials: true,
     }),
   );
