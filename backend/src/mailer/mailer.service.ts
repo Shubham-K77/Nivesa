@@ -15,12 +15,12 @@ export class MailerService {
     try {
       //Configured Value:
       const mailer = await nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: 'smtp-relay.brevo.com',
         port: 587,
         secure: false,
         auth: {
-          user: this.configService.get<string>('gmail_account'),
-          pass: this.configService.get<string>('gmail_password'),
+          user: this.configService.get<string>('BREVO_SMTP_USER'),
+          pass: this.configService.get<string>('BREVO_SMTP_PASS'),
         },
       });
       //Return the configured Value:
